@@ -1,5 +1,9 @@
 # ⚡ AI WARP ENGINE — Windows App (R3 Canvas Edition v6.4)
 
+<p align="center">
+  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.1" width="720">
+</p>
+
 A public-domain glitch visual synthesizer and audio-reactive media playground, packaged as a standalone Windows app with a one-click installer.
 
 **Status: Complete · Ready** — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
