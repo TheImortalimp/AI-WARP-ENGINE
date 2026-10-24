@@ -9,11 +9,13 @@ Unicode true
 Name "AI WARP ENGINE"
 OutFile "AI-WARP-ENGINE-${VERSION}-x64-setup.exe"
 RequestExecutionLevel user
-InstallDir "$LOCALAPPDATA\Programs\AI-WARP-ENGINE"
-InstallDirRegKey HKCU "Software\AI-WARP-ENGINE" "InstallDir"
+InstallDir "$DESKTOP\AI WARP ENGINE"
+Icon "app.ico"
+UninstallIcon "app.ico"
+!define MUI_ICON "app.ico"
+!define MUI_UNICON "app.ico"
 
 !insertmacro MUI_PAGE_WELCOME
-!insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !define MUI_FINISHPAGE_RUN "$INSTDIR\AI-Warp-Engine.exe"
 !insertmacro MUI_PAGE_FINISH
@@ -28,8 +30,9 @@ Section "Install"
   CreateDirectory "$SMPROGRAMS\AI WARP ENGINE"
   CreateShortcut "$SMPROGRAMS\AI WARP ENGINE\AI WARP ENGINE.lnk" "$INSTDIR\AI-Warp-Engine.exe"
   CreateShortcut "$SMPROGRAMS\AI WARP ENGINE\Uninstall.lnk" "$INSTDIR\uninstall.exe"
-  CreateShortcut "$DESKTOP\AI WARP ENGINE.lnk" "$INSTDIR\AI-Warp-Engine.exe"
+  CreateShortcut "$INSTDIR\AI WARP ENGINE.lnk" "$INSTDIR\AI-Warp-Engine.exe" "" "$INSTDIR\AI-Warp-Engine.exe" 0
   WriteRegStr HKCU "Software\AI-WARP-ENGINE" "InstallDir" "$INSTDIR"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\AI-WARP-ENGINE" "DisplayIcon" "$INSTDIR\AI-Warp-Engine.exe"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\AI-WARP-ENGINE" "DisplayName" "AI WARP ENGINE"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\AI-WARP-ENGINE" "DisplayVersion" "${VERSION}"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\AI-WARP-ENGINE" "Publisher" "River Lyle Reuveni (TheImortalimp)"
@@ -38,7 +41,6 @@ SectionEnd
 
 Section "Uninstall"
   RMDir /r "$INSTDIR"
-  Delete "$DESKTOP\AI WARP ENGINE.lnk"
   RMDir /r "$SMPROGRAMS\AI WARP ENGINE"
   DeleteRegKey HKCU "Software\AI-WARP-ENGINE"
   DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\AI-WARP-ENGINE"
