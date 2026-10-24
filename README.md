@@ -1,16 +1,16 @@
 # ⚡ AI WARP ENGINE — Windows App (R3 Canvas Edition v6.4)
 
 <p align="center">
-  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.7" width="720">
+  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.8" width="720">
 </p>
 
 A public-domain glitch visual synthesizer and audio-reactive media playground, packaged as a standalone Windows app with a one-click installer.
 
-**Status: Complete · Ready** (v6.4.7) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
+**Status: Complete · Ready** (v6.4.8) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
 
 ## Install
 
-1. Download `AI-WARP-ENGINE-6.4.7-x64-setup.exe` from the latest release.
+1. Download `AI-WARP-ENGINE-6.4.8-x64-setup.exe` from the latest release.
 2. Run it, accept the licence terms, and finish the wizard. No admin rights are needed.
 3. The app installs to `Desktop\AI WARP ENGINE`, with a launcher shortcut, a Start Menu entry and an uninstaller.
 
@@ -43,7 +43,7 @@ Each voice has its own on/off, level, size and depth.
 | 13–29 (NewBlue-inspired) | newblue_roll, active_cam, shear, wiggle, zoom_blur, video_tile, twirl, light_ring, earthquake, water_drop, rgb_shift, quad_mirror, fish_eye, pinch, solarize, cathode_beam, neon_edges |
 
 - The **AI WARP Strength** slider scales every mode; **Master Opacity** scales the whole stack.
-- On YouTube sources the warp runs through the original **Warp Bus**: CSS 3D transforms, clip-path tears and a cumulative filter chain on the video, plus the SVG Warp Lens. The YouTube iframe is cross-origin, so its pixels cannot be read; for the exact canvas effects on a YouTube video use **Share Screen / Window** (`N`).
+- On YouTube sources the warp runs through the original **Warp Bus**: CSS 3D transforms, clip-path tears and a cumulative filter chain on the video, plus a per-mode **compositor overlay** (backdrop-filter tear bands, masked rings / wedges, blend tints, grid and scanlines) because the cross-origin iframe ignores SVG filters. For the exact canvas effects on a YouTube video use **Share Screen / Window** (`N`).
 - v6.4.2 strengthened all 29 modes (larger amplitudes and a stronger strength curve).
 
 ### Ghost Protocol R3 and V-Sync R3
@@ -124,6 +124,7 @@ The web app is plain HTML / JS / CSS, so you can also run it in any Chromium bro
 
 | Version | Highlights |
 |---------|------------|
+| v6.4.8 | Original engine and skewing kept, plus per-mode compositor FX overlay on YouTube playback (the original SVG lens is ignored by the YouTube iframe) |
 | v6.4.7 | Original AI WARP modes, skewing and YouTube path restored verbatim (all v6.4.2–v6.4.6 FX changes removed); opacity/alpha clamps kept |
 | v6.4.6 | (superseded) AI WARP modes now visible on real YouTube playback (compositor overlay layers; SVG filter removed from the iframe chain) |
 | v6.4.5 | Per-mode pixel FX on the YouTube feed via SVG (superseded: browsers ignore SVG filters on the iframe) |

@@ -8,7 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>AI-Warp-Engine</AssemblyName>
     <RootNamespace>AiWarpEngine</RootNamespace>
-    <Version>6.4.7</Version>
+    <Version>6.4.8</Version>
     <Authors>River Lyle Reuveni</Authors>
     <Company>River Lyle Reuveni (Imortalimp)</Company>
     <Product>AI WARP ENGINE</Product>
