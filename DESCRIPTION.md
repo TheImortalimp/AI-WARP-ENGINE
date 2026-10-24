@@ -10,17 +10,35 @@
 
 ## What it does
 
-Takes a live source (generative visuals, local media, YouTube, shared screen or window, microphone audio) and runs it through a real-time effects pipeline:
+Takes a live source and runs it through a real-time Canvas effects pipeline, driven by an audio-reactive analyser (bass / mid / treble / drive).
 
-- 34 independently controllable glitch voices (17 core + 17 `GC#(3)`)
-- 29 AI Warp modes plus a compositor-level SVG Warp Lens for YouTube
-- Ghost Protocol R3 and V-Sync R3 overlays
-- Automation: Auto Glitch, continual randomisation, timed automation, crescendo and audio-ear drive
-- 80 machine presets plus user presets, live mixer, keyboard shortcuts
+**Sources:** built-in generative visuals, local image / video / audio files, YouTube (playlist or URL), a shared tab / window / screen (display capture, `N`), and microphone audio (`M`).
+
+**Effects:**
+- 34 independently controllable glitch voices: 17 core (Neon Grad, Scanlines, Data Bands, Flash, HSL Rainbow, ASCII, Font Burn, Strobe, Gemini Bomb, Tech Artist, VHS Glitch, Data Bomb, Ink Glyphs, Matrix ASCII, Matrix Chord, B&W Invert, Hue/Color Cycle) plus 17 Glitch Revision 3 `GC#(3)` counterparts.
+- 29 AI Warp modes: 12 algorithmic (liquid, prism, breathe, fold, aurora, vortex, cybergrid, hyperdrive, kaleidoscope, quantum, ripple, analog CRT) and 17 NewBlue-inspired (roll, active cam, shear, wiggle, zoom blur, video tile, twirl, light ring, earthquake, water drop, RGB shift, quad mirror, fish eye, pinch, solarize, cathode beam, neon edges), plus a compositor-level SVG Warp Lens for YouTube.
+- Ghost Protocol R3 (DIA, SPECTRUM, CRT, PLASMA, LED) and V-Sync R3 (Scanphasing, Color Harmony, Sharp) overlays, with Soft-Eye and Crescendo.
+
+**Automation:** Auto Glitch, Continual Random, Automated Masters, Timed Automation, Wired mode, Soft-Eye and Crescendo.
+
+**Control:** 80 machine presets plus saved user presets with smooth cross-fades, a live mixer, and keyboard hotkeys (`W` warp, `G` ghost, `V` V-Sync, `A` auto, `R` randomise, `T` timed, `C` crescendo, `Z` zero, `S` freeze, `E` ear, `H` hide UI, `1`–`9` voices, `?` help).
+
+## Safe levels
+
+AI WARP Strength, Master Opacity, Ghost level, V-Sync level and every voice alpha are clamped to 0–1 wherever they are written, and non-numeric values are ignored, so no slider, preset, automation or audio input can push an alpha out of range.
 
 ## Verified in the packaged app
 
-All 34 voices, 29 warp modes, Ghost and V-Sync modes run without errors in the installed WebView2 host; screen share (`N`) and microphone (`M`) hotkeys confirmed working.
+- All 34 voices and all 29 warp modes, across every Ghost and V-Sync combination, ran with 0 console errors, 0 out-of-range alpha writes and 0 NaN colours, including with out-of-range audio levels.
+- Every automation, Soft-Eye, Crescendo and out-of-range presets were exercised.
+- Screen share (`N`) and microphone (`M`) hotkeys confirmed working.
+
+## Release history
+
+- **v6.4.3** — all levels and alphas hard-clamped; Ghost, V-Sync and automations verified; Complete · Ready.
+- **v6.4.2** — all 29 AI Warp modes boosted.
+- **v6.4.1** — GC#(3) helper fixes; screen share and microphone confirmed.
+- **v6.4.0** — first standalone installer.
 
 ## Keywords
 
