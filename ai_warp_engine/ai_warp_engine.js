@@ -37,6 +37,9 @@
         return a + (b - a) * t;
     }
 
+    // Warp modes drawn as displaced strips; the clean frame is laid under them to fill strip-edge gaps.
+    const STRIP_BASE_MODES = new Set(['liquid', 'prism', 'quantum', 'analog_crt', 'newblue_shear']);
+
     function drawCover(ctx, media, cw, ch) {
         if (!media) return;
         const mw = media.videoWidth || media.naturalWidth || media.width || cw;
@@ -1873,35 +1876,44 @@
             gctx.save();
             gctx.clearRect(0, 0, w, h);
 
+            // Fine strips (v6.4.4): ~5px slices so displacement reads as a smooth skew, not blocky bands.
+            // Strip modes first lay the clean frame down so strip edges never expose transparency.
+            const SP = Math.max(3, Math.round(w / 180));
+            const SPY = Math.max(3, Math.round(h / 150));
+            const u = (px) => px / Math.max(1, w) * 30;   // strip position on the original 30-column phase scale
+            const v = (py) => py / Math.max(1, h) * 24;
+            if (STRIP_BASE_MODES.has(mode)) gctx.drawImage(this.workCanvas, 0, 0);
+
             // 1. LIQUID: Multi-frequency bidirectional harmonic fluid waves
             if (mode === 'liquid') {
-                const cols = 22 + Math.floor(s * 18);
-                const colW = Math.ceil(w / cols);
+                const colW = SP;
+                const cols = Math.ceil(w / colW);
                 const ampX = (18 + s * 65 + bass * 40) * K;
                 const ampY = (10 + s * 35 + mid * 25) * K;
                 for (let c = 0; c < cols; c++) {
                     const sx = c * colW;
                     const sw = Math.min(colW, w - sx);
                     if (sw <= 0) continue;
-                    const waveX = Math.sin(t * 3.4 + c * 0.45) * ampX + Math.cos(t * 1.7 + c * 0.22) * (ampX * 0.4);
-                    const waveY = Math.sin(t * 2.8 + c * 0.35) * ampY;
+                    const cu = u(sx);
+                    const waveX = Math.sin(t * 3.4 + cu * 0.45) * ampX + Math.cos(t * 1.7 + cu * 0.22) * (ampX * 0.4);
+                    const waveY = Math.sin(t * 2.8 + cu * 0.35) * ampY;
                     try {
-                        gctx.drawImage(this.workCanvas, sx, 0, sw, h, sx + waveX, waveY, sw, h);
+                        gctx.drawImage(this.workCanvas, sx, 0, sw, h, sx + waveX, waveY, sw + 0.75, h);
                     } catch(e) {}
                 }
             }
             // 2. PRISM: Multi-angle crystal refraction & chromatic dispersion
             else if (mode === 'prism') {
-                const slices = 20 + Math.floor(s * 16);
-                const sliceH = Math.ceil(h / slices);
+                const sliceH = SPY;
+                const slices = Math.ceil(h / sliceH);
                 const disp = (12 + s * 55 + treble * 35) * K;
                 for (let i = 0; i < slices; i++) {
                     const sy = i * sliceH;
                     const sh = Math.min(sliceH, h - sy);
                     if (sh <= 0) continue;
-                    const dx = Math.sin(t * 4.0 + i * 0.5) * disp;
+                    const dx = Math.sin(t * 4.0 + v(sy) * 0.5) * disp;
                     try {
-                        gctx.drawImage(this.workCanvas, 0, sy, w, sh, dx, sy, w, sh);
+                        gctx.drawImage(this.workCanvas, 0, sy, w, sh + 0.75, dx, sy, w, sh + 0.75);
                     } catch(e) {}
                 }
                 gctx.globalCompositeOperation = 'screen';
@@ -2047,19 +2059,18 @@
             }
             // 10. QUANTUM: Micro-quantum foam probabilistic slice teleportation
             else if (mode === 'quantum') {
-                const bands = 45 + Math.floor(s * 25);
-                const bh = Math.ceil(h / bands);
+                const bh = SPY * 2;
+                const bands = Math.ceil(h / bh);
                 const amp = (20 + s * 60 + treble * 35) * K;
                 for (let b = 0; b < bands; b++) {
                     const sy = b * bh;
                     const sh = Math.min(bh, h - sy);
                     if (sh <= 0) continue;
-                    let dx = 0;
-                    if (Math.random() < 0.55 * s) {
-                        dx = (Math.random() - 0.5) * amp * 2.2;
-                    }
+                    // Smooth coherent noise instead of per-frame random so the foam flows rather than flickers.
+                    const n = Math.sin(t * 5.1 + b * 0.37) * 0.6 + Math.sin(t * 8.3 - b * 0.91) * 0.4;
+                    const dx = n * amp * (0.4 + 0.6 * s);
                     try {
-                        gctx.drawImage(this.workCanvas, 0, sy, w, sh, dx, sy, w, sh);
+                        gctx.drawImage(this.workCanvas, 0, sy, w, sh + 0.75, dx, sy, w, sh + 0.75);
                     } catch(e) {}
                 }
             }
@@ -2109,18 +2120,18 @@
             }
             // 12. ANALOG CRT: Spherical glass cathode tube & magnetic barrel distortion
             else if (mode === 'analog_crt') {
-                const cols = 20;
-                const colW = Math.ceil(w / cols);
+                const colW = SP;
+                const cols = Math.ceil(w / colW);
                 const barrelAmp = (15 + s * 45) * K;
                 for (let c = 0; c < cols; c++) {
                     const sx = c * colW;
                     const sw = Math.min(colW, w - sx);
                     if (sw <= 0) continue;
-                    const normX = (sx - (w / 2)) / (w / 2);
+                    const normX = (sx + sw / 2 - (w / 2)) / (w / 2);
                     const bulge = (1.0 - normX * normX) * barrelAmp;
-                    const scanJitter = Math.sin(t * 15 + c) * 3;
+                    const scanJitter = Math.sin(t * 15 + u(sx) * 0.7) * 3;
                     try {
-                        gctx.drawImage(this.workCanvas, sx, 0, sw, h, sx + scanJitter, -bulge * 0.4, sw, h + bulge * 0.8);
+                        gctx.drawImage(this.workCanvas, sx, 0, sw, h, sx + scanJitter, -bulge * 0.4, sw + 0.75, h + bulge * 0.8);
                     } catch(e) {}
                 }
             }
@@ -2173,17 +2184,17 @@
             }
             // 15. SHEAR: NewBlue Shear Energy directional angular displacement & vector slant
             else if (mode === 'newblue_shear') {
-                const bands = 26 + Math.floor(s * 18);
-                const bh = Math.ceil(h / bands);
+                const bh = SPY;
+                const bands = Math.ceil(h / bh);
                 const shearAngle = Math.sin(t * 3.0) * (0.55 + s * 1.0) + bass * 0.5;
                 for (let i = 0; i < bands; i++) {
                     const sy = i * bh;
                     const sh = Math.min(bh, h - sy);
                     if (sh <= 0) continue;
-                    const norm = (i / bands) - 0.5;
+                    const norm = ((sy + sh / 2) / h) - 0.5;
                     const dx = norm * shearAngle * (w * 0.25);
                     try {
-                        gctx.drawImage(this.workCanvas, 0, sy, w, sh, dx, sy, w, sh);
+                        gctx.drawImage(this.workCanvas, 0, sy, w, sh + 0.75, dx, sy, w, sh + 0.75);
                     } catch(e) {}
                 }
             }
@@ -2521,7 +2532,9 @@
                 };
             }
 
-            const s = (this.aiWarpActive && this.aiWarpStrength > 0.005) ? (this.aiWarpStrength * this.masterOpacity) : 0;
+            const sRawYt = (this.aiWarpActive && this.aiWarpStrength > 0.005) ? (this.aiWarpStrength * this.masterOpacity) : 0;
+            // Same strength curve as the canvas warp so YouTube FX are equally visible (v6.4.4)
+            const s = sRawYt > 0.005 ? Math.min(1, sRawYt * 1.35 + 0.15) : 0;
             const t = now * 0.001 * this.glitchSpeed;
             const audio = this.audioDrive;
             const bass = audio.bass || 0;
@@ -2835,7 +2848,13 @@
             }
 
             // ── 3. Damping (exponential smoothing, frame-rate independent) ───────
-            const damping = Math.min(1.0, Math.max(0.04, dt * 5.0));
+            // Amplify mode deviations (not the neutral pose) so the warp reads clearly on the feed
+            const YK = 1.7;
+            targetSkewX *= YK; targetSkewY *= YK; targetRotZ *= YK; targetRotX *= YK; targetRotY *= YK;
+            targetDriftX *= YK; targetDriftY *= YK;
+            targetScaleX = 1 + (targetScaleX - 1) * YK;
+            targetScaleY = 1 + (targetScaleY - 1) * YK;
+            const damping = Math.min(1.0, Math.max(0.04, dt * 7.0));
             const sm = this.smoothedTransform;
             sm.skewX = lerp(sm.skewX, targetSkewX, damping);
             sm.skewY = lerp(sm.skewY, targetSkewY, damping);
