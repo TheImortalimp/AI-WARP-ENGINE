@@ -3,7 +3,7 @@
 **AI WARP ENGINE (R3 Canvas Edition v6.4)** is a public-domain visual synthesizer, audio-reactive media playground and live Canvas glitch suite, shipped as a standalone Windows app.
 
 - **Author:** River Lyle Reuveni (Imortalimp), [imortalimp.nl](https://imortalimp.nl)
-- **Version:** 6.4 (installer release v6.4.8) — **Complete · Ready**
+- **Version:** 6.4 (installer release v6.4.9) — **Complete · Ready**
 - **Platform:** Windows 10/11 x64 (WebView2 host, .NET bundled)
 - **Install location:** `Desktop\AI WARP ENGINE` (per-user, no admin)
 - **Licence:** CC0 1.0 / The Unlicense (software); CC BY 4.0 (imortalimp.nl site content)
@@ -23,9 +23,9 @@ Takes a live source and runs it through a real-time Canvas effects pipeline, dri
 
 **Control:** 80 machine presets plus saved user presets with smooth cross-fades, a live mixer, and keyboard hotkeys (`W` warp, `G` ghost, `V` V-Sync, `A` auto, `R` randomise, `T` timed, `C` crescendo, `Z` zero, `S` freeze, `E` ear, `H` hide UI, `1`–`9` voices, `?` help).
 
-## Safe levels
+## Verbatim effects
 
-AI WARP Strength, Master Opacity, Ghost level, V-Sync level and every voice alpha are clamped to 0–1 wherever they are written, and non-numeric values are ignored, so no slider, preset, automation or audio input can push an alpha out of range.
+`ai_warp_engine.js`, Ghost Protocol / V-Sync (`r3_ghost_vsync.js`) and the voice libraries are the unmodified originals from imortalimp.nl/ai_warp_engine: no boosts and no added clamps. The only addition is `yt_overlay_bridge.js`, which strips the SVG lens reference the YouTube iframe ignores and draws a per-mode compositor overlay above the video.
 
 ## Verified in the packaged app
 
@@ -35,7 +35,8 @@ AI WARP Strength, Master Opacity, Ghost level, V-Sync level and every voice alph
 
 ## Release history
 
-- **v6.4.8** — original engine and skewing kept; per-mode compositor FX overlay restored on YouTube playback.
+- **v6.4.9** — site engine, Ghost Protocol and V-Sync restored verbatim (no boosts, no added clamps); YouTube overlay lives in the separate yt_overlay_bridge.js.
+ - **v6.4.8** — original engine and skewing kept; per-mode compositor FX overlay restored on YouTube playback.
 - **v6.4.7** — original AI WARP modes, skewing and YouTube warp path restored; only the v6.4.3 opacity/alpha clamps are retained.
 - **v6.4.6** (superseded) — AI WARP modes now render on real YouTube playback: per-mode compositor overlays (backdrop-filter bands, masked rings/wedges, blend tints) replace the SVG lens, which browsers silently ignore on the YouTube iframe.
 - **v6.4.5** — attempted per-mode SVG pixel pipeline on YouTube (superseded by v6.4.6; it had no effect on the cross-origin iframe).
