@@ -1,0 +1,45 @@
+Unicode true
+!include "MUI2.nsh"
+!ifndef VERSION
+  !define VERSION "6.4.0"
+!endif
+!ifndef SRC
+  !define SRC "publish"
+!endif
+Name "AI WARP ENGINE"
+OutFile "AI-WARP-ENGINE-${VERSION}-x64-setup.exe"
+RequestExecutionLevel user
+InstallDir "$LOCALAPPDATA\Programs\AI-WARP-ENGINE"
+InstallDirRegKey HKCU "Software\AI-WARP-ENGINE" "InstallDir"
+
+!insertmacro MUI_PAGE_WELCOME
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES
+!define MUI_FINISHPAGE_RUN "$INSTDIR\AI-Warp-Engine.exe"
+!insertmacro MUI_PAGE_FINISH
+!insertmacro MUI_UNPAGE_CONFIRM
+!insertmacro MUI_UNPAGE_INSTFILES
+!insertmacro MUI_LANGUAGE "English"
+
+Section "Install"
+  SetOutPath "$INSTDIR"
+  File /r "${SRC}\*.*"
+  WriteUninstaller "$INSTDIR\uninstall.exe"
+  CreateDirectory "$SMPROGRAMS\AI WARP ENGINE"
+  CreateShortcut "$SMPROGRAMS\AI WARP ENGINE\AI WARP ENGINE.lnk" "$INSTDIR\AI-Warp-Engine.exe"
+  CreateShortcut "$SMPROGRAMS\AI WARP ENGINE\Uninstall.lnk" "$INSTDIR\uninstall.exe"
+  CreateShortcut "$DESKTOP\AI WARP ENGINE.lnk" "$INSTDIR\AI-Warp-Engine.exe"
+  WriteRegStr HKCU "Software\AI-WARP-ENGINE" "InstallDir" "$INSTDIR"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\AI-WARP-ENGINE" "DisplayName" "AI WARP ENGINE"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\AI-WARP-ENGINE" "DisplayVersion" "${VERSION}"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\AI-WARP-ENGINE" "Publisher" "River Lyle Reuveni (TheImortalimp)"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\AI-WARP-ENGINE" "UninstallString" "$INSTDIR\uninstall.exe"
+SectionEnd
+
+Section "Uninstall"
+  RMDir /r "$INSTDIR"
+  Delete "$DESKTOP\AI WARP ENGINE.lnk"
+  RMDir /r "$SMPROGRAMS\AI WARP ENGINE"
+  DeleteRegKey HKCU "Software\AI-WARP-ENGINE"
+  DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\AI-WARP-ENGINE"
+SectionEnd

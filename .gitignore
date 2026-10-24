@@ -1,0 +1,4 @@
+shell/bin/
+shell/obj/
+shell/publish/
+shell/*.exe
