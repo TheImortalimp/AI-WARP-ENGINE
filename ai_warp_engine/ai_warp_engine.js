@@ -1381,7 +1381,7 @@
                         const w = self.canvas.width, h = self.canvas.height;
                         gctx.save();
                         gctx.globalCompositeOperation = 'screen';
-                        gctx.fillStyle = `rgba(255, 120, 20, ${0.55 * s * dp * self.masterOpacity})`;
+                        gctx.fillStyle = `rgba(255, 120, 20, ${clamp01(0.55 * s * dp * self.masterOpacity)})`;
                         gctx.font = `bold ${Math.round(36 * sz)}px monospace`;
                         const t = performance.now() * 0.002;
                         const count = Math.max(2, Math.round(6 * dp));
@@ -1409,8 +1409,9 @@
                         const grad = gctx.createLinearGradient(0, 0, w, h);
                         const h1 = (t * 26) % 360;
                         const h2 = (h1 + 120 + sz * 30) % 360;
-                        grad.addColorStop(0, `hsla(${h1}, 100%, 50%, ${0.45 * s * dp * self.masterOpacity})`);
-                        grad.addColorStop(1, `hsla(${h2}, 100%, 50%, ${0.45 * s * dp * self.masterOpacity})`);
+                        const gradA = clamp01(0.45 * s * dp * self.masterOpacity);
+                        grad.addColorStop(0, `hsla(${h1}, 100%, 50%, ${gradA})`);
+                        grad.addColorStop(1, `hsla(${h2}, 100%, 50%, ${gradA})`);
                         gctx.fillStyle = grad;
                         gctx.fillRect(0, 0, w, h);
                         gctx.restore();
@@ -1863,9 +1864,7 @@
             const gctx = this.gctx;
             const mode = this.aiWarpMode;
             const audio = this.audioDrive;
-            const bass = audio.bass || 0;
-            const mid = audio.mid || 0;
-            const treble = audio.treble || 0;
+            const bass = clamp01(audio.bass), mid = clamp01(audio.mid), treble = clamp01(audio.treble);
 
             this.workCanvas.width = w; this.workCanvas.height = h;
             this.workCtx.clearRect(0, 0, w, h);
@@ -1921,7 +1920,7 @@
                 gctx.drawImage(this.workCanvas, -w / 2, -h / 2);
                 if (bass > 0.3) {
                     gctx.globalCompositeOperation = 'screen';
-                    gctx.globalAlpha = (bass - 0.2) * 0.5 * s;
+                    gctx.globalAlpha = clamp01((bass - 0.2) * 0.5 * s);
                     const bScale = 1.0 + bass * 0.15;
                     gctx.scale(bScale, bScale);
                     gctx.drawImage(this.workCanvas, -w / 2, -h / 2);
@@ -3065,6 +3064,36 @@
             }
         }
     }
+
+    // Single choke point: every direct write to these master levels is clamped to [0,1] (NaN -> keeps last good value).
+    ['aiWarpStrength', 'masterOpacity', 'ghostLevel', 'vsyncLevel'].forEach(key => {
+        const store = '_' + key;
+        Object.defineProperty(AiWarpEngine.prototype, key, {
+            configurable: true,
+            enumerable: true,
+            get() { return this[store] === undefined ? 0 : this[store]; },
+            set(v) {
+                const n = typeof v === 'number' ? v : parseFloat(v);
+                if (!Number.isFinite(n)) { if (this[store] === undefined) this[store] = 0; return; }
+                this[store] = n < 0 ? 0 : (n > 1 ? 1 : n);
+            }
+        });
+    });
+
+    // Per-voice alphas are clamped on write as well, so no automation path can push a voice past 0..1.
+    const alphaGuard = {
+        set(target, prop, value) {
+            const n = typeof value === 'number' ? value : parseFloat(value);
+            target[prop] = Number.isFinite(n) ? (n < 0 ? 0 : (n > 1 ? 1 : n)) : 0;
+            return true;
+        }
+    };
+    Object.defineProperty(AiWarpEngine.prototype, 'effectAlphas', {
+        configurable: true,
+        enumerable: true,
+        get() { return this._effectAlphas; },
+        set(obj) { this._effectAlphas = new Proxy(Object.assign({}, obj), alphaGuard); }
+    });
 
     root.AiWarpEngine = AiWarpEngine;
 })(typeof window !== 'undefined' ? window : this);

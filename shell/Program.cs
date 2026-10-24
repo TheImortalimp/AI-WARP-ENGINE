@@ -36,6 +36,8 @@ internal sealed class MainForm : Form
     {
         var profile = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AI-Warp-Engine", "profile");
+        var profileOverride = Environment.GetEnvironmentVariable("AIWARP_PROFILE");
+        if (!string.IsNullOrWhiteSpace(profileOverride)) profile = profileOverride;
         var args = "--autoplay-policy=no-user-gesture-required";
         var debugPort = Environment.GetEnvironmentVariable("AIWARP_DEBUG_PORT");
         if (int.TryParse(debugPort, out var port) && port > 0 && port < 65536)

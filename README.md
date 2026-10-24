@@ -10,7 +10,7 @@ A public-domain glitch visual synthesizer and audio-reactive media playground, p
 
 ## Install
 
-1. Download `AI-WARP-ENGINE-6.4.2-x64-setup.exe` from the latest release.
+1. Download `AI-WARP-ENGINE-6.4.3-x64-setup.exe` from the latest release.
 2. Run it, accept the licence terms, and finish the wizard. No admin rights are needed.
 3. The app installs to `Desktop\AI WARP ENGINE`, with a launcher shortcut, a Start Menu entry and an uninstaller.
 
