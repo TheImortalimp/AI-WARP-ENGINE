@@ -9,6 +9,12 @@
     <AssemblyName>AI-Warp-Engine</AssemblyName>
     <RootNamespace>AiWarpEngine</RootNamespace>
     <Version>6.4.0</Version>
+    <Authors>River Lyle Reuveni</Authors>
+    <Company>River Lyle Reuveni (Imortalimp)</Company>
+    <Product>AI WARP ENGINE</Product>
+    <Description>Glitch visual synthesizer and audio-reactive media playground</Description>
+    <Copyright>(c) 2026 River Lyle Reuveni - imortalimp.nl - CC0 1.0 / The Unlicense</Copyright>
+    <PackageProjectUrl>https://imortalimp.nl</PackageProjectUrl>
     <ApplicationIcon>app.ico</ApplicationIcon>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
