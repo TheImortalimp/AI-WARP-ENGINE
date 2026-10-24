@@ -1855,7 +1855,10 @@
             const w = this.canvas.width, h = this.canvas.height;
             if (!w || !h) return;
 
-            const s = this.aiWarpStrength * this.masterOpacity;
+            // v6.4.2 boost: stronger strength curve (capped at 1 so alphas stay valid) + amplitude multiplier K
+            const sRaw = this.aiWarpStrength * this.masterOpacity;
+            const s = Math.min(1, sRaw * 1.35 + 0.15);
+            const K = 1.8;
             const t = now * 0.001 * this.glitchSpeed;
             const gctx = this.gctx;
             const mode = this.aiWarpMode;
@@ -1875,8 +1878,8 @@
             if (mode === 'liquid') {
                 const cols = 22 + Math.floor(s * 18);
                 const colW = Math.ceil(w / cols);
-                const ampX = (18 + s * 65 + bass * 40);
-                const ampY = (10 + s * 35 + mid * 25);
+                const ampX = (18 + s * 65 + bass * 40) * K;
+                const ampY = (10 + s * 35 + mid * 25) * K;
                 for (let c = 0; c < cols; c++) {
                     const sx = c * colW;
                     const sw = Math.min(colW, w - sx);
@@ -1892,7 +1895,7 @@
             else if (mode === 'prism') {
                 const slices = 20 + Math.floor(s * 16);
                 const sliceH = Math.ceil(h / slices);
-                const disp = (12 + s * 55 + treble * 35);
+                const disp = (12 + s * 55 + treble * 35) * K;
                 for (let i = 0; i < slices; i++) {
                     const sy = i * sliceH;
                     const sh = Math.min(sliceH, h - sy);
@@ -1903,7 +1906,7 @@
                     } catch(e) {}
                 }
                 gctx.globalCompositeOperation = 'screen';
-                gctx.globalAlpha = 0.35 * s;
+                gctx.globalAlpha = Math.min(1, 0.6 * s);
                 try {
                     gctx.drawImage(this.workCanvas, -disp * 1.5, -disp * 0.5);
                     gctx.drawImage(this.workCanvas, disp * 1.5, disp * 0.5);
@@ -1911,7 +1914,7 @@
             }
             // 3. BREATHE: Organic radial expansion & spherical contraction
             else if (mode === 'breathe') {
-                const scale = 1.0 + Math.sin(t * 2.5) * (0.07 + s * 0.12 + bass * 0.14);
+                const scale = 1.0 + Math.sin(t * 2.5) * (0.12 + s * 0.22 + bass * 0.2);
                 gctx.save();
                 gctx.translate(w / 2, h / 2);
                 gctx.scale(scale, scale);
@@ -1929,7 +1932,7 @@
             else if (mode === 'fold') {
                 const pleats = 28 + Math.floor(s * 14);
                 const pw = Math.ceil(w / pleats);
-                const amp = (16 + s * 50 + bass * 30);
+                const amp = (16 + s * 50 + bass * 30) * K;
                 for (let p = 0; p < pleats; p++) {
                     const sx = p * pw;
                     const sw = Math.min(pw, w - sx);
@@ -1947,18 +1950,18 @@
             else if (mode === 'aurora') {
                 const ribbons = 16 + Math.floor(s * 12);
                 const rw = Math.ceil(w / ribbons);
-                const drift = Math.sin(t * 1.5) * 40 * s;
+                const drift = Math.sin(t * 1.5) * 40 * s * K;
                 for (let r = 0; r < ribbons; r++) {
                     const sx = r * rw;
                     const sw = Math.min(rw, w - sx);
                     if (sw <= 0) continue;
-                    const wave = Math.sin(t * 2.2 + r * 0.6) * (20 + s * 45) + drift;
+                    const wave = Math.sin(t * 2.2 + r * 0.6) * (20 + s * 45) * K + drift;
                     try {
                         gctx.drawImage(this.workCanvas, sx, 0, sw, h, sx + wave, 0, sw, h);
                     } catch(e) {}
                 }
                 gctx.globalCompositeOperation = 'screen';
-                gctx.globalAlpha = 0.25 * s;
+                gctx.globalAlpha = 0.45 * s;
                 const auroraGrad = gctx.createLinearGradient(0, 0, w, h);
                 auroraGrad.addColorStop(0, 'rgba(0, 255, 160, 0.4)');
                 auroraGrad.addColorStop(0.5, 'rgba(0, 220, 255, 0.3)');
@@ -1976,7 +1979,7 @@
 
                 for (let i = rings - 1; i >= 1; i--) {
                     const r = i * ringW;
-                    const spinAngle = (1.0 - (r / maxR)) * (1.2 + s * 2.2) * Math.sin(t * 2.5);
+                    const spinAngle = (1.0 - (r / maxR)) * (2.4 + s * 4.0) * Math.sin(t * 2.5);
                     gctx.save();
                     gctx.beginPath();
                     gctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -1991,7 +1994,7 @@
             else if (mode === 'cybergrid') {
                 const gridX = 12, gridY = 8;
                 const bw = Math.ceil(w / gridX), bh = Math.ceil(h / gridY);
-                const amp = (12 + s * 40 + mid * 25);
+                const amp = (12 + s * 40 + mid * 25) * K;
                 for (let gx = 0; gx < gridX; gx++) {
                     for (let gy = 0; gy < gridY; gy++) {
                         const sx = gx * bw, sy = gy * bh;
@@ -2013,13 +2016,13 @@
             }
             // 8. HYPERDRIVE: Relativistic hyperspace starfield streak zoom
             else if (mode === 'hyperdrive') {
-                const passes = 5;
+                const passes = 8;
                 const cx = w / 2, cy = h / 2;
                 gctx.drawImage(this.workCanvas, 0, 0);
                 gctx.globalCompositeOperation = 'screen';
                 for (let p = 1; p <= passes; p++) {
-                    const zScale = 1.0 + (p * 0.035 * (s + bass * 0.5));
-                    gctx.globalAlpha = (0.28 / p) * s;
+                    const zScale = 1.0 + (p * 0.07 * (s + bass * 0.5));
+                    gctx.globalAlpha = Math.min(1, (0.6 / Math.sqrt(p)) * s);
                     gctx.save();
                     gctx.translate(cx, cy);
                     gctx.scale(zScale, zScale);
@@ -2047,13 +2050,13 @@
             else if (mode === 'quantum') {
                 const bands = 45 + Math.floor(s * 25);
                 const bh = Math.ceil(h / bands);
-                const amp = (20 + s * 60 + treble * 35);
+                const amp = (20 + s * 60 + treble * 35) * K;
                 for (let b = 0; b < bands; b++) {
                     const sy = b * bh;
                     const sh = Math.min(bh, h - sy);
                     if (sh <= 0) continue;
                     let dx = 0;
-                    if (Math.random() < 0.35 * s) {
+                    if (Math.random() < 0.55 * s) {
                         dx = (Math.random() - 0.5) * amp * 2.2;
                     }
                     try {
@@ -2073,7 +2076,7 @@
                     try {
                         const r = (i + 1) * rw;
                         const wavePhase = Math.sin((r / maxR) * 16.0 - t * 7.5);
-                        const displacement = wavePhase * (12 + s * 36 + bass * 30);
+                        const displacement = wavePhase * (12 + s * 36 + bass * 30) * K;
                         const rInner = Math.max(0.1, r - rw);
                         const rOuter = Math.max(rInner + 0.5, r);
 
@@ -2084,7 +2087,7 @@
                         gctx.clip();
 
                         // Concentric optical magnification & displacement
-                        const zoom = 1.0 + (wavePhase * 0.08 * s);
+                        const zoom = 1.0 + (wavePhase * 0.14 * s);
                         gctx.translate(cx, cy);
                         gctx.scale(zoom, zoom);
                         gctx.translate(-cx + displacement * 0.5, -cy + displacement * 0.5);
@@ -2097,7 +2100,7 @@
                         gctx.beginPath();
                         gctx.arc(cx, cy, crestRadius, 0, Math.PI * 2);
                         gctx.lineWidth = Math.max(1, rw * 0.28);
-                        gctx.strokeStyle = `rgba(0, 229, 255, ${Math.max(0, 0.24 * s * Math.abs(wavePhase))})`;
+                        gctx.strokeStyle = `rgba(0, 229, 255, ${Math.max(0, 0.5 * s * Math.abs(wavePhase))})`;
                         gctx.stroke();
                         gctx.restore();
                     } catch(e) {
@@ -2109,7 +2112,7 @@
             else if (mode === 'analog_crt') {
                 const cols = 20;
                 const colW = Math.ceil(w / cols);
-                const barrelAmp = (15 + s * 45);
+                const barrelAmp = (15 + s * 45) * K;
                 for (let c = 0; c < cols; c++) {
                     const sx = c * colW;
                     const sw = Math.min(colW, w - sx);
@@ -2124,7 +2127,7 @@
             }
             // 13. ROLL: NewBlue Rolling Shutter & film frame roll with vertical seam wrapping
             else if (mode === 'newblue_roll') {
-                const yRoll = ((t * (100 + s * 220) + Math.sin(t * 1.5) * 60) % h + h) % h;
+                const yRoll = ((t * (100 + s * 220) * 1.6 + Math.sin(t * 1.5) * 60) % h + h) % h;
                 const seamH = Math.floor(yRoll);
                 try {
                     if (seamH < h) {
@@ -2149,10 +2152,10 @@
             }
             // 14. ACTIVE CAM: NewBlue Active Camera organic handheld gimbal shake & lens tremor
             else if (mode === 'newblue_active_cam') {
-                const shakeX = (Math.sin(t * 4.2) * 16 + Math.sin(t * 9.5) * 8 + (Math.random() - 0.5) * 4) * s;
-                const shakeY = (Math.cos(t * 3.8) * 14 + Math.cos(t * 8.3) * 6 + (Math.random() - 0.5) * 4) * s;
-                const rotAngle = (Math.sin(t * 2.1) * 0.035 + Math.sin(t * 5.4) * 0.015) * s;
-                const focalScale = 1.05 + (s * 0.08) + Math.sin(t * 1.8) * 0.03 * s;
+                const shakeX = (Math.sin(t * 4.2) * 16 + Math.sin(t * 9.5) * 8 + (Math.random() - 0.5) * 4) * s * K;
+                const shakeY = (Math.cos(t * 3.8) * 14 + Math.cos(t * 8.3) * 6 + (Math.random() - 0.5) * 4) * s * K;
+                const rotAngle = (Math.sin(t * 2.1) * 0.035 + Math.sin(t * 5.4) * 0.015) * s * K;
+                const focalScale = 1.08 + (s * 0.12) + Math.sin(t * 1.8) * 0.05 * s;
                 try {
                     gctx.save();
                     gctx.translate(w / 2 + shakeX, h / 2 + shakeY);
@@ -2173,7 +2176,7 @@
             else if (mode === 'newblue_shear') {
                 const bands = 26 + Math.floor(s * 18);
                 const bh = Math.ceil(h / bands);
-                const shearAngle = Math.sin(t * 3.0) * (0.35 + s * 0.65) + bass * 0.35;
+                const shearAngle = Math.sin(t * 3.0) * (0.55 + s * 1.0) + bass * 0.5;
                 for (let i = 0; i < bands; i++) {
                     const sy = i * bh;
                     const sh = Math.min(bh, h - sy);
@@ -2189,7 +2192,7 @@
             else if (mode === 'newblue_wiggle') {
                 const cols = 16, rows = 12;
                 const tw = Math.ceil(w / cols), th = Math.ceil(h / rows);
-                const maxJitter = (8 + s * 26 + mid * 18);
+                const maxJitter = (8 + s * 26 + mid * 18) * K;
                 for (let c = 0; c < cols; c++) {
                     for (let r = 0; r < rows; r++) {
                         const sx = c * tw, sy = r * th;
@@ -2206,14 +2209,14 @@
             // 17. ZOOM BLAST: NewBlue Zoom Blast explosive multi-pass radial zoom streaks
             else if (mode === 'newblue_zoom_blur') {
                 const cx = w / 2, cy = h / 2;
-                const passes = 7;
-                const maxZoom = 0.07 + s * 0.26 + bass * 0.22;
+                const passes = 10;
+                const maxZoom = 0.14 + s * 0.45 + bass * 0.3;
                 gctx.drawImage(this.workCanvas, 0, 0);
                 gctx.save();
                 gctx.globalCompositeOperation = 'screen';
                 for (let p = 1; p <= passes; p++) {
                     const factor = 1.0 + (p / passes) * maxZoom;
-                    gctx.globalAlpha = (0.35 / p) * s;
+                    gctx.globalAlpha = Math.min(1, (0.8 / Math.sqrt(p)) * s);
                     try {
                         gctx.save();
                         gctx.translate(cx, cy);
@@ -2231,7 +2234,7 @@
                 for (let gx = 0; gx < grid; gx++) {
                     for (let gy = 0; gy < grid; gy++) {
                         const phase = Math.sin(t * 3.0 + gx * 1.2 + gy * 0.9);
-                        const scale = 0.92 + phase * 0.06 * s;
+                        const scale = 0.92 + phase * 0.10 * s;
                         try {
                             gctx.save();
                             gctx.translate(gx * tw + tw / 2, gy * th + th / 2);
@@ -2252,7 +2255,7 @@
                 const rw = maxR / rings;
                 const cx = w / 2, cy = h / 2;
                 gctx.drawImage(this.workCanvas, 0, 0);
-                const maxTwist = (1.5 + s * 3.5 + mid * 2.0) * Math.sin(t * 2.0);
+                const maxTwist = (3.0 + s * 5.0 + mid * 2.0) * Math.sin(t * 2.0);
                 for (let i = rings - 1; i >= 1; i--) {
                     const r = i * rw;
                     const twist = (1.0 - (r / maxR)) * maxTwist;
@@ -2275,20 +2278,20 @@
                 try {
                     gctx.save();
                     gctx.globalCompositeOperation = 'screen';
-                    const flareGrad = gctx.createLinearGradient(0, flareY - 14, 0, flareY + 14);
+                    const flareGrad = gctx.createLinearGradient(0, flareY - 28, 0, flareY + 28);
                     flareGrad.addColorStop(0, 'rgba(0, 220, 255, 0)');
-                    flareGrad.addColorStop(0.5, `rgba(255, 255, 255, ${0.75 * s})`);
+                    flareGrad.addColorStop(0.5, `rgba(255, 255, 255, ${Math.min(1, 1.1 * s)})`);
                     flareGrad.addColorStop(1, 'rgba(0, 180, 255, 0)');
                     gctx.fillStyle = flareGrad;
-                    gctx.fillRect(0, flareY - 14, w, 28);
+                    gctx.fillRect(0, flareY - 28, w, 56);
 
                     const ringCount = 4;
                     for (let k = 1; k <= ringCount; k++) {
                         const ringR = Math.max(1, (45 * k + Math.sin(t * 3.0 + k) * 22) * (0.8 + s * 0.6));
                         gctx.beginPath();
                         gctx.arc(w / 2, flareY, ringR, 0, Math.PI * 2);
-                        gctx.strokeStyle = k % 2 === 0 ? `rgba(0, 255, 200, ${0.45 * s})` : `rgba(255, 60, 180, ${0.45 * s})`;
-                        gctx.lineWidth = 2.5;
+                        gctx.strokeStyle = k % 2 === 0 ? `rgba(0, 255, 200, ${0.8 * s})` : `rgba(255, 60, 180, ${0.8 * s})`;
+                        gctx.lineWidth = 5;
                         gctx.stroke();
                     }
                     gctx.restore();
@@ -2297,8 +2300,8 @@
             // 21. EARTHQUAKE: NewBlue Seismic Earthquake shockwave pulses & clamp jolt
             else if (mode === 'newblue_earthquake') {
                 const pulse = Math.pow(Math.abs(Math.sin(t * 6.5)), 6.0);
-                const quakeX = (Math.sin(t * 45.0) * (18 + s * 55) * pulse + (Math.random() - 0.5) * 6 * s);
-                const quakeY = (Math.cos(t * 38.0) * (14 + s * 45) * pulse + (Math.random() - 0.5) * 6 * s);
+                const quakeX = (Math.sin(t * 45.0) * (18 + s * 55) * K * pulse + (Math.random() - 0.5) * 6 * s);
+                const quakeY = (Math.cos(t * 38.0) * (14 + s * 45) * K * pulse + (Math.random() - 0.5) * 6 * s);
                 try {
                     gctx.drawImage(this.workCanvas, quakeX, quakeY);
                     if (pulse > 0.3) {
@@ -2320,7 +2323,7 @@
                 for (let d = dropRings; d >= 1; d--) {
                     const r = (d / dropRings) * maxDropR;
                     const wave = Math.sin((d / dropRings) * 12.0 - t * 6.0);
-                    const zoom = 1.0 + wave * 0.12 * s;
+                    const zoom = 1.0 + wave * 0.22 * s;
                     try {
                         gctx.save();
                         gctx.beginPath();
@@ -2335,7 +2338,7 @@
             }
             // 23. RGB FAST SHIFT: NewBlue 3-Axis Directional RGB Prism Dispersion
             else if (mode === 'newblue_rgb_shift') {
-                const shiftAmp = (14 + s * 48 + treble * 25);
+                const shiftAmp = (14 + s * 48 + treble * 25) * K;
                 const angleR = t * 2.8, angleB = t * 2.8 + (Math.PI * 4 / 3);
                 const rx = Math.cos(angleR) * shiftAmp, ry = Math.sin(angleR) * shiftAmp;
                 const bx = Math.cos(angleB) * shiftAmp, by = Math.sin(angleB) * shiftAmp;
@@ -2343,7 +2346,7 @@
                     gctx.drawImage(this.workCanvas, 0, 0);
                     gctx.save();
                     gctx.globalCompositeOperation = 'screen';
-                    gctx.globalAlpha = 0.45 * s;
+                    gctx.globalAlpha = 0.8 * s;
                     gctx.drawImage(this.workCanvas, rx, ry);
                     gctx.drawImage(this.workCanvas, bx, by);
                     gctx.restore();
@@ -2385,7 +2388,7 @@
                 for (let i = shells; i >= 1; i--) {
                     const r = i * shellR;
                     const normR = r / maxR;
-                    const bulge = 1.0 + (1.0 - normR * normR) * (0.35 + s * 0.65);
+                    const bulge = 1.0 + (1.0 - normR * normR) * (0.6 + s * 0.9);
                     try {
                         gctx.save();
                         gctx.beginPath();
@@ -2408,7 +2411,7 @@
                 for (let i = shells; i >= 1; i--) {
                     const r = i * shellR;
                     const normR = r / maxR;
-                    const pinch = 1.0 - (1.0 - normR) * (0.28 + s * 0.42);
+                    const pinch = 1.0 - (1.0 - normR) * (0.45 + s * 0.5);
                     try {
                         gctx.save();
                         gctx.beginPath();
@@ -2427,13 +2430,13 @@
                     gctx.drawImage(this.workCanvas, 0, 0);
                     gctx.save();
                     gctx.globalCompositeOperation = 'difference';
-                    gctx.globalAlpha = 0.40 + s * 0.45;
+                    gctx.globalAlpha = Math.min(1, 0.7 + s * 0.3);
                     gctx.drawImage(this.workCanvas, 0, 0);
                     gctx.restore();
 
                     gctx.save();
                     gctx.globalCompositeOperation = 'color-dodge';
-                    gctx.globalAlpha = 0.28 * s;
+                    gctx.globalAlpha = 0.55 * s;
                     const solHue = (t * 40.0) % 360;
                     gctx.fillStyle = `hsl(${solHue}, 90%, 50%)`;
                     gctx.fillRect(0, 0, w, h);
@@ -2451,7 +2454,7 @@
                     const sh = Math.min(lh, h - sy);
                     if (sh <= 0) continue;
                     const distToFly = Math.abs(sy - flyY);
-                    const beamJitter = distToFly < 45 ? (Math.random() - 0.5) * (18 + s * 45) : Math.sin(t * 12.0 + l * 0.3) * (4 + s * 12);
+                    const beamJitter = distToFly < 45 ? (Math.random() - 0.5) * (18 + s * 45) * K : Math.sin(t * 12.0 + l * 0.3) * (4 + s * 12) * K;
                     try {
                         gctx.drawImage(this.workCanvas, 0, sy, w, sh, beamJitter, sy, w, sh);
                     } catch(e) {}
@@ -2461,7 +2464,7 @@
             }
             // 29. NEON EDGES: NewBlue High-contrast Sobel gradient edge detection
             else if (mode === 'newblue_neon_edges') {
-                const edgeDist = 2 + s * 4;
+                const edgeDist = 3 + s * 7;
                 try {
                     gctx.drawImage(this.workCanvas, 0, 0);
                     gctx.save();
@@ -2479,9 +2482,9 @@
             }
 
             // Universal High-impact Chromatic Separation Passes
-            const chroma = (6 + s * 22 + treble * 16);
+            const chroma = (8 + s * 28 + treble * 16);
             gctx.globalCompositeOperation = 'screen';
-            gctx.globalAlpha = 0.22 + s * 0.28;
+            gctx.globalAlpha = 0.3 + s * 0.3;
             try {
                 gctx.drawImage(this.workCanvas, -chroma, 0);
                 gctx.drawImage(this.workCanvas, chroma, 0);
