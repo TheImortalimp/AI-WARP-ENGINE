@@ -33,3 +33,5 @@
   <ItemGroup>
     <Content Include="app.ico" Link="app\favicon.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+
+</Project>
