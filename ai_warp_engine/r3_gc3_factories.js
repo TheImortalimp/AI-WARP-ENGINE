@@ -35,6 +35,11 @@
     let currentDepth = 1;
     let activeEffects = []; // only used by R3's one-shot helper; GC#(3) runs persistent factories.
     const renderBudget = { asciiCells: 21000 };
+    /* Host scratch surface used by the Data Bands / VHS Glitch GC#(3) slicers. */
+    const scratch = root.document && root.document.createElement ? root.document.createElement('canvas') : { width: 0, height: 0 };
+    const scratchCtx = scratch.getContext ? scratch.getContext('2d') : null;
+    /* Film-grain glow multiplier for the Data Bands slicer; follows the Motion master. */
+    const motionGlow = () => 0.85 + 0.30 * Math.max(0, Math.min(1, masterControls.motionScale));
     /* R3's Data Bomb and ASCII factory block expects the original glyph atlas.
        This self-contained atlas is host plumbing; the R3 factory source below
        remains byte-for-byte unchanged. */

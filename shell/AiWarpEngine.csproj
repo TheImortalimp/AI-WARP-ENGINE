@@ -30,4 +30,6 @@
              Link="app\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
-</Project>
+  <ItemGroup>
+    <Content Include="app.ico" Link="app\favicon.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>

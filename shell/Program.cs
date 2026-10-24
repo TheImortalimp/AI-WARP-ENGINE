@@ -36,8 +36,11 @@ internal sealed class MainForm : Form
     {
         var profile = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AI-Warp-Engine", "profile");
-        var env = await CoreWebView2Environment.CreateAsync(null, profile,
-            new CoreWebView2EnvironmentOptions("--autoplay-policy=no-user-gesture-required"));
+        var args = "--autoplay-policy=no-user-gesture-required";
+        var debugPort = Environment.GetEnvironmentVariable("AIWARP_DEBUG_PORT");
+        if (int.TryParse(debugPort, out var port) && port > 0 && port < 65536)
+            args += $" --remote-debugging-port={port}";
+        var env = await CoreWebView2Environment.CreateAsync(null, profile, new CoreWebView2EnvironmentOptions(args));
         await view.EnsureCoreWebView2Async(env);
 
         var core = view.CoreWebView2;
