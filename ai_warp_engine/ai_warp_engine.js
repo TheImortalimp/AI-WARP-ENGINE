@@ -37,95 +37,6 @@
         return a + (b - a) * t;
     }
 
-    /* Per-mode YouTube pixel pipeline (v6.4.5). The iframe is cross-origin so JS can't read it;
-       instead each mode composes an SVG filter the compositor applies to the real video pixels.
-       tear: strip displacement (axis 'y' = row tears, 'x' = column waves); radial: signed lens
-       (mag/twirl/ripple); rgb: chroma split px; tone: solar/poster/edges; bloom: glow; echo: trail. */
-    const YT_FX_CFG = {
-        liquid:              { tear: { axis: 'x', f: 0.012, amt: 70 }, rgb: 6 },
-        prism:               { tear: { axis: 'y', f: 0.05, amt: 60 }, rgb: 22 },
-        breathe:             { radial: { kind: 'mag', k: -260, pulse: true }, bloom: 0.5 },
-        fold:                { tear: { axis: 'x', f: 0.02, amt: 90 }, rgb: 10 },
-        aurora:              { tear: { axis: 'x', f: 0.008, amt: 80 }, rgb: 12, bloom: 0.6 },
-        vortex:              { radial: { kind: 'twirl', k: 420 }, rgb: 8 },
-        cybergrid:           { tear: { axis: 'y', f: 0.07, amt: 50, jump: true }, tone: { kind: 'poster', mix: 0.85 }, rgb: 8 },
-        hyperdrive:          { radial: { kind: 'mag', k: -420 }, echo: 0.5, rgb: 14, bloom: 0.5 },
-        kaleidoscope:        { radial: { kind: 'twirl', k: -380 }, rgb: 18, tone: { kind: 'poster', mix: 0.5 } },
-        quantum:             { tear: { axis: 'y', f: 0.12, amt: 140, jump: true }, rgb: 10 },
-        ripple:              { radial: { kind: 'ripple', k: 160 }, bloom: 0.3 },
-        analog_crt:          { tear: { axis: 'y', f: 0.15, amt: 30 }, rgb: 12, bloom: 0.35 },
-        newblue_roll:        { tear: { axis: 'x', f: 0.004, amt: 160 }, rgb: 8 },
-        newblue_active_cam:  { radial: { kind: 'mag', k: -300, pulse: true }, tear: { axis: 'y', f: 0.03, amt: 50 }, rgb: 10 },
-        newblue_shear:       { tear: { axis: 'y', f: 0.0025, amt: 220 }, rgb: 8 },
-        newblue_wiggle:      { tear: { axis: 'y', f: 0.09, amt: 50 }, rgb: 6 },
-        newblue_zoom_blur:   { radial: { kind: 'mag', k: -340, pulse: true }, echo: 0.55, bloom: 0.4 },
-        newblue_video_tile:  { tone: { kind: 'poster', mix: 1 }, tear: { axis: 'y', f: 0.03, amt: 90, jump: true, type: 'turbulence' } },
-        newblue_twirl:       { radial: { kind: 'twirl', k: 520 }, bloom: 0.3 },
-        newblue_light_ring:  { radial: { kind: 'ripple', k: 130 }, bloom: 1.2 },
-        newblue_earthquake:  { tear: { axis: 'y', f: 0.1, amt: 170, jump: true }, rgb: 16 },
-        newblue_water_drop:  { radial: { kind: 'ripple', k: 220 }, rgb: 6 },
-        newblue_rgb_shift:   { rgb: 46, tear: { axis: 'y', f: 0.04, amt: 36 } },
-        newblue_quad_mirror: { tear: { axis: 'x', f: 0.02, amt: 60 }, rgb: 14, tone: { kind: 'poster', mix: 0.4 } },
-        newblue_fish_eye:    { radial: { kind: 'mag', k: -520 }, rgb: 8 },
-        newblue_pinch:       { radial: { kind: 'mag', k: 460, pulse: true }, bloom: 0.3 },
-        newblue_solarize:    { tone: { kind: 'solar', mix: 1 }, rgb: 8 },
-        newblue_cathode_beam:{ tear: { axis: 'y', f: 0.2, amt: 24 }, rgb: 14, bloom: 1.0 },
-        newblue_neon_edges:  { tone: { kind: 'edges', mix: 1 }, rgb: 8, bloom: 0.8 }
-    };
-
-    /* YouTube overlay FX (v6.4.6). The YouTube iframe is cross-origin and its pixels can't be read or
-       SVG-filtered, so each mode is built from layers the compositor CAN apply over it:
-       b = backdrop-filter bands [count, minH, maxH, fxList, shift, jump, roll]
-       r = masked backdrop ring/wedge/edge/checker layer [kind, fx, param]
-       t = blend-mode tint [gradient, blend, alpha]; g = full-frame backdrop fx [fx, alpha]
-       grid/scan/vig = overlay alphas. */
-    const G_CM = 'linear-gradient(100deg,#00e5ff,#7a1fa2,#ff2bd6)';
-    const G_RAD = (c) => `radial-gradient(circle,${c},rgba(0,0,0,0) 68%)`;
-    const YT_OV = {
-        liquid:              { b: [12, .05, .14, ['hue', 'sat'], .07], t: [G_CM, 'color', .5] },
-        prism:               { b: [14, .02, .08, ['hue', 'inv'], .05], t: ['linear-gradient(90deg,#f00,#0f0,#00f)', 'screen', .32] },
-        breathe:             { r: ['rings', 'bright', 70], t: [G_RAD('#ff50a0'), 'overlay', .65] },
-        fold:                { b: [8, .08, .22, ['inv', 'sat'], .12], t: ['linear-gradient(0deg,#ff7a00,#6a00ff)', 'soft-light', .6] },
-        aurora:              { b: [5, .1, .25, ['hue'], .04], t: ['linear-gradient(180deg,#00ffa0,#7800ff)', 'screen', .55] },
-        vortex:              { r: ['wedges', 'hue', 24], t: [G_RAD('#fff'), 'overlay', .5] },
-        cybergrid:           { b: [8, .02, .07, ['sat', 'inv'], .05, 1], grid: .6 },
-        hyperdrive:          { r: ['rings', 'bright', 50], t: [G_RAD('#fff'), 'color-dodge', .6] },
-        kaleidoscope:        { r: ['wedges', 'inv', 18], t: ['conic-gradient(#f0f,#0ff,#ff0,#f0f)', 'color', .5] },
-        quantum:             { b: [14, .01, .05, ['inv', 'dark', 'hue'], .1, 1] },
-        ripple:              { r: ['rings', 'inv', 90], t: [G_RAD('#00e5ff'), 'screen', .3] },
-        analog_crt:          { b: [3, .03, .08, ['bright'], .02], scan: .6, vig: .55 },
-        newblue_roll:        { b: [2, .12, .25, ['dark', 'bright'], 0, 0, 1] },
-        newblue_active_cam:  { b: [6, .03, .1, ['sat', 'hue'], .04], r: ['edge', 'sat', 0] },
-        newblue_shear:       { b: [12, .06, .1, ['hue'], .16] },
-        newblue_wiggle:      { b: [14, .02, .06, ['sat'], .03] },
-        newblue_zoom_blur:   { r: ['edge', 'blur', 0], t: [G_RAD('#fff'), 'overlay', .35] },
-        newblue_video_tile:  { r: ['checker', 'inv', 20] },
-        newblue_twirl:       { r: ['wedges', 'hue', 40], t: [G_RAD('#fff'), 'overlay', .3] },
-        newblue_light_ring:  { r: ['rings', 'bright', 120], t: [G_RAD('#ffffc8'), 'screen', .65] },
-        newblue_earthquake:  { b: [14, .02, .09, ['inv', 'dark'], .12, 1] },
-        newblue_water_drop:  { r: ['rings', 'blur', 110], t: [G_RAD('#00c8ff'), 'color', .3] },
-        newblue_rgb_shift:   { b: [8, .03, .07, ['hue'], .06, 1], t: ['linear-gradient(90deg,#f00,rgba(0,0,0,0) 40%,rgba(0,0,0,0) 60%,#0ff)', 'screen', .65] },
-        newblue_quad_mirror: { r: ['checker', 'hue', 50], t: ['conic-gradient(#f0f,#0ff,#f0f)', 'soft-light', .5] },
-        newblue_fish_eye:    { r: ['edge', 'blur', 0], vig: .65 },
-        newblue_pinch:       { r: ['edge', 'sat', 0], vig: .45 },
-        newblue_solarize:    { g: ['solar', .85], b: [4, .15, .3, ['inv'], 0] },
-        newblue_cathode_beam:{ b: [1, .05, .1, ['bright'], 0, 0, 1], scan: .7, vig: .45 },
-        newblue_neon_edges:  { g: ['neon', .9], grid: .5 }
-    };
-    const ovFx = (k, h) => ({
-        inv: `invert(1) hue-rotate(${h | 0}deg) saturate(1.8)`,
-        hue: `hue-rotate(${h | 0}deg) saturate(3.2) contrast(1.3)`,
-        sat: 'saturate(4.5) contrast(1.8) brightness(1.15)',
-        bright: 'brightness(2.6) contrast(1.5) saturate(2)',
-        blur: 'blur(8px) saturate(1.8) brightness(1.15)',
-        dark: 'brightness(0.2) contrast(1.8)',
-        neon: 'contrast(2.4) saturate(3.4) brightness(1.15)',
-        solar: `invert(1) contrast(1.5) hue-rotate(${h | 0}deg)`
-    })[k] || 'none';
-
-    // Warp modes drawn as displaced strips; the clean frame is laid under them to fill strip-edge gaps.
-    const STRIP_BASE_MODES = new Set(['liquid', 'prism', 'quantum', 'analog_crt', 'newblue_shear']);
-
     function drawCover(ctx, media, cw, ch) {
         if (!media) return;
         const mw = media.videoWidth || media.naturalWidth || media.width || cw;
@@ -377,7 +288,6 @@
                     ytShell.style.filter = 'none';
                     ytShell.style.clipPath = 'none';
                     ytShell.style.setProperty('-webkit-clip-path', 'none');
-                    if (this._ytOv) this._ytOv.host.style.display = 'none';
                     if (this.svgWarpNodes && this.svgWarpNodes.disp) {
                         this.svgWarpNodes.disp.setAttribute('scale', '0');
                         this._svgWarpLastScale = '0';
@@ -473,253 +383,6 @@
                 bfY: bfY * (1 + 0.18 * Math.cos(t * 0.37)),
                 scale, type
             };
-        }
-
-        // Builds the per-mode SVG pixel pipeline (#ytSvgFx); rebuilt only on mode / size change.
-        ensureYtFx(mode, W, H) {
-            const key = mode + '|' + Math.round(W / 8) + 'x' + Math.round(H / 8);
-            if (this._ytFxKey === key) return !!this._ytFx;
-            this._ytFxKey = key;
-            const cfg = YT_FX_CFG[mode];
-            this._ytFx = null;
-            const NS = 'http://www.w3.org/2000/svg';
-            let host = document.getElementById('ytSvgFxHost');
-            if (!host) {
-                host = document.createElementNS(NS, 'svg');
-                host.id = 'ytSvgFxHost';
-                host.setAttribute('width', '0'); host.setAttribute('height', '0');
-                host.setAttribute('aria-hidden', 'true');
-                host.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
-                document.body.appendChild(host);
-            }
-            host.innerHTML = '';
-            if (!cfg) return false;
-            const filt = document.createElementNS(NS, 'filter');
-            filt.setAttribute('id', 'ytSvgFx');
-            filt.setAttribute('x', '-20%'); filt.setAttribute('y', '-20%');
-            filt.setAttribute('width', '140%'); filt.setAttribute('height', '140%');
-            filt.setAttribute('color-interpolation-filters', 'sRGB');
-            host.appendChild(filt);
-            const mk = (tag, attrs) => {
-                const e = document.createElementNS(NS, tag);
-                for (const k in attrs) e.setAttribute(k, attrs[k]);
-                filt.appendChild(e);
-                return e;
-            };
-            const nodes = { cfg };
-            let cur = 'SourceGraphic';
-            const mapUri = (horiz, inverted, period, chan) => {
-                const c = chan === 'R' ? '#f00' : '#0f0';
-                const a = inverted ? c : '#000', b = inverted ? '#000' : c;
-                const x2 = horiz ? period : 0, y2 = horiz ? 0 : period;
-                const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'><defs><linearGradient id='g' x1='0' y1='0' x2='${x2}' y2='${y2}' spreadMethod='reflect'><stop offset='0' stop-color='${a}'/><stop offset='1' stop-color='${b}'/></linearGradient></defs><rect width='100' height='100' fill='url(#g)'/></svg>`;
-                return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-            };
-            const imgBox = { x: (-0.2 * W).toFixed(1), y: (-0.2 * H).toFixed(1), width: (1.4 * W).toFixed(1), height: (1.4 * H).toFixed(1), preserveAspectRatio: 'none' };
-
-            if (cfg.tear) {
-                const rows = cfg.tear.axis === 'y';
-                nodes.tearTurb = mk('feTurbulence', { type: cfg.tear.type || 'fractalNoise', baseFrequency: rows ? '0.0004 ' + cfg.tear.f : cfg.tear.f + ' 0.0004', numOctaves: 1, seed: 3, result: 'tn' });
-                mk('feColorMatrix', { in: 'tn', type: 'matrix', values: rows ? '1 0 0 0 0  0 0 0 0 0.5  0 0 0 0 0  0 0 0 0 1' : '0 0 0 0 0.5  0 1 0 0 0  0 0 0 0 0  0 0 0 0 1', result: 'tm' });
-                nodes.tear = mk('feDisplacementMap', { in: cur, in2: 'tm', scale: 0, xChannelSelector: 'R', yChannelSelector: 'G', result: 'o1' });
-                cur = 'o1';
-            }
-            if (cfg.radial) {
-                const kind = cfg.radial.kind;
-                const per = kind === 'ripple' ? 0.17 : 1;
-                const hx = kind === 'twirl' ? mapUri(false, false, per, 'R') : mapUri(true, false, per, 'R');
-                const vy = kind === 'twirl' ? mapUri(true, true, per, 'G') : mapUri(false, false, per, 'G');
-                const i1 = mk('feImage', Object.assign({ result: 'mr' }, imgBox)); i1.setAttribute('href', hx);
-                const i2 = mk('feImage', Object.assign({ result: 'mg' }, imgBox)); i2.setAttribute('href', vy);
-                mk('feComposite', { in: 'mr', in2: 'mg', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'rmap' });
-                const pre = cur;
-                nodes.radial = mk('feDisplacementMap', { in: cur, in2: 'rmap', scale: 0, xChannelSelector: 'R', yChannelSelector: 'G', result: 'o2' });
-                cur = 'o2';
-                if (cfg.echo) {
-                    nodes.echo = mk('feComposite', { in: 'o2', in2: pre, operator: 'arithmetic', k1: 0, k2: 0.5, k3: 0.5, k4: 0, result: 'o2e' });
-                    cur = 'o2e';
-                }
-            }
-            if (cfg.rgb) {
-                mk('feColorMatrix', { in: cur, type: 'matrix', values: '1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0', result: 'cr' });
-                mk('feColorMatrix', { in: cur, type: 'matrix', values: '0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0', result: 'cg' });
-                mk('feColorMatrix', { in: cur, type: 'matrix', values: '0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0', result: 'cb' });
-                nodes.rgbR = mk('feOffset', { in: 'cr', dx: 0, dy: 0, result: 'r2' });
-                nodes.rgbB = mk('feOffset', { in: 'cb', dx: 0, dy: 0, result: 'b2' });
-                mk('feComposite', { in: 'r2', in2: 'cg', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'rg' });
-                mk('feComposite', { in: 'rg', in2: 'b2', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'o3' });
-                cur = 'o3';
-            }
-            if (cfg.tone) {
-                const base = cur;
-                if (cfg.tone.kind === 'edges') {
-                    mk('feConvolveMatrix', { in: cur, order: 3, kernelMatrix: '-1 -1 -1 -1 8 -1 -1 -1 -1', preserveAlpha: 'true', result: 'ed' });
-                    mk('feColorMatrix', { in: 'ed', type: 'matrix', values: '0 0 0 0 0  1.6 1.6 1.6 0 0  1.6 1.6 1.6 0 0  0 0 0 1 0', result: 'edn' });
-                    nodes.tone = mk('feComposite', { in: 'edn', in2: base, operator: 'arithmetic', k1: 0, k2: 1, k3: 0.45, k4: 0, result: 'o4' });
-                } else {
-                    const tv = cfg.tone.kind === 'solar' ? '0 1 0' : '0 0.34 0.67 1';
-                    const ty = cfg.tone.kind === 'solar' ? 'table' : 'discrete';
-                    const ct = mk('feComponentTransfer', { in: cur, result: 'tt' });
-                    for (const ch of ['R', 'G', 'B']) {
-                        const fn = document.createElementNS(NS, 'feFunc' + ch);
-                        fn.setAttribute('type', ty); fn.setAttribute('tableValues', tv);
-                        ct.appendChild(fn);
-                    }
-                    nodes.tone = mk('feComposite', { in: 'tt', in2: base, operator: 'arithmetic', k1: 0, k2: 1, k3: 0, k4: 0, result: 'o4' });
-                }
-                cur = 'o4';
-            }
-            if (cfg.bloom) {
-                mk('feGaussianBlur', { in: cur, stdDeviation: Math.max(4, W / 160).toFixed(1), result: 'bl' });
-                nodes.bloom = mk('feComposite', { in: 'bl', in2: cur, operator: 'arithmetic', k1: 0, k2: 0, k3: 1, k4: 0, result: 'o5' });
-                cur = 'o5';
-            }
-            this._ytFx = nodes;
-            return true;
-        }
-
-        updateYtFx(s, t, bass, mid, treble, W) {
-            const n = this._ytFx;
-            if (!n) return;
-            const cfg = n.cfg, A = W / 1000;
-            if (n.tear) {
-                const tr = cfg.tear;
-                const rows = tr.axis === 'y';
-                const wob = 1 + 0.06 * Math.sin(t * 1.3) + 0.04 * Math.sin(t * 2.9);
-                const f = (tr.f * wob).toFixed(5);
-                n.tearTurb.setAttribute('baseFrequency', rows ? '0.0004 ' + f : f + ' 0.0004');
-                if (tr.jump) n.tearTurb.setAttribute('seed', String(Math.floor(t * 9) % 97));
-                const sc = Math.min(500, tr.amt * A * s * (1 + bass * 0.7 + mid * 0.3));
-                n.tear.setAttribute('scale', sc.toFixed(1));
-            }
-            if (n.radial) {
-                const r = cfg.radial;
-                let k = r.k * A * s;
-                if (r.pulse) k *= (0.35 + 0.65 * Math.sin(t * 2.4));
-                if (r.kind === 'ripple') k *= Math.sin(t * 3.2);
-                n.radial.setAttribute('scale', Math.max(-700, Math.min(700, k * (1 + bass * 0.5))).toFixed(1));
-                if (n.echo) {
-                    const e = Math.min(0.9, cfg.echo * (0.6 + 0.6 * s));
-                    n.echo.setAttribute('k2', (1 - e).toFixed(2)); n.echo.setAttribute('k3', e.toFixed(2));
-                }
-            }
-            if (n.rgbR) {
-                const d = Math.min(120, cfg.rgb * A * s * (1 + treble * 1.2));
-                const wy = Math.sin(t * 2.1) * d * 0.25;
-                n.rgbR.setAttribute('dx', d.toFixed(1)); n.rgbR.setAttribute('dy', wy.toFixed(1));
-                n.rgbB.setAttribute('dx', (-d).toFixed(1)); n.rgbB.setAttribute('dy', (-wy).toFixed(1));
-            }
-            if (n.tone) {
-                const m = Math.max(0, Math.min(1, cfg.tone.mix * (0.35 + 0.65 * s)));
-                if (cfg.tone.kind === 'edges') {
-                    n.tone.setAttribute('k2', (0.4 + 0.6 * m).toFixed(2));
-                } else {
-                    n.tone.setAttribute('k2', m.toFixed(2)); n.tone.setAttribute('k3', (1 - m).toFixed(2));
-                }
-            }
-            if (n.bloom) n.bloom.setAttribute('k2', Math.min(1.6, cfg.bloom * (0.4 + 0.9 * s) * (1 + bass * 0.5)).toFixed(2));
-        }
-
-        // Compositor-safe overlay layer over the YouTube iframe (see YT_OV).
-        updateYtOverlay(s, t, mode, bass, mid, treble) {
-            if (!this._ytOv) {
-                const stage = document.getElementById('canvas-stage');
-                const shell = document.getElementById('ytWarpShell');
-                if (!stage || !shell) return;
-                const host = document.createElement('div');
-                host.id = 'ytFxOverlay';
-                host.style.cssText = 'position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;display:none';
-                shell.insertAdjacentElement('afterend', host);
-                const mk = (css) => { const d = document.createElement('div'); d.style.cssText = 'position:absolute;display:none;' + css; host.appendChild(d); return d; };
-                const bands = [];
-                for (let i = 0; i < 14; i++) bands.push(mk('left:-6%;width:112%;'));
-                this._ytOv = {
-                    host, bands,
-                    ring: mk('inset:0;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;'),
-                    glob: mk('inset:0;'),
-                    tint: mk('inset:0;'),
-                    grid: mk('inset:0;mix-blend-mode:screen;background:repeating-linear-gradient(0deg,rgba(0,255,255,.55) 0 1px,transparent 1px 36px),repeating-linear-gradient(90deg,rgba(255,43,214,.55) 0 1px,transparent 1px 36px);'),
-                    scan: mk('inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.55) 0 1px,transparent 1px 3px);'),
-                    vig: mk('inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 45%,rgba(0,0,0,.9) 100%);')
-                };
-            }
-            const ov = this._ytOv;
-            const cfg = YT_OV[mode];
-            if (!cfg || s <= 0.005) { ov.host.style.display = 'none'; return; }
-            ov.host.style.display = 'block';
-            const c01 = (v) => Math.max(0, Math.min(1, v));
-            const hash = (x) => { const v = Math.sin(x * 12.9898) * 43758.5453; return v - Math.floor(v); };
-            const show = (el, on) => { const d = on ? 'block' : 'none'; if (el.style.display !== d) el.style.display = d; };
-            const bf = (el, v) => { el.style.backdropFilter = v; el.style.webkitBackdropFilter = v; };
-            const msk = (el, v) => { el.style.maskImage = v; el.style.webkitMaskImage = v; };
-            const pump = 1 + bass * 0.7;
-            const W = ov.host.clientWidth || 1280;
-
-            const [n, hMin, hMax, fxList, shift, jump, roll] = cfg.b || [0];
-            for (let i = 0; i < ov.bands.length; i++) {
-                const el = ov.bands[i];
-                if (i >= n) { show(el, false); continue; }
-                const js = jump ? Math.floor(t * 8) : 0;
-                const h1 = hash(i * 7.1 + js), h2 = hash(i * 3.3 + js * 1.7);
-                const on = jump ? h1 > (1 - (0.3 + 0.65 * s)) : true;
-                show(el, on);
-                if (!on) continue;
-                let y = roll ? ((t * 0.35 + i * 0.5) % 1)
-                    : jump ? h2
-                    : (((i * 0.618 + 0.1 * Math.sin(t * 0.9 + i) + t * 0.05 * (1 + (i % 3))) % 1) + 1) % 1;
-                const hh = hMin + (hMax - hMin) * h1;
-                el.style.top = (y * 100).toFixed(2) + '%';
-                el.style.height = (hh * 100).toFixed(2) + '%';
-                el.style.transform = `translateX(${(Math.sin(t * 3 + i * 1.9) * shift * W * s * pump).toFixed(1)}px)`;
-                bf(el, ovFx(fxList[i % fxList.length], i * 47 + t * 70));
-                el.style.opacity = c01(s * (0.6 + 0.5 * bass) * (0.65 + 0.35 * h2)).toFixed(3);
-            }
-
-            if (cfg.r) {
-                const [kind, fx, p] = cfg.r;
-                const el = ov.ring;
-                show(el, true);
-                bf(el, ovFx(fx, t * 60));
-                el.style.opacity = c01(s * 0.9 * pump).toFixed(3);
-                let mask, size = '100% 100%';
-                if (kind === 'rings') {
-                    mask = `repeating-radial-gradient(circle at 50% 50%,#000 0 ${p * 0.45}px,transparent ${p * 0.45}px ${p}px)`;
-                    const z = 130 + 90 * (0.5 + 0.5 * Math.sin(t * 2.2));
-                    size = `${z}% ${z}%`;
-                } else if (kind === 'wedges') {
-                    const a = 360 / p;
-                    mask = `repeating-conic-gradient(from ${((t * 40) % 360).toFixed(1)}deg at 50% 50%,#000 0 ${a / 2}deg,transparent ${a / 2}deg ${a}deg)`;
-                } else if (kind === 'edge') {
-                    const inner = 18 + 22 * (0.5 + 0.5 * Math.sin(t * 2));
-                    mask = `radial-gradient(circle at 50% 50%,transparent 0 ${inner}%,#000 ${inner + 38}%)`;
-                } else {
-                    mask = 'repeating-conic-gradient(#000 0 25%,transparent 0 50%)';
-                    size = `${p}% ${p}%`;
-                }
-                msk(el, mask);
-                el.style.webkitMaskSize = size; el.style.maskSize = size;
-            } else show(ov.ring, false);
-
-            if (cfg.g) {
-                const el = ov.glob;
-                show(el, true);
-                bf(el, ovFx(cfg.g[0], t * 50));
-                const flick = cfg.g[0] === 'solar' ? (0.55 + 0.45 * Math.sin(t * 2.6)) : 1;
-                el.style.opacity = c01(cfg.g[1] * s * flick).toFixed(3);
-            } else show(ov.glob, false);
-
-            if (cfg.t) {
-                const el = ov.tint;
-                show(el, true);
-                el.style.background = cfg.t[0];
-                el.style.mixBlendMode = cfg.t[1];
-                el.style.opacity = c01(cfg.t[2] * s * (0.8 + 0.4 * bass)).toFixed(3);
-            } else show(ov.tint, false);
-
-            for (const k of ['grid', 'scan', 'vig']) {
-                const el = ov[k];
-                if (cfg[k]) { show(el, true); el.style.opacity = c01(cfg[k] * s).toFixed(3); } else show(el, false);
-            }
         }
 
         // Live Alpha Calculation
@@ -2193,10 +1856,7 @@
             const w = this.canvas.width, h = this.canvas.height;
             if (!w || !h) return;
 
-            // v6.4.2 boost: stronger strength curve (capped at 1 so alphas stay valid) + amplitude multiplier K
-            const sRaw = this.aiWarpStrength * this.masterOpacity;
-            const s = Math.min(1, sRaw * 1.35 + 0.15);
-            const K = 1.8;
+            const s = this.aiWarpStrength * this.masterOpacity;
             const t = now * 0.001 * this.glitchSpeed;
             const gctx = this.gctx;
             const mode = this.aiWarpMode;
@@ -2210,48 +1870,39 @@
             gctx.save();
             gctx.clearRect(0, 0, w, h);
 
-            // Fine strips (v6.4.4): ~5px slices so displacement reads as a smooth skew, not blocky bands.
-            // Strip modes first lay the clean frame down so strip edges never expose transparency.
-            const SP = Math.max(3, Math.round(w / 180));
-            const SPY = Math.max(3, Math.round(h / 150));
-            const u = (px) => px / Math.max(1, w) * 30;   // strip position on the original 30-column phase scale
-            const v = (py) => py / Math.max(1, h) * 24;
-            if (STRIP_BASE_MODES.has(mode)) gctx.drawImage(this.workCanvas, 0, 0);
-
             // 1. LIQUID: Multi-frequency bidirectional harmonic fluid waves
             if (mode === 'liquid') {
-                const colW = SP;
-                const cols = Math.ceil(w / colW);
-                const ampX = (18 + s * 65 + bass * 40) * K;
-                const ampY = (10 + s * 35 + mid * 25) * K;
+                const cols = 22 + Math.floor(s * 18);
+                const colW = Math.ceil(w / cols);
+                const ampX = (18 + s * 65 + bass * 40);
+                const ampY = (10 + s * 35 + mid * 25);
                 for (let c = 0; c < cols; c++) {
                     const sx = c * colW;
                     const sw = Math.min(colW, w - sx);
                     if (sw <= 0) continue;
-                    const cu = u(sx);
-                    const waveX = Math.sin(t * 3.4 + cu * 0.45) * ampX + Math.cos(t * 1.7 + cu * 0.22) * (ampX * 0.4);
-                    const waveY = Math.sin(t * 2.8 + cu * 0.35) * ampY;
+                    const waveX = Math.sin(t * 3.4 + c * 0.45) * ampX + Math.cos(t * 1.7 + c * 0.22) * (ampX * 0.4);
+                    const waveY = Math.sin(t * 2.8 + c * 0.35) * ampY;
                     try {
-                        gctx.drawImage(this.workCanvas, sx, 0, sw, h, sx + waveX, waveY, sw + 0.75, h);
+                        gctx.drawImage(this.workCanvas, sx, 0, sw, h, sx + waveX, waveY, sw, h);
                     } catch(e) {}
                 }
             }
             // 2. PRISM: Multi-angle crystal refraction & chromatic dispersion
             else if (mode === 'prism') {
-                const sliceH = SPY;
-                const slices = Math.ceil(h / sliceH);
-                const disp = (12 + s * 55 + treble * 35) * K;
+                const slices = 20 + Math.floor(s * 16);
+                const sliceH = Math.ceil(h / slices);
+                const disp = (12 + s * 55 + treble * 35);
                 for (let i = 0; i < slices; i++) {
                     const sy = i * sliceH;
                     const sh = Math.min(sliceH, h - sy);
                     if (sh <= 0) continue;
-                    const dx = Math.sin(t * 4.0 + v(sy) * 0.5) * disp;
+                    const dx = Math.sin(t * 4.0 + i * 0.5) * disp;
                     try {
-                        gctx.drawImage(this.workCanvas, 0, sy, w, sh + 0.75, dx, sy, w, sh + 0.75);
+                        gctx.drawImage(this.workCanvas, 0, sy, w, sh, dx, sy, w, sh);
                     } catch(e) {}
                 }
                 gctx.globalCompositeOperation = 'screen';
-                gctx.globalAlpha = Math.min(1, 0.6 * s);
+                gctx.globalAlpha = 0.35 * s;
                 try {
                     gctx.drawImage(this.workCanvas, -disp * 1.5, -disp * 0.5);
                     gctx.drawImage(this.workCanvas, disp * 1.5, disp * 0.5);
@@ -2259,7 +1910,7 @@
             }
             // 3. BREATHE: Organic radial expansion & spherical contraction
             else if (mode === 'breathe') {
-                const scale = 1.0 + Math.sin(t * 2.5) * (0.12 + s * 0.22 + bass * 0.2);
+                const scale = 1.0 + Math.sin(t * 2.5) * (0.07 + s * 0.12 + bass * 0.14);
                 gctx.save();
                 gctx.translate(w / 2, h / 2);
                 gctx.scale(scale, scale);
@@ -2277,7 +1928,7 @@
             else if (mode === 'fold') {
                 const pleats = 28 + Math.floor(s * 14);
                 const pw = Math.ceil(w / pleats);
-                const amp = (16 + s * 50 + bass * 30) * K;
+                const amp = (16 + s * 50 + bass * 30);
                 for (let p = 0; p < pleats; p++) {
                     const sx = p * pw;
                     const sw = Math.min(pw, w - sx);
@@ -2295,18 +1946,18 @@
             else if (mode === 'aurora') {
                 const ribbons = 16 + Math.floor(s * 12);
                 const rw = Math.ceil(w / ribbons);
-                const drift = Math.sin(t * 1.5) * 40 * s * K;
+                const drift = Math.sin(t * 1.5) * 40 * s;
                 for (let r = 0; r < ribbons; r++) {
                     const sx = r * rw;
                     const sw = Math.min(rw, w - sx);
                     if (sw <= 0) continue;
-                    const wave = Math.sin(t * 2.2 + r * 0.6) * (20 + s * 45) * K + drift;
+                    const wave = Math.sin(t * 2.2 + r * 0.6) * (20 + s * 45) + drift;
                     try {
                         gctx.drawImage(this.workCanvas, sx, 0, sw, h, sx + wave, 0, sw, h);
                     } catch(e) {}
                 }
                 gctx.globalCompositeOperation = 'screen';
-                gctx.globalAlpha = 0.45 * s;
+                gctx.globalAlpha = 0.25 * s;
                 const auroraGrad = gctx.createLinearGradient(0, 0, w, h);
                 auroraGrad.addColorStop(0, 'rgba(0, 255, 160, 0.4)');
                 auroraGrad.addColorStop(0.5, 'rgba(0, 220, 255, 0.3)');
@@ -2324,7 +1975,7 @@
 
                 for (let i = rings - 1; i >= 1; i--) {
                     const r = i * ringW;
-                    const spinAngle = (1.0 - (r / maxR)) * (2.4 + s * 4.0) * Math.sin(t * 2.5);
+                    const spinAngle = (1.0 - (r / maxR)) * (1.2 + s * 2.2) * Math.sin(t * 2.5);
                     gctx.save();
                     gctx.beginPath();
                     gctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -2339,7 +1990,7 @@
             else if (mode === 'cybergrid') {
                 const gridX = 12, gridY = 8;
                 const bw = Math.ceil(w / gridX), bh = Math.ceil(h / gridY);
-                const amp = (12 + s * 40 + mid * 25) * K;
+                const amp = (12 + s * 40 + mid * 25);
                 for (let gx = 0; gx < gridX; gx++) {
                     for (let gy = 0; gy < gridY; gy++) {
                         const sx = gx * bw, sy = gy * bh;
@@ -2361,13 +2012,13 @@
             }
             // 8. HYPERDRIVE: Relativistic hyperspace starfield streak zoom
             else if (mode === 'hyperdrive') {
-                const passes = 8;
+                const passes = 5;
                 const cx = w / 2, cy = h / 2;
                 gctx.drawImage(this.workCanvas, 0, 0);
                 gctx.globalCompositeOperation = 'screen';
                 for (let p = 1; p <= passes; p++) {
-                    const zScale = 1.0 + (p * 0.07 * (s + bass * 0.5));
-                    gctx.globalAlpha = Math.min(1, (0.6 / Math.sqrt(p)) * s);
+                    const zScale = 1.0 + (p * 0.035 * (s + bass * 0.5));
+                    gctx.globalAlpha = (0.28 / p) * s;
                     gctx.save();
                     gctx.translate(cx, cy);
                     gctx.scale(zScale, zScale);
@@ -2393,18 +2044,19 @@
             }
             // 10. QUANTUM: Micro-quantum foam probabilistic slice teleportation
             else if (mode === 'quantum') {
-                const bh = SPY * 2;
-                const bands = Math.ceil(h / bh);
-                const amp = (20 + s * 60 + treble * 35) * K;
+                const bands = 45 + Math.floor(s * 25);
+                const bh = Math.ceil(h / bands);
+                const amp = (20 + s * 60 + treble * 35);
                 for (let b = 0; b < bands; b++) {
                     const sy = b * bh;
                     const sh = Math.min(bh, h - sy);
                     if (sh <= 0) continue;
-                    // Smooth coherent noise instead of per-frame random so the foam flows rather than flickers.
-                    const n = Math.sin(t * 5.1 + b * 0.37) * 0.6 + Math.sin(t * 8.3 - b * 0.91) * 0.4;
-                    const dx = n * amp * (0.4 + 0.6 * s);
+                    let dx = 0;
+                    if (Math.random() < 0.35 * s) {
+                        dx = (Math.random() - 0.5) * amp * 2.2;
+                    }
                     try {
-                        gctx.drawImage(this.workCanvas, 0, sy, w, sh + 0.75, dx, sy, w, sh + 0.75);
+                        gctx.drawImage(this.workCanvas, 0, sy, w, sh, dx, sy, w, sh);
                     } catch(e) {}
                 }
             }
@@ -2420,7 +2072,7 @@
                     try {
                         const r = (i + 1) * rw;
                         const wavePhase = Math.sin((r / maxR) * 16.0 - t * 7.5);
-                        const displacement = wavePhase * (12 + s * 36 + bass * 30) * K;
+                        const displacement = wavePhase * (12 + s * 36 + bass * 30);
                         const rInner = Math.max(0.1, r - rw);
                         const rOuter = Math.max(rInner + 0.5, r);
 
@@ -2431,7 +2083,7 @@
                         gctx.clip();
 
                         // Concentric optical magnification & displacement
-                        const zoom = 1.0 + (wavePhase * 0.14 * s);
+                        const zoom = 1.0 + (wavePhase * 0.08 * s);
                         gctx.translate(cx, cy);
                         gctx.scale(zoom, zoom);
                         gctx.translate(-cx + displacement * 0.5, -cy + displacement * 0.5);
@@ -2444,7 +2096,7 @@
                         gctx.beginPath();
                         gctx.arc(cx, cy, crestRadius, 0, Math.PI * 2);
                         gctx.lineWidth = Math.max(1, rw * 0.28);
-                        gctx.strokeStyle = `rgba(0, 229, 255, ${Math.max(0, 0.5 * s * Math.abs(wavePhase))})`;
+                        gctx.strokeStyle = `rgba(0, 229, 255, ${Math.max(0, 0.24 * s * Math.abs(wavePhase))})`;
                         gctx.stroke();
                         gctx.restore();
                     } catch(e) {
@@ -2454,24 +2106,24 @@
             }
             // 12. ANALOG CRT: Spherical glass cathode tube & magnetic barrel distortion
             else if (mode === 'analog_crt') {
-                const colW = SP;
-                const cols = Math.ceil(w / colW);
-                const barrelAmp = (15 + s * 45) * K;
+                const cols = 20;
+                const colW = Math.ceil(w / cols);
+                const barrelAmp = (15 + s * 45);
                 for (let c = 0; c < cols; c++) {
                     const sx = c * colW;
                     const sw = Math.min(colW, w - sx);
                     if (sw <= 0) continue;
-                    const normX = (sx + sw / 2 - (w / 2)) / (w / 2);
+                    const normX = (sx - (w / 2)) / (w / 2);
                     const bulge = (1.0 - normX * normX) * barrelAmp;
-                    const scanJitter = Math.sin(t * 15 + u(sx) * 0.7) * 3;
+                    const scanJitter = Math.sin(t * 15 + c) * 3;
                     try {
-                        gctx.drawImage(this.workCanvas, sx, 0, sw, h, sx + scanJitter, -bulge * 0.4, sw + 0.75, h + bulge * 0.8);
+                        gctx.drawImage(this.workCanvas, sx, 0, sw, h, sx + scanJitter, -bulge * 0.4, sw, h + bulge * 0.8);
                     } catch(e) {}
                 }
             }
             // 13. ROLL: NewBlue Rolling Shutter & film frame roll with vertical seam wrapping
             else if (mode === 'newblue_roll') {
-                const yRoll = ((t * (100 + s * 220) * 1.6 + Math.sin(t * 1.5) * 60) % h + h) % h;
+                const yRoll = ((t * (100 + s * 220) + Math.sin(t * 1.5) * 60) % h + h) % h;
                 const seamH = Math.floor(yRoll);
                 try {
                     if (seamH < h) {
@@ -2496,10 +2148,10 @@
             }
             // 14. ACTIVE CAM: NewBlue Active Camera organic handheld gimbal shake & lens tremor
             else if (mode === 'newblue_active_cam') {
-                const shakeX = (Math.sin(t * 4.2) * 16 + Math.sin(t * 9.5) * 8 + (Math.random() - 0.5) * 4) * s * K;
-                const shakeY = (Math.cos(t * 3.8) * 14 + Math.cos(t * 8.3) * 6 + (Math.random() - 0.5) * 4) * s * K;
-                const rotAngle = (Math.sin(t * 2.1) * 0.035 + Math.sin(t * 5.4) * 0.015) * s * K;
-                const focalScale = 1.08 + (s * 0.12) + Math.sin(t * 1.8) * 0.05 * s;
+                const shakeX = (Math.sin(t * 4.2) * 16 + Math.sin(t * 9.5) * 8 + (Math.random() - 0.5) * 4) * s;
+                const shakeY = (Math.cos(t * 3.8) * 14 + Math.cos(t * 8.3) * 6 + (Math.random() - 0.5) * 4) * s;
+                const rotAngle = (Math.sin(t * 2.1) * 0.035 + Math.sin(t * 5.4) * 0.015) * s;
+                const focalScale = 1.05 + (s * 0.08) + Math.sin(t * 1.8) * 0.03 * s;
                 try {
                     gctx.save();
                     gctx.translate(w / 2 + shakeX, h / 2 + shakeY);
@@ -2518,17 +2170,17 @@
             }
             // 15. SHEAR: NewBlue Shear Energy directional angular displacement & vector slant
             else if (mode === 'newblue_shear') {
-                const bh = SPY;
-                const bands = Math.ceil(h / bh);
-                const shearAngle = Math.sin(t * 3.0) * (0.55 + s * 1.0) + bass * 0.5;
+                const bands = 26 + Math.floor(s * 18);
+                const bh = Math.ceil(h / bands);
+                const shearAngle = Math.sin(t * 3.0) * (0.35 + s * 0.65) + bass * 0.35;
                 for (let i = 0; i < bands; i++) {
                     const sy = i * bh;
                     const sh = Math.min(bh, h - sy);
                     if (sh <= 0) continue;
-                    const norm = ((sy + sh / 2) / h) - 0.5;
+                    const norm = (i / bands) - 0.5;
                     const dx = norm * shearAngle * (w * 0.25);
                     try {
-                        gctx.drawImage(this.workCanvas, 0, sy, w, sh + 0.75, dx, sy, w, sh + 0.75);
+                        gctx.drawImage(this.workCanvas, 0, sy, w, sh, dx, sy, w, sh);
                     } catch(e) {}
                 }
             }
@@ -2536,7 +2188,7 @@
             else if (mode === 'newblue_wiggle') {
                 const cols = 16, rows = 12;
                 const tw = Math.ceil(w / cols), th = Math.ceil(h / rows);
-                const maxJitter = (8 + s * 26 + mid * 18) * K;
+                const maxJitter = (8 + s * 26 + mid * 18);
                 for (let c = 0; c < cols; c++) {
                     for (let r = 0; r < rows; r++) {
                         const sx = c * tw, sy = r * th;
@@ -2553,14 +2205,14 @@
             // 17. ZOOM BLAST: NewBlue Zoom Blast explosive multi-pass radial zoom streaks
             else if (mode === 'newblue_zoom_blur') {
                 const cx = w / 2, cy = h / 2;
-                const passes = 10;
-                const maxZoom = 0.14 + s * 0.45 + bass * 0.3;
+                const passes = 7;
+                const maxZoom = 0.07 + s * 0.26 + bass * 0.22;
                 gctx.drawImage(this.workCanvas, 0, 0);
                 gctx.save();
                 gctx.globalCompositeOperation = 'screen';
                 for (let p = 1; p <= passes; p++) {
                     const factor = 1.0 + (p / passes) * maxZoom;
-                    gctx.globalAlpha = Math.min(1, (0.8 / Math.sqrt(p)) * s);
+                    gctx.globalAlpha = (0.35 / p) * s;
                     try {
                         gctx.save();
                         gctx.translate(cx, cy);
@@ -2578,7 +2230,7 @@
                 for (let gx = 0; gx < grid; gx++) {
                     for (let gy = 0; gy < grid; gy++) {
                         const phase = Math.sin(t * 3.0 + gx * 1.2 + gy * 0.9);
-                        const scale = 0.92 + phase * 0.10 * s;
+                        const scale = 0.92 + phase * 0.06 * s;
                         try {
                             gctx.save();
                             gctx.translate(gx * tw + tw / 2, gy * th + th / 2);
@@ -2599,7 +2251,7 @@
                 const rw = maxR / rings;
                 const cx = w / 2, cy = h / 2;
                 gctx.drawImage(this.workCanvas, 0, 0);
-                const maxTwist = (3.0 + s * 5.0 + mid * 2.0) * Math.sin(t * 2.0);
+                const maxTwist = (1.5 + s * 3.5 + mid * 2.0) * Math.sin(t * 2.0);
                 for (let i = rings - 1; i >= 1; i--) {
                     const r = i * rw;
                     const twist = (1.0 - (r / maxR)) * maxTwist;
@@ -2622,20 +2274,20 @@
                 try {
                     gctx.save();
                     gctx.globalCompositeOperation = 'screen';
-                    const flareGrad = gctx.createLinearGradient(0, flareY - 28, 0, flareY + 28);
+                    const flareGrad = gctx.createLinearGradient(0, flareY - 14, 0, flareY + 14);
                     flareGrad.addColorStop(0, 'rgba(0, 220, 255, 0)');
-                    flareGrad.addColorStop(0.5, `rgba(255, 255, 255, ${Math.min(1, 1.1 * s)})`);
+                    flareGrad.addColorStop(0.5, `rgba(255, 255, 255, ${0.75 * s})`);
                     flareGrad.addColorStop(1, 'rgba(0, 180, 255, 0)');
                     gctx.fillStyle = flareGrad;
-                    gctx.fillRect(0, flareY - 28, w, 56);
+                    gctx.fillRect(0, flareY - 14, w, 28);
 
                     const ringCount = 4;
                     for (let k = 1; k <= ringCount; k++) {
                         const ringR = Math.max(1, (45 * k + Math.sin(t * 3.0 + k) * 22) * (0.8 + s * 0.6));
                         gctx.beginPath();
                         gctx.arc(w / 2, flareY, ringR, 0, Math.PI * 2);
-                        gctx.strokeStyle = k % 2 === 0 ? `rgba(0, 255, 200, ${0.8 * s})` : `rgba(255, 60, 180, ${0.8 * s})`;
-                        gctx.lineWidth = 5;
+                        gctx.strokeStyle = k % 2 === 0 ? `rgba(0, 255, 200, ${0.45 * s})` : `rgba(255, 60, 180, ${0.45 * s})`;
+                        gctx.lineWidth = 2.5;
                         gctx.stroke();
                     }
                     gctx.restore();
@@ -2644,8 +2296,8 @@
             // 21. EARTHQUAKE: NewBlue Seismic Earthquake shockwave pulses & clamp jolt
             else if (mode === 'newblue_earthquake') {
                 const pulse = Math.pow(Math.abs(Math.sin(t * 6.5)), 6.0);
-                const quakeX = (Math.sin(t * 45.0) * (18 + s * 55) * K * pulse + (Math.random() - 0.5) * 6 * s);
-                const quakeY = (Math.cos(t * 38.0) * (14 + s * 45) * K * pulse + (Math.random() - 0.5) * 6 * s);
+                const quakeX = (Math.sin(t * 45.0) * (18 + s * 55) * pulse + (Math.random() - 0.5) * 6 * s);
+                const quakeY = (Math.cos(t * 38.0) * (14 + s * 45) * pulse + (Math.random() - 0.5) * 6 * s);
                 try {
                     gctx.drawImage(this.workCanvas, quakeX, quakeY);
                     if (pulse > 0.3) {
@@ -2667,7 +2319,7 @@
                 for (let d = dropRings; d >= 1; d--) {
                     const r = (d / dropRings) * maxDropR;
                     const wave = Math.sin((d / dropRings) * 12.0 - t * 6.0);
-                    const zoom = 1.0 + wave * 0.22 * s;
+                    const zoom = 1.0 + wave * 0.12 * s;
                     try {
                         gctx.save();
                         gctx.beginPath();
@@ -2682,7 +2334,7 @@
             }
             // 23. RGB FAST SHIFT: NewBlue 3-Axis Directional RGB Prism Dispersion
             else if (mode === 'newblue_rgb_shift') {
-                const shiftAmp = (14 + s * 48 + treble * 25) * K;
+                const shiftAmp = (14 + s * 48 + treble * 25);
                 const angleR = t * 2.8, angleB = t * 2.8 + (Math.PI * 4 / 3);
                 const rx = Math.cos(angleR) * shiftAmp, ry = Math.sin(angleR) * shiftAmp;
                 const bx = Math.cos(angleB) * shiftAmp, by = Math.sin(angleB) * shiftAmp;
@@ -2690,7 +2342,7 @@
                     gctx.drawImage(this.workCanvas, 0, 0);
                     gctx.save();
                     gctx.globalCompositeOperation = 'screen';
-                    gctx.globalAlpha = 0.8 * s;
+                    gctx.globalAlpha = 0.45 * s;
                     gctx.drawImage(this.workCanvas, rx, ry);
                     gctx.drawImage(this.workCanvas, bx, by);
                     gctx.restore();
@@ -2732,7 +2384,7 @@
                 for (let i = shells; i >= 1; i--) {
                     const r = i * shellR;
                     const normR = r / maxR;
-                    const bulge = 1.0 + (1.0 - normR * normR) * (0.6 + s * 0.9);
+                    const bulge = 1.0 + (1.0 - normR * normR) * (0.35 + s * 0.65);
                     try {
                         gctx.save();
                         gctx.beginPath();
@@ -2755,7 +2407,7 @@
                 for (let i = shells; i >= 1; i--) {
                     const r = i * shellR;
                     const normR = r / maxR;
-                    const pinch = 1.0 - (1.0 - normR) * (0.45 + s * 0.5);
+                    const pinch = 1.0 - (1.0 - normR) * (0.28 + s * 0.42);
                     try {
                         gctx.save();
                         gctx.beginPath();
@@ -2774,13 +2426,13 @@
                     gctx.drawImage(this.workCanvas, 0, 0);
                     gctx.save();
                     gctx.globalCompositeOperation = 'difference';
-                    gctx.globalAlpha = Math.min(1, 0.7 + s * 0.3);
+                    gctx.globalAlpha = 0.40 + s * 0.45;
                     gctx.drawImage(this.workCanvas, 0, 0);
                     gctx.restore();
 
                     gctx.save();
                     gctx.globalCompositeOperation = 'color-dodge';
-                    gctx.globalAlpha = 0.55 * s;
+                    gctx.globalAlpha = 0.28 * s;
                     const solHue = (t * 40.0) % 360;
                     gctx.fillStyle = `hsl(${solHue}, 90%, 50%)`;
                     gctx.fillRect(0, 0, w, h);
@@ -2798,7 +2450,7 @@
                     const sh = Math.min(lh, h - sy);
                     if (sh <= 0) continue;
                     const distToFly = Math.abs(sy - flyY);
-                    const beamJitter = distToFly < 45 ? (Math.random() - 0.5) * (18 + s * 45) * K : Math.sin(t * 12.0 + l * 0.3) * (4 + s * 12) * K;
+                    const beamJitter = distToFly < 45 ? (Math.random() - 0.5) * (18 + s * 45) : Math.sin(t * 12.0 + l * 0.3) * (4 + s * 12);
                     try {
                         gctx.drawImage(this.workCanvas, 0, sy, w, sh, beamJitter, sy, w, sh);
                     } catch(e) {}
@@ -2808,7 +2460,7 @@
             }
             // 29. NEON EDGES: NewBlue High-contrast Sobel gradient edge detection
             else if (mode === 'newblue_neon_edges') {
-                const edgeDist = 3 + s * 7;
+                const edgeDist = 2 + s * 4;
                 try {
                     gctx.drawImage(this.workCanvas, 0, 0);
                     gctx.save();
@@ -2826,9 +2478,9 @@
             }
 
             // Universal High-impact Chromatic Separation Passes
-            const chroma = (8 + s * 28 + treble * 16);
+            const chroma = (6 + s * 22 + treble * 16);
             gctx.globalCompositeOperation = 'screen';
-            gctx.globalAlpha = 0.3 + s * 0.3;
+            gctx.globalAlpha = 0.22 + s * 0.28;
             try {
                 gctx.drawImage(this.workCanvas, -chroma, 0);
                 gctx.drawImage(this.workCanvas, chroma, 0);
@@ -2866,9 +2518,7 @@
                 };
             }
 
-            const sRawYt = (this.aiWarpActive && this.aiWarpStrength > 0.005) ? (this.aiWarpStrength * this.masterOpacity) : 0;
-            // Same strength curve as the canvas warp so YouTube FX are equally visible (v6.4.4)
-            const s = sRawYt > 0.005 ? Math.min(1, sRawYt * 1.35 + 0.15) : 0;
+            const s = (this.aiWarpActive && this.aiWarpStrength > 0.005) ? (this.aiWarpStrength * this.masterOpacity) : 0;
             const t = now * 0.001 * this.glitchSpeed;
             const audio = this.audioDrive;
             const bass = audio.bass || 0;
@@ -3182,13 +2832,7 @@
             }
 
             // ── 3. Damping (exponential smoothing, frame-rate independent) ───────
-            // Amplify mode deviations (not the neutral pose) so the warp reads clearly on the feed
-            const YK = 1.7;
-            targetSkewX *= YK; targetSkewY *= YK; targetRotZ *= YK; targetRotX *= YK; targetRotY *= YK;
-            targetDriftX *= YK; targetDriftY *= YK;
-            targetScaleX = 1 + (targetScaleX - 1) * YK;
-            targetScaleY = 1 + (targetScaleY - 1) * YK;
-            const damping = Math.min(1.0, Math.max(0.04, dt * 7.0));
+            const damping = Math.min(1.0, Math.max(0.04, dt * 5.0));
             const sm = this.smoothedTransform;
             sm.skewX = lerp(sm.skewX, targetSkewX, damping);
             sm.skewY = lerp(sm.skewY, targetSkewY, damping);
@@ -3248,10 +2892,7 @@
             // pixels are warped (melted, torn, liquefied) — without JS ever reading
             // them (cross-origin safe). Applied BEFORE the CSS color chain below.
             let svgFilterUrl = '';
-            // SVG reference filters silently fail on a cross-origin iframe (and drop every other filter in the
-            // chain), so they are only used when the shell holds non-iframe content. The iframe path uses the
-            // compositor-safe overlay layer (updateYtOverlay) instead.
-            if (this.svgWarpActive && !ytShell.querySelector('iframe')) {
+            if (this.svgWarpActive) {
                 if (!this.svgWarpNodes) {
                     const turb = document.getElementById('ytWarpTurb');
                     const disp = document.getElementById('ytWarpDisp');
@@ -3275,11 +2916,6 @@
                         this._svgWarpLastType = lens.type;
                     }
                     svgFilterUrl = 'url(#ytSvgWarp) ';
-                    const fxW = ytShell.offsetWidth || 1280, fxH = ytShell.offsetHeight || 720;
-                    if (this.ensureYtFx(mode, fxW, fxH)) {
-                        this.updateYtFx(s, t, bass, mid, treble, fxW);
-                        svgFilterUrl += 'url(#ytSvgFx) ';
-                    }
                 } else if (this.svgWarpNodes && this._svgWarpLastScale !== '0') {
                     this.svgWarpNodes.disp.setAttribute('scale', '0');
                     this._svgWarpLastScale = '0';
@@ -3306,7 +2942,6 @@
             ytShell.style.filter = filter;
             ytShell.style.clipPath = clipCss || 'none';
             ytShell.style.setProperty('-webkit-clip-path', clipCss || 'none');
-            this.updateYtOverlay(s, t, mode, bass, mid, treble);
         }
         /* ── MASTER RENDER LOOP ────────────────────────────────────────────────── */
         mainRenderLoop(now) {

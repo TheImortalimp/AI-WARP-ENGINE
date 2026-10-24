@@ -3,7 +3,7 @@
 **AI WARP ENGINE (R3 Canvas Edition v6.4)** is a public-domain visual synthesizer, audio-reactive media playground and live Canvas glitch suite, shipped as a standalone Windows app.
 
 - **Author:** River Lyle Reuveni (Imortalimp), [imortalimp.nl](https://imortalimp.nl)
-- **Version:** 6.4 (installer release v6.4.6) — **Complete · Ready**
+- **Version:** 6.4 (installer release v6.4.7) — **Complete · Ready**
 - **Platform:** Windows 10/11 x64 (WebView2 host, .NET bundled)
 - **Install location:** `Desktop\AI WARP ENGINE` (per-user, no admin)
 - **Licence:** CC0 1.0 / The Unlicense (software); CC BY 4.0 (imortalimp.nl site content)
@@ -35,7 +35,8 @@ AI WARP Strength, Master Opacity, Ghost level, V-Sync level and every voice alph
 
 ## Release history
 
-- **v6.4.6** — AI WARP modes now render on real YouTube playback: per-mode compositor overlays (backdrop-filter bands, masked rings/wedges, blend tints) replace the SVG lens, which browsers silently ignore on the YouTube iframe.
+- **v6.4.7** — original AI WARP modes, skewing and YouTube warp path restored; only the v6.4.3 opacity/alpha clamps are retained.
+- **v6.4.6** (superseded) — AI WARP modes now render on real YouTube playback: per-mode compositor overlays (backdrop-filter bands, masked rings/wedges, blend tints) replace the SVG lens, which browsers silently ignore on the YouTube iframe.
 - **v6.4.5** — attempted per-mode SVG pixel pipeline on YouTube (superseded by v6.4.6; it had no effect on the cross-origin iframe).
 - **v6.4.4** — AI WARP FX boosted on the YouTube feed; canvas skewing smoothed.
 - **v6.4.3** — all levels and alphas hard-clamped; Ghost, V-Sync and automations verified; Complete · Ready.
