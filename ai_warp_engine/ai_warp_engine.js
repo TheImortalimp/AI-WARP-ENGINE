@@ -37,6 +37,42 @@
         return a + (b - a) * t;
     }
 
+    /* Per-mode YouTube pixel pipeline (v6.4.5). The iframe is cross-origin so JS can't read it;
+       instead each mode composes an SVG filter the compositor applies to the real video pixels.
+       tear: strip displacement (axis 'y' = row tears, 'x' = column waves); radial: signed lens
+       (mag/twirl/ripple); rgb: chroma split px; tone: solar/poster/edges; bloom: glow; echo: trail. */
+    const YT_FX_CFG = {
+        liquid:              { tear: { axis: 'x', f: 0.012, amt: 70 }, rgb: 6 },
+        prism:               { tear: { axis: 'y', f: 0.05, amt: 60 }, rgb: 22 },
+        breathe:             { radial: { kind: 'mag', k: -260, pulse: true }, bloom: 0.5 },
+        fold:                { tear: { axis: 'x', f: 0.02, amt: 90 }, rgb: 10 },
+        aurora:              { tear: { axis: 'x', f: 0.008, amt: 80 }, rgb: 12, bloom: 0.6 },
+        vortex:              { radial: { kind: 'twirl', k: 420 }, rgb: 8 },
+        cybergrid:           { tear: { axis: 'y', f: 0.07, amt: 50, jump: true }, tone: { kind: 'poster', mix: 0.85 }, rgb: 8 },
+        hyperdrive:          { radial: { kind: 'mag', k: -420 }, echo: 0.5, rgb: 14, bloom: 0.5 },
+        kaleidoscope:        { radial: { kind: 'twirl', k: -380 }, rgb: 18, tone: { kind: 'poster', mix: 0.5 } },
+        quantum:             { tear: { axis: 'y', f: 0.12, amt: 140, jump: true }, rgb: 10 },
+        ripple:              { radial: { kind: 'ripple', k: 160 }, bloom: 0.3 },
+        analog_crt:          { tear: { axis: 'y', f: 0.15, amt: 30 }, rgb: 12, bloom: 0.35 },
+        newblue_roll:        { tear: { axis: 'x', f: 0.004, amt: 160 }, rgb: 8 },
+        newblue_active_cam:  { radial: { kind: 'mag', k: -300, pulse: true }, tear: { axis: 'y', f: 0.03, amt: 50 }, rgb: 10 },
+        newblue_shear:       { tear: { axis: 'y', f: 0.0025, amt: 220 }, rgb: 8 },
+        newblue_wiggle:      { tear: { axis: 'y', f: 0.09, amt: 50 }, rgb: 6 },
+        newblue_zoom_blur:   { radial: { kind: 'mag', k: -340, pulse: true }, echo: 0.55, bloom: 0.4 },
+        newblue_video_tile:  { tone: { kind: 'poster', mix: 1 }, tear: { axis: 'y', f: 0.03, amt: 90, jump: true, type: 'turbulence' } },
+        newblue_twirl:       { radial: { kind: 'twirl', k: 520 }, bloom: 0.3 },
+        newblue_light_ring:  { radial: { kind: 'ripple', k: 130 }, bloom: 1.2 },
+        newblue_earthquake:  { tear: { axis: 'y', f: 0.1, amt: 170, jump: true }, rgb: 16 },
+        newblue_water_drop:  { radial: { kind: 'ripple', k: 220 }, rgb: 6 },
+        newblue_rgb_shift:   { rgb: 46, tear: { axis: 'y', f: 0.04, amt: 36 } },
+        newblue_quad_mirror: { tear: { axis: 'x', f: 0.02, amt: 60 }, rgb: 14, tone: { kind: 'poster', mix: 0.4 } },
+        newblue_fish_eye:    { radial: { kind: 'mag', k: -520 }, rgb: 8 },
+        newblue_pinch:       { radial: { kind: 'mag', k: 460, pulse: true }, bloom: 0.3 },
+        newblue_solarize:    { tone: { kind: 'solar', mix: 1 }, rgb: 8 },
+        newblue_cathode_beam:{ tear: { axis: 'y', f: 0.2, amt: 24 }, rgb: 14, bloom: 1.0 },
+        newblue_neon_edges:  { tone: { kind: 'edges', mix: 1 }, rgb: 8, bloom: 0.8 }
+    };
+
     // Warp modes drawn as displaced strips; the clean frame is laid under them to fill strip-edge gaps.
     const STRIP_BASE_MODES = new Set(['liquid', 'prism', 'quantum', 'analog_crt', 'newblue_shear']);
 
@@ -386,6 +422,151 @@
                 bfY: bfY * (1 + 0.18 * Math.cos(t * 0.37)),
                 scale, type
             };
+        }
+
+        // Builds the per-mode SVG pixel pipeline (#ytSvgFx); rebuilt only on mode / size change.
+        ensureYtFx(mode, W, H) {
+            const key = mode + '|' + Math.round(W / 8) + 'x' + Math.round(H / 8);
+            if (this._ytFxKey === key) return !!this._ytFx;
+            this._ytFxKey = key;
+            const cfg = YT_FX_CFG[mode];
+            this._ytFx = null;
+            const NS = 'http://www.w3.org/2000/svg';
+            let host = document.getElementById('ytSvgFxHost');
+            if (!host) {
+                host = document.createElementNS(NS, 'svg');
+                host.id = 'ytSvgFxHost';
+                host.setAttribute('width', '0'); host.setAttribute('height', '0');
+                host.setAttribute('aria-hidden', 'true');
+                host.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
+                document.body.appendChild(host);
+            }
+            host.innerHTML = '';
+            if (!cfg) return false;
+            const filt = document.createElementNS(NS, 'filter');
+            filt.setAttribute('id', 'ytSvgFx');
+            filt.setAttribute('x', '-20%'); filt.setAttribute('y', '-20%');
+            filt.setAttribute('width', '140%'); filt.setAttribute('height', '140%');
+            filt.setAttribute('color-interpolation-filters', 'sRGB');
+            host.appendChild(filt);
+            const mk = (tag, attrs) => {
+                const e = document.createElementNS(NS, tag);
+                for (const k in attrs) e.setAttribute(k, attrs[k]);
+                filt.appendChild(e);
+                return e;
+            };
+            const nodes = { cfg };
+            let cur = 'SourceGraphic';
+            const mapUri = (horiz, inverted, period, chan) => {
+                const c = chan === 'R' ? '#f00' : '#0f0';
+                const a = inverted ? c : '#000', b = inverted ? '#000' : c;
+                const x2 = horiz ? period : 0, y2 = horiz ? 0 : period;
+                const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'><defs><linearGradient id='g' x1='0' y1='0' x2='${x2}' y2='${y2}' spreadMethod='reflect'><stop offset='0' stop-color='${a}'/><stop offset='1' stop-color='${b}'/></linearGradient></defs><rect width='100' height='100' fill='url(#g)'/></svg>`;
+                return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+            };
+            const imgBox = { x: (-0.2 * W).toFixed(1), y: (-0.2 * H).toFixed(1), width: (1.4 * W).toFixed(1), height: (1.4 * H).toFixed(1), preserveAspectRatio: 'none' };
+
+            if (cfg.tear) {
+                const rows = cfg.tear.axis === 'y';
+                nodes.tearTurb = mk('feTurbulence', { type: cfg.tear.type || 'fractalNoise', baseFrequency: rows ? '0.0004 ' + cfg.tear.f : cfg.tear.f + ' 0.0004', numOctaves: 1, seed: 3, result: 'tn' });
+                mk('feColorMatrix', { in: 'tn', type: 'matrix', values: rows ? '1 0 0 0 0  0 0 0 0 0.5  0 0 0 0 0  0 0 0 0 1' : '0 0 0 0 0.5  0 1 0 0 0  0 0 0 0 0  0 0 0 0 1', result: 'tm' });
+                nodes.tear = mk('feDisplacementMap', { in: cur, in2: 'tm', scale: 0, xChannelSelector: 'R', yChannelSelector: 'G', result: 'o1' });
+                cur = 'o1';
+            }
+            if (cfg.radial) {
+                const kind = cfg.radial.kind;
+                const per = kind === 'ripple' ? 0.17 : 1;
+                const hx = kind === 'twirl' ? mapUri(false, false, per, 'R') : mapUri(true, false, per, 'R');
+                const vy = kind === 'twirl' ? mapUri(true, true, per, 'G') : mapUri(false, false, per, 'G');
+                const i1 = mk('feImage', Object.assign({ result: 'mr' }, imgBox)); i1.setAttribute('href', hx);
+                const i2 = mk('feImage', Object.assign({ result: 'mg' }, imgBox)); i2.setAttribute('href', vy);
+                mk('feComposite', { in: 'mr', in2: 'mg', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'rmap' });
+                const pre = cur;
+                nodes.radial = mk('feDisplacementMap', { in: cur, in2: 'rmap', scale: 0, xChannelSelector: 'R', yChannelSelector: 'G', result: 'o2' });
+                cur = 'o2';
+                if (cfg.echo) {
+                    nodes.echo = mk('feComposite', { in: 'o2', in2: pre, operator: 'arithmetic', k1: 0, k2: 0.5, k3: 0.5, k4: 0, result: 'o2e' });
+                    cur = 'o2e';
+                }
+            }
+            if (cfg.rgb) {
+                mk('feColorMatrix', { in: cur, type: 'matrix', values: '1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0', result: 'cr' });
+                mk('feColorMatrix', { in: cur, type: 'matrix', values: '0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0', result: 'cg' });
+                mk('feColorMatrix', { in: cur, type: 'matrix', values: '0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0', result: 'cb' });
+                nodes.rgbR = mk('feOffset', { in: 'cr', dx: 0, dy: 0, result: 'r2' });
+                nodes.rgbB = mk('feOffset', { in: 'cb', dx: 0, dy: 0, result: 'b2' });
+                mk('feComposite', { in: 'r2', in2: 'cg', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'rg' });
+                mk('feComposite', { in: 'rg', in2: 'b2', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'o3' });
+                cur = 'o3';
+            }
+            if (cfg.tone) {
+                const base = cur;
+                if (cfg.tone.kind === 'edges') {
+                    mk('feConvolveMatrix', { in: cur, order: 3, kernelMatrix: '-1 -1 -1 -1 8 -1 -1 -1 -1', preserveAlpha: 'true', result: 'ed' });
+                    mk('feColorMatrix', { in: 'ed', type: 'matrix', values: '0 0 0 0 0  1.6 1.6 1.6 0 0  1.6 1.6 1.6 0 0  0 0 0 1 0', result: 'edn' });
+                    nodes.tone = mk('feComposite', { in: 'edn', in2: base, operator: 'arithmetic', k1: 0, k2: 1, k3: 0.45, k4: 0, result: 'o4' });
+                } else {
+                    const tv = cfg.tone.kind === 'solar' ? '0 1 0' : '0 0.34 0.67 1';
+                    const ty = cfg.tone.kind === 'solar' ? 'table' : 'discrete';
+                    const ct = mk('feComponentTransfer', { in: cur, result: 'tt' });
+                    for (const ch of ['R', 'G', 'B']) {
+                        const fn = document.createElementNS(NS, 'feFunc' + ch);
+                        fn.setAttribute('type', ty); fn.setAttribute('tableValues', tv);
+                        ct.appendChild(fn);
+                    }
+                    nodes.tone = mk('feComposite', { in: 'tt', in2: base, operator: 'arithmetic', k1: 0, k2: 1, k3: 0, k4: 0, result: 'o4' });
+                }
+                cur = 'o4';
+            }
+            if (cfg.bloom) {
+                mk('feGaussianBlur', { in: cur, stdDeviation: Math.max(4, W / 160).toFixed(1), result: 'bl' });
+                nodes.bloom = mk('feComposite', { in: 'bl', in2: cur, operator: 'arithmetic', k1: 0, k2: 0, k3: 1, k4: 0, result: 'o5' });
+                cur = 'o5';
+            }
+            this._ytFx = nodes;
+            return true;
+        }
+
+        updateYtFx(s, t, bass, mid, treble, W) {
+            const n = this._ytFx;
+            if (!n) return;
+            const cfg = n.cfg, A = W / 1000;
+            if (n.tear) {
+                const tr = cfg.tear;
+                const rows = tr.axis === 'y';
+                const wob = 1 + 0.06 * Math.sin(t * 1.3) + 0.04 * Math.sin(t * 2.9);
+                const f = (tr.f * wob).toFixed(5);
+                n.tearTurb.setAttribute('baseFrequency', rows ? '0.0004 ' + f : f + ' 0.0004');
+                if (tr.jump) n.tearTurb.setAttribute('seed', String(Math.floor(t * 9) % 97));
+                const sc = Math.min(500, tr.amt * A * s * (1 + bass * 0.7 + mid * 0.3));
+                n.tear.setAttribute('scale', sc.toFixed(1));
+            }
+            if (n.radial) {
+                const r = cfg.radial;
+                let k = r.k * A * s;
+                if (r.pulse) k *= (0.35 + 0.65 * Math.sin(t * 2.4));
+                if (r.kind === 'ripple') k *= Math.sin(t * 3.2);
+                n.radial.setAttribute('scale', Math.max(-700, Math.min(700, k * (1 + bass * 0.5))).toFixed(1));
+                if (n.echo) {
+                    const e = Math.min(0.9, cfg.echo * (0.6 + 0.6 * s));
+                    n.echo.setAttribute('k2', (1 - e).toFixed(2)); n.echo.setAttribute('k3', e.toFixed(2));
+                }
+            }
+            if (n.rgbR) {
+                const d = Math.min(120, cfg.rgb * A * s * (1 + treble * 1.2));
+                const wy = Math.sin(t * 2.1) * d * 0.25;
+                n.rgbR.setAttribute('dx', d.toFixed(1)); n.rgbR.setAttribute('dy', wy.toFixed(1));
+                n.rgbB.setAttribute('dx', (-d).toFixed(1)); n.rgbB.setAttribute('dy', (-wy).toFixed(1));
+            }
+            if (n.tone) {
+                const m = Math.max(0, Math.min(1, cfg.tone.mix * (0.35 + 0.65 * s)));
+                if (cfg.tone.kind === 'edges') {
+                    n.tone.setAttribute('k2', (0.4 + 0.6 * m).toFixed(2));
+                } else {
+                    n.tone.setAttribute('k2', m.toFixed(2)); n.tone.setAttribute('k3', (1 - m).toFixed(2));
+                }
+            }
+            if (n.bloom) n.bloom.setAttribute('k2', Math.min(1.6, cfg.bloom * (0.4 + 0.9 * s) * (1 + bass * 0.5)).toFixed(2));
         }
 
         // Live Alpha Calculation
@@ -2938,6 +3119,11 @@
                         this._svgWarpLastType = lens.type;
                     }
                     svgFilterUrl = 'url(#ytSvgWarp) ';
+                    const fxW = ytShell.offsetWidth || 1280, fxH = ytShell.offsetHeight || 720;
+                    if (this.ensureYtFx(mode, fxW, fxH)) {
+                        this.updateYtFx(s, t, bass, mid, treble, fxW);
+                        svgFilterUrl += 'url(#ytSvgFx) ';
+                    }
                 } else if (this.svgWarpNodes && this._svgWarpLastScale !== '0') {
                     this.svgWarpNodes.disp.setAttribute('scale', '0');
                     this._svgWarpLastScale = '0';
