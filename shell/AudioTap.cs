@@ -13,24 +13,47 @@ internal sealed class AudioTap : IDisposable
     private int pos;
     private readonly float[] smooth = new float[N / 2];
     private WasapiLoopbackCapture cap;
+    private ProcessLoopbackCapture direct;
     private System.Windows.Forms.Timer timer;
     private readonly Action<string> send;
 
+    // "direct" = this app's own audio via the driver's process loopback; "system" = whole-output fallback.
+    public string Mode { get; private set; } = "none";
+
     public AudioTap(Action<string> send) { this.send = send; }
 
-    public bool Start()
+    public bool Start(int targetPid = 0)
     {
-        try
+        direct = new ProcessLoopbackCapture(PushInterleaved);
+        if (direct.Start(targetPid > 0 ? targetPid : Environment.ProcessId)) Mode = "direct";
+        else
         {
-            cap = new WasapiLoopbackCapture();
-            cap.DataAvailable += OnData;
-            cap.StartRecording();
+            direct.Dispose(); direct = null;
+            try
+            {
+                cap = new WasapiLoopbackCapture();
+                cap.DataAvailable += OnData;
+                cap.StartRecording();
+                Mode = "system";
+            }
+            catch { cap?.Dispose(); cap = null; return false; }
         }
-        catch { cap?.Dispose(); cap = null; return false; }
         timer = new System.Windows.Forms.Timer { Interval = 33 };
         timer.Tick += (_, _) => Pump();
         timer.Start();
         return true;
+    }
+
+    private void PushInterleaved(float[] data, int frames)
+    {
+        lock (gate)
+        {
+            for (int i = 0; i < frames; i++)
+            {
+                ring[pos] = (data[i * 2] + data[i * 2 + 1]) * 0.5f;
+                pos = (pos + 1) % N;
+            }
+        }
     }
 
     private void OnData(object s, WaveInEventArgs e)
@@ -119,6 +142,7 @@ internal sealed class AudioTap : IDisposable
     public void Dispose()
     {
         timer?.Stop(); timer?.Dispose(); timer = null;
+        direct?.Dispose(); direct = null;
         try { cap?.StopRecording(); } catch { }
         cap?.Dispose(); cap = null;
     }

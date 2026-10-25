@@ -159,7 +159,14 @@ internal sealed class MainForm : Form
     {
         StopTap();
         var t = new AudioTap(m => { try { view.CoreWebView2?.PostWebMessageAsString(m); } catch { } });
-        if (t.Start()) tap = t; else t.Dispose();
+        int browserPid = 0;
+        try { browserPid = (int)(view.CoreWebView2?.BrowserProcessId ?? 0); } catch { }
+        if (t.Start(browserPid))
+        {
+            tap = t;
+            try { view.CoreWebView2?.PostWebMessageAsString("lens:audiomode|" + t.Mode); } catch { }
+        }
+        else t.Dispose();
     }
 
     private void StopTap() { tap?.Dispose(); tap = null; }
