@@ -232,6 +232,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     let captureSourceNode = null;
     let captureGainNode = null;
     let captureReturnToYouTube = false;
+    const lensBridge = window.chrome && window.chrome.webview ? window.chrome.webview : null;
+    let lensActive = false;
+    let lensFailed = false;
+    let lensFrameCanvas = null;
+    let lensFrameBusy = false;
+    if (lensBridge) {
+        lensBridge.addEventListener('message', (ev) => {
+            const d = ev.data;
+            if (typeof d !== 'string') return;
+            if (d === 'lens:closed' && lensActive) { lensActive = false; window.stopTabCapture(true); }
+            else if (d.startsWith('lens:frame|') && lensFrameCanvas && !lensFrameBusy) {
+                lensFrameBusy = true;
+                const img = new Image();
+                img.onload = () => {
+                    if (lensFrameCanvas) lensFrameCanvas.getContext('2d').drawImage(img, 0, 0, lensFrameCanvas.width, lensFrameCanvas.height);
+                    lensFrameBusy = false;
+                };
+                img.onerror = () => { lensFrameBusy = false; };
+                img.src = 'data:image/jpeg;base64,' + d.substring(11);
+            }
+        });
+    }
     const micToggleBtn = document.getElementById('micToggleBtn');
 
     function initAudioContext() {
@@ -1360,6 +1382,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (aiWarp) aiWarp.setSourceMode(returnToYouTube ? 'youtube' : 'generative');
         }
         if (wasActive) captureReturnToYouTube = false;
+        if (lensActive && wasActive) { lensActive = false; try { lensBridge.postMessage('lens:frames|stop'); lensBridge.postMessage('lens:close'); } catch (e) {} }
+        if (wasActive) lensFrameCanvas = null;
         if (wasActive && notify) {
             showHudNotification(returnToYouTube
                 ? '🖥 SCREEN CAPTURE STOPPED — YouTube canvas feed restored'
@@ -1367,15 +1391,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    async function startTabCapture() {
+    function openLensFrameStream() {
+        const cv = document.createElement('canvas');
+        cv.width = 960; cv.height = 540;
+        const cx = cv.getContext('2d');
+        cx.fillStyle = '#000'; cx.fillRect(0, 0, cv.width, cv.height);
+        lensFrameCanvas = cv;
+        lensFrameBusy = false;
+        const s = cv.captureStream(30);
+        lensBridge.postMessage('lens:frames|start');
+        return Promise.resolve(s);
+    }
+
+    async function startTabCapture(fromLens = false) {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
             showHudNotification('🖥 SCREEN CAPTURE NOT SUPPORTED HERE — use a secure page in a supported browser');
             return;
         }
-        captureReturnToYouTube = currentMediaKind === 'youtube';
+        captureReturnToYouTube = fromLens === true ? false : currentMediaKind === 'youtube';
         let stream;
         try {
-            stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+            stream = fromLens === true ? await openLensFrameStream()
+                : await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
         } catch (err) {
             captureReturnToYouTube = false;
             if (err && err.name !== 'NotAllowedError') {
@@ -1449,8 +1486,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (ytKb) ytKb.updateBadge();
     }
 
+    // ── YT LENS (desktop app only) ──────────────────────────────────────────
+    // The cross-origin YouTube iframe cannot be read by the canvas, so inside the app the video plays in a
+    // separate "AI WARP LENS" window which is captured (auto-selected) and fed through the full canvas pipeline.
+    async function loadYouTubeViaLens(videoObj, embedUrl) {
+        if (ytUrlInput) {
+            const listStr = videoObj.playlistId ? `&list=${videoObj.playlistId}` : '';
+            ytUrlInput.value = `https://www.youtube.com/watch?v=${videoObj.id}${listStr}`;
+        }
+        if (lensActive && captureStream) {
+            lensBridge.postMessage('lens:open|' + embedUrl);
+            return true;
+        }
+        pauseAllOtherMedia();
+        lensBridge.postMessage('lens:open|' + embedUrl);
+        await new Promise(r => setTimeout(r, 2500)); // the lens window must exist before it can be captured
+        lensActive = true;
+        captureReturnToYouTube = false;
+        await startTabCapture(true);
+        if (!captureStream) { lensActive = false; lensBridge.postMessage('lens:close'); return false; }
+        showHudNotification('YT LENS LIVE: real YouTube pixels now drive all 34 voices + 29 warp modes');
+        updateYouTubeUi();
+        return true;
+    }
+
     function loadYouTube(videoObj) {
         if (!videoObj || !videoObj.id) return;
+        if (lensBridge && !lensFailed) {
+            const plp = videoObj.playlistId ? `&list=${videoObj.playlistId}` : `&playlist=${videoObj.id}`;
+            const embed = `https://www.youtube-nocookie.com/embed/${videoObj.id}?autoplay=1&enablejsapi=1&playsinline=1&controls=1&rel=0&modestbranding=1&loop=1${plp}`;
+            loadYouTubeViaLens(videoObj, embed).then((ok) => {
+                if (!ok) { lensFailed = true; showHudNotification('YT LENS UNAVAILABLE — using the in-page player'); loadYouTube(videoObj); }
+            });
+            return;
+        }
         pauseAllOtherMedia();
         currentMediaKind = 'youtube';
         syncPlaybackClasses('youtube');
