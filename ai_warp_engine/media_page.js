@@ -237,11 +237,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     let lensFailed = false;
     let lensFrameCanvas = null;
     let lensFrameBusy = false;
+    const lensAudioFreq = new Uint8Array(512);
+    const lensAudioWave = new Uint8Array(512);
+    let lensAudioAt = 0;
     if (lensBridge) {
         lensBridge.addEventListener('message', (ev) => {
             const d = ev.data;
             if (typeof d !== 'string') return;
             if (d === 'lens:closed' && lensActive) { lensActive = false; window.stopTabCapture(true); }
+            else if (d.startsWith('lens:audio|') && lensActive) {
+                try {
+                    const bin = atob(d.substring(11));
+                    if (bin.length >= 1024) {
+                        for (let i = 0; i < 512; i++) { lensAudioFreq[i] = bin.charCodeAt(i); lensAudioWave[i] = bin.charCodeAt(512 + i); }
+                        lensAudioAt = performance.now();
+                    }
+                } catch (e) {}
+            }
             else if (d.startsWith('lens:frame|') && lensFrameCanvas && !lensFrameBusy) {
                 lensFrameBusy = true;
                 const img = new Image();
@@ -616,6 +628,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (isMicActive) {
             updateAudioMonitorBadge('MONITOR: LIVE MIC [ACTIVE]', true);
+        } else if (lensActive && performance.now() - lensAudioAt < 500) {
+            // Real audio from the YT LENS (system loopback tapped by the desktop shell)
+            if (freqData.length !== 512) { freqData = new Uint8Array(512); timeData = new Uint8Array(512); }
+            freqData.set(lensAudioFreq); timeData.set(lensAudioWave);
+            updateAudioMonitorBadge('MONITOR: 📡 YT LENS AUDIO [ACTIVE]', true);
         } else if (isSynthRunning) {
             const track = currentSynthTrackIndex >= 0 && synthTracks[currentSynthTrackIndex] ? synthTracks[currentSynthTrackIndex].toUpperCase() : 'SYNTH';
             updateAudioMonitorBadge(`MONITOR: ${track} [ACTIVE]`, true);

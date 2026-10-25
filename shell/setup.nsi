@@ -1,7 +1,7 @@
 Unicode true
 !include "MUI2.nsh"
 !ifndef VERSION
-  !define VERSION "6.4.14"
+  !define VERSION "6.4.15"
 !endif
 !ifndef SRC
   !define SRC "publish"
@@ -11,7 +11,7 @@ OutFile "AI-WARP-ENGINE-${VERSION}-x64-setup.exe"
 RequestExecutionLevel user
 InstallDir "$DESKTOP\AI WARP ENGINE"
 BrandingText "AI WARP ENGINE - River Lyle Reuveni - imortalimp.nl"
-VIProductVersion "6.4.14.0"
+VIProductVersion "6.4.15.0"
 VIAddVersionKey "ProductName" "AI WARP ENGINE"
 VIAddVersionKey "ProductVersion" "${VERSION}"
 VIAddVersionKey "FileVersion" "${VERSION}"

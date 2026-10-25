@@ -71,8 +71,8 @@ internal sealed class MainForm : Form
             try { msg = e.TryGetWebMessageAsString(); } catch { return; }
             if (msg.StartsWith("lens:open|", StringComparison.Ordinal)) OpenLens(msg.Substring(10));
             else if (msg == "lens:close") CloseLens();
-            else if (msg == "lens:frames|start") StartFramePump();
-            else if (msg == "lens:frames|stop") pumpGen++;
+            else if (msg == "lens:frames|start") { StartFramePump(); StartTap(); }
+            else if (msg == "lens:frames|stop") { pumpGen++; StopTap(); }
         };
         core.Navigate($"https://{Host}/index.html");
     }
@@ -153,9 +153,21 @@ internal sealed class MainForm : Form
         }
     }
 
+    private AudioTap tap;
+
+    private void StartTap()
+    {
+        StopTap();
+        var t = new AudioTap(m => { try { view.CoreWebView2?.PostWebMessageAsString(m); } catch { } });
+        if (t.Start()) tap = t; else t.Dispose();
+    }
+
+    private void StopTap() { tap?.Dispose(); tap = null; }
+
     private void CloseLens()
     {
         pumpGen++;
+        StopTap();
         if (lensForm is { IsDisposed: false }) lensForm.Close();
         lensForm = null;
     }
