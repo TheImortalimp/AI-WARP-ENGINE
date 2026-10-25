@@ -72,7 +72,7 @@ internal sealed class MainForm : Form
             if (msg.StartsWith("lens:open|", StringComparison.Ordinal)) OpenLens(msg.Substring(10));
             else if (msg == "lens:close") CloseLens();
             else if (msg == "lens:frames|start") StartFramePump();
-            else if (msg == "lens:frames|stop") pumpOn = false;
+            else if (msg == "lens:frames|stop") pumpGen++;
         };
         core.Navigate($"https://{Host}/index.html");
     }
@@ -127,41 +127,35 @@ internal sealed class MainForm : Form
 
     // WebView2 has no scriptable screen-capture picker, so the lens compositor output (including the
     // cross-origin YouTube iframe) is snapshotted and streamed to the main page as JPEG frames.
-    private volatile bool pumpOn;
-    private bool pumping;
+    private int pumpGen;
 
+    // Each start begins a new generation, so a loop stuck on a closed lens window can never block the next one.
     private async void StartFramePump()
     {
-        pumpOn = true;
-        if (pumping) return;
-        pumping = true;
-        try
+        var gen = ++pumpGen;
+        while (gen == pumpGen)
         {
-            while (pumpOn)
+            var t0 = Environment.TickCount64;
+            var core = lensView?.CoreWebView2;
+            if (core is not null && lensForm is { IsDisposed: false } && view.CoreWebView2 is not null)
             {
-                var t0 = Environment.TickCount64;
-                var core = lensView?.CoreWebView2;
-                if (core is not null && lensForm is { IsDisposed: false } && view.CoreWebView2 is not null)
+                try
                 {
-                    try
-                    {
-                        using var ms = new MemoryStream();
-                        await core.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Jpeg, ms);
-                        if (pumpOn && ms.Length > 0)
-                            view.CoreWebView2.PostWebMessageAsString("lens:frame|" + Convert.ToBase64String(ms.GetBuffer(), 0, (int)ms.Length));
-                    }
-                    catch { }
+                    using var ms = new MemoryStream();
+                    await core.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Jpeg, ms);
+                    if (gen == pumpGen && ms.Length > 0)
+                        view.CoreWebView2.PostWebMessageAsString("lens:frame|" + Convert.ToBase64String(ms.GetBuffer(), 0, (int)ms.Length));
                 }
-                var wait = 50 - (int)(Environment.TickCount64 - t0);
-                await Task.Delay(Math.Max(wait, 5));
+                catch { }
             }
+            var wait = 50 - (int)(Environment.TickCount64 - t0);
+            await Task.Delay(Math.Max(wait, 5));
         }
-        finally { pumping = false; }
     }
 
     private void CloseLens()
     {
-        pumpOn = false;
+        pumpGen++;
         if (lensForm is { IsDisposed: false }) lensForm.Close();
         lensForm = null;
     }

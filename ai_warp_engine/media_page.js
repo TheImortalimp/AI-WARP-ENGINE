@@ -2017,16 +2017,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
 
-        if (mediaPlayPauseBtn) {
-            mediaPlayPauseBtn.onclick = () => {
-                if (mediaEl.paused) {
-                    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-                    mediaEl.play();
-                } else {
-                    mediaEl.pause();
-                }
-            };
-        }
+        // Play/pause is handled by the single click listener bound at startup (a second handler here toggled twice = no-op).
 
         if (mediaSeekSlider) {
             mediaSeekSlider.oninput = () => {

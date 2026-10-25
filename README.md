@@ -1,16 +1,16 @@
 # ⚡ AI WARP ENGINE — Windows App (R3 Canvas Edition v6.4)
 
 <p align="center">
-  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.13" width="720">
+  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.14" width="720">
 </p>
 
 A public-domain glitch visual synthesizer and audio-reactive media playground, packaged as a standalone Windows app with a one-click installer.
 
-**Status: Complete · Ready** (v6.4.13) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
+**Status: Complete · Ready** (v6.4.14) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
 
 ## Install
 
-1. Download `AI-WARP-ENGINE-6.4.13-x64-setup.exe` from the latest release.
+1. Download `AI-WARP-ENGINE-6.4.14-x64-setup.exe` from the latest release.
 2. Run it, accept the licence terms, and finish the wizard. No admin rights are needed.
 3. The app installs to `Desktop\AI WARP ENGINE`, with a launcher shortcut, a Start Menu entry and an uninstaller.
 
@@ -51,7 +51,7 @@ Each voice has its own on/off, level, size and depth.
 - **V-Sync:** OFF, **SCANPHASING**, **COLOR HARMONY**, **SHARP** (the Full mode), each with its own level, rolling scan bars, tears and tracking.
 - **Soft-Eye** (OFF, CALM, SURGE, CRESCENDO) ramps intensity over time, and **Crescendo** fires a short burst.
 
-### Effects are verbatim (v6.4.13)
+### Effects are verbatim (v6.4.14)
 
 `ai_warp_engine.js`, `glitch_engine.js` and the Ghost Protocol / V-Sync engine (`r3_ghost_vsync.js`) are byte-identical to the files served at imortalimp.nl/ai_warp_engine: no boosts, no added clamps, no extra overlays. The app runs them unchanged.
 ### Capture and audio
@@ -122,6 +122,7 @@ The web app is plain HTML / JS / CSS, so you can also run it in any Chromium bro
 
 | Version | Highlights |
 |---------|------------|
+| v6.4.14 | Fixed: local-media pause button (double toggle) and YT LENS frames lost after switching to local media and back |
 | v6.4.13 | Window keeps its border and stays resizable/draggable while the lens runs (no forced full screen) |
 | v6.4.12 | Lens window hidden off-screen, audio monitor / cadence / EAR driven by picture motion |
 | v6.4.11 | YT LENS: YouTube plays in a second AI WARP LENS window and its real pixels feed the canvas pipeline |
