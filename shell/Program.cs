@@ -107,7 +107,6 @@ internal sealed class MainForm : Form
         };
         // Parked off-screen: it keeps rendering (and playing audio) for capture without covering the app.
         lensForm.Location = new Point(-12000, 200);
-        if (!(FormBorderStyle == FormBorderStyle.None)) SetFullscreen(true);
         try { lensForm.Icon = Icon; } catch { }
         lensForm.Controls.Add(lensView);
         lensForm.FormClosed += (_, _) =>
