@@ -578,6 +578,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         audioMonitorBadge.style.boxShadow = active ? '0 0 10px var(--theme-glow)' : 'none';
     }
 
+    // Frame-to-frame motion (0..1) of the lens picture, used as the audio-reactive pulse.
+    let fluxCv = null, fluxPrev = null, fluxVal = 0, fluxAt = 0;
+    function lensFlux() {
+        const now = performance.now();
+        if (now - fluxAt < 60) return fluxVal;
+        fluxAt = now;
+        if (!localVideo || localVideo.readyState < 2) return fluxVal;
+        if (!fluxCv) { fluxCv = document.createElement('canvas'); fluxCv.width = 32; fluxCv.height = 18; }
+        const c = fluxCv.getContext('2d', { willReadFrequently: true });
+        c.drawImage(localVideo, 0, 0, 32, 18);
+        const d = c.getImageData(0, 0, 32, 18).data;
+        let diff = 0;
+        if (fluxPrev) for (let i = 0; i < d.length; i += 4) diff += Math.abs(d[i] - fluxPrev[i]) + Math.abs(d[i + 1] - fluxPrev[i + 1]) + Math.abs(d[i + 2] - fluxPrev[i + 2]);
+        fluxPrev = d;
+        const target = clamp01(diff / (576 * 3 * 40));
+        fluxVal += (target - fluxVal) * 0.6;
+        return fluxVal;
+    }
+
     // Audio frequency analysis routine with YouTube Audio Sync Engine
     function getAudioEnergy() {
         let realAudioActive = false;
@@ -600,22 +619,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (isSynthRunning) {
             const track = currentSynthTrackIndex >= 0 && synthTracks[currentSynthTrackIndex] ? synthTracks[currentSynthTrackIndex].toUpperCase() : 'SYNTH';
             updateAudioMonitorBadge(`MONITOR: ${track} [ACTIVE]`, true);
-        } else if (currentMediaKind === 'capture' && captureStream) {
+        } else if (currentMediaKind === 'capture' && captureStream && !lensActive) {
             updateAudioMonitorBadge('MONITOR: 🖥 SCREEN SHARE [ACTIVE]', true);
         } else if (localAudio && !localAudio.paused) {
             updateAudioMonitorBadge('MONITOR: LOCAL AUDIO [ACTIVE]', true);
-        } else if (localVideo && !localVideo.paused) {
+        } else if (localVideo && !localVideo.paused && !lensActive) {
             updateAudioMonitorBadge('MONITOR: LOCAL VIDEO [ACTIVE]', true);
         } else if (activeAudioElement && !activeAudioElement.paused) {
             updateAudioMonitorBadge('MONITOR: POLE · R [ACTIVE]', true);
-        } else if (currentMediaKind === 'youtube') {
+        } else if (currentMediaKind === 'youtube' || (lensActive && currentMediaKind === 'capture')) {
             // High-octane dynamic YouTube audio frequency & waveform synthesizer
             const t = performance.now() * 0.001;
             const N = freqData.length;
+            const flux = lensActive ? lensFlux() : 0; // lens audio is not capturable; picture motion drives the pulse
             const beatPhase = (t * 2.166) % 1.0; // 130 BPM cadence
-            const kick = Math.pow(Math.max(0, 1.0 - beatPhase * 3.6), 2.5);
+            const kick = Math.min(1, Math.pow(Math.max(0, 1.0 - beatPhase * 3.6), 2.5) * (lensActive ? 0.55 : 1) + flux * 0.8);
             const snare = (Math.floor(t * 2.166) % 2 === 1) ? Math.pow(Math.max(0, 1.0 - ((beatPhase + 0.5) % 1.0) * 4.0), 2) * 0.8 : 0;
-            const hihat = Math.pow(Math.max(0, 1.0 - ((t * 8.664) % 1.0) * 3.5), 2) * 0.7;
+            const hihat = Math.pow(Math.max(0, 1.0 - ((t * 8.664) % 1.0) * 3.5), 2) * 0.7 * (lensActive ? 0.6 + flux : 1);
             const bassLfo = 0.5 + 0.5 * Math.sin(t * 4.2);
 
             for (let i = 0; i < N; i++) {

@@ -1,16 +1,16 @@
 # ⚡ AI WARP ENGINE — Windows App (R3 Canvas Edition v6.4)
 
 <p align="center">
-  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.11" width="720">
+  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.12" width="720">
 </p>
 
 A public-domain glitch visual synthesizer and audio-reactive media playground, packaged as a standalone Windows app with a one-click installer.
 
-**Status: Complete · Ready** (v6.4.11) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
+**Status: Complete · Ready** (v6.4.12) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
 
 ## Install
 
-1. Download `AI-WARP-ENGINE-6.4.11-x64-setup.exe` from the latest release.
+1. Download `AI-WARP-ENGINE-6.4.12-x64-setup.exe` from the latest release.
 2. Run it, accept the licence terms, and finish the wizard. No admin rights are needed.
 3. The app installs to `Desktop\AI WARP ENGINE`, with a launcher shortcut, a Start Menu entry and an uninstaller.
 
@@ -43,7 +43,7 @@ Each voice has its own on/off, level, size and depth.
 | 13–29 (NewBlue-inspired) | newblue_roll, active_cam, shear, wiggle, zoom_blur, video_tile, twirl, light_ring, earthquake, water_drop, rgb_shift, quad_mirror, fish_eye, pinch, solarize, cathode_beam, neon_edges |
 
 - The **AI WARP Strength** slider scales every mode; **Master Opacity** scales the whole stack.
-- On YouTube sources the warp runs through the original **Warp Bus** exactly as on imortalimp.nl/ai_warp_engine: CSS 3D transforms, skew and clip-path tears, the SVG Warp Lens and the voice filter chain, with the glitch canvas voices layered above. The YouTube iframe is cross-origin, so its pixels cannot be read; in the desktop app the video therefore plays in a second **AI WARP LENS** window whose rendered frames are streamed to the main canvas, so every voice and warp mode acts on the real YouTube pixels (keep the lens window open; its audio plays from that window). In a normal browser use **Share Screen / Window** (`N`).
+- On YouTube sources the warp runs through the original **Warp Bus** exactly as on imortalimp.nl/ai_warp_engine: CSS 3D transforms, skew and clip-path tears, the SVG Warp Lens and the voice filter chain, with the glitch canvas voices layered above. The YouTube iframe is cross-origin, so its pixels cannot be read; in the desktop app the video therefore plays in a second **AI WARP LENS** window whose rendered frames are streamed to the main canvas, so every voice and warp mode acts on the real YouTube pixels (the lens window is parked off-screen and the app goes full screen automatically; keep it open, its audio plays from there, and the audio monitor / cadence / EAR modes are driven by the picture's motion). In a normal browser use **Share Screen / Window** (`N`).
 
 ### Ghost Protocol R3 and V-Sync R3
 
@@ -51,7 +51,7 @@ Each voice has its own on/off, level, size and depth.
 - **V-Sync:** OFF, **SCANPHASING**, **COLOR HARMONY**, **SHARP** (the Full mode), each with its own level, rolling scan bars, tears and tracking.
 - **Soft-Eye** (OFF, CALM, SURGE, CRESCENDO) ramps intensity over time, and **Crescendo** fires a short burst.
 
-### Effects are verbatim (v6.4.11)
+### Effects are verbatim (v6.4.12)
 
 `ai_warp_engine.js`, `glitch_engine.js` and the Ghost Protocol / V-Sync engine (`r3_ghost_vsync.js`) are byte-identical to the files served at imortalimp.nl/ai_warp_engine: no boosts, no added clamps, no extra overlays. The app runs them unchanged.
 ### Capture and audio
@@ -122,6 +122,7 @@ The web app is plain HTML / JS / CSS, so you can also run it in any Chromium bro
 
 | Version | Highlights |
 |---------|------------|
+| v6.4.12 | Lens window hidden off-screen, auto full screen, audio monitor / cadence / EAR driven by picture motion |
 | v6.4.11 | YT LENS: YouTube plays in a second AI WARP LENS window and its real pixels feed the canvas pipeline |
 | v6.4.10 | YouTube overlay bridge removed; effect engine runs exactly as on imortalimp.nl/ai_warp_engine |
 | v6.4.9 | Site engine, Ghost Protocol and V-Sync restored verbatim (no boosts, no added clamps); YouTube overlay moved to a separate bridge file |
