@@ -22,3 +22,5 @@ Download and run `AI-WARP-ENGINE-6.4.19-x64-setup.exe` on Windows 10/11 x64. The
 - Lens audio continues through the standalone shell's existing process-loopback `AudioTap` when the lens frame/audio stream starts.
 
 **Installer SHA-256:** `1796A70D7D883586B5BDB33A281217E7D1ABB53808AA4E5E6D8E058EE07D1E05`
+
+For installation, controls, audio setup, effects and troubleshooting, [download the AI WARP ENGINE User Manual](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/download/v6.4.19/MANUAL.md).

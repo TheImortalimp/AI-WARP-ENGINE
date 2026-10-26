@@ -54,6 +54,8 @@ Enable the DROP THE MILK? toolbar button or press `D`. The effect composites a s
 - **v6.4.1** — GC#(3) helper fixes; screen share and microphone confirmed.
 - **v6.4.0** — first standalone installer.
 
+See [MANUAL.md](MANUAL.md) for installation, controls, audio setup, effects, automation and troubleshooting.
+
 ## Keywords
 
 River Lyle Reuveni, Imortalimp, creative coding, Web Audio, glitch engine, audio visualizer, digital art, WebView2, Windows installer

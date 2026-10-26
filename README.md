@@ -107,6 +107,7 @@ Press `?` in the app for the in-app shortcut list. Hotkeys are ignored while a t
 | `DESCRIPTION.md` | Short project description |
 
 Full engine documentation: [ai_warp_engine/README.md](ai_warp_engine/README.md).
+For the standalone app’s setup and controls, see the [user manual](MANUAL.md).
 
 ## Build from source
 
