@@ -65,7 +65,7 @@
                 waveFreq: 3 + ((familyIndex * 3 + variation) % 10),
                 waveAmp: 0.022 + (variation % 5) * 0.008 + familyIndex * 0.002,
                 bloom: 0.42 + ((familyIndex + variation) % 6) * 0.085,
-                opacity: 0.52 + ((familyIndex * 3 + variation) % 10) * 0.045,
+                opacity: 0.16 + ((familyIndex * 3 + variation) % 10) * 0.023,
                 yScale: family.yScale + (variation - 4.5) * 0.012,
                 mirror: ((familyIndex + variation) % 2) === 0
             };
@@ -191,8 +191,8 @@
             this.onSoftEyeProgress = null;
             this.hardLightActive = false;
             this.milkdropActive = false;
-            this.milkdropOpacity = 0.82;
-            this.milkdropTargetOpacity = 0.82;
+            this.milkdropOpacity = 0.30;
+            this.milkdropTargetOpacity = 0.30;
             this.milkdropOpacityLocked = false;
             this.milkdropLastRenderAt = 0;
             this.milkdropStartAt = 0;
@@ -873,9 +873,9 @@
                 + (modeBlend.canvas - 1) * 0.002 + voiceBlend.geometry * 0.0015;
             const spin = Math.sin(t * 0.31 + preset.id * 0.8) * (0.002 + beat * 0.012) * preset.twist
                 * (0.72 + modeBlend.vsyncSpeed * 0.14 + modeBlend.vsyncRoll * 0.14) * modeBlend.phase;
-            const fbAlpha = Math.min(0.78, preset.feedback + 0.08 * (0.5 + 0.5 * Math.sin(t * 0.47))
-                + bass * 0.10 + modeBlend.ghostWarp * 0.035 + modeBlend.softEye * 0.025
-                + voiceBlend.texture * 0.065 + voiceBlend.activity * 0.04);
+            const fbAlpha = Math.min(0.24, preset.feedback * 0.48 + 0.025 * (0.5 + 0.5 * Math.sin(t * 0.47))
+                + bass * 0.028 + modeBlend.ghostWarp * 0.012 + modeBlend.softEye * 0.008
+                + voiceBlend.texture * 0.022 + voiceBlend.activity * 0.014);
             const dst = this.milkdropNextCtx, fb = this.milkdropFeedbackCtx;
             dst.save(); dst.setTransform(1, 0, 0, 1, 0, 0); dst.clearRect(0, 0, w, h);
             dst.globalCompositeOperation = 'source-over'; dst.globalAlpha = 1; dst.filter = 'none';
@@ -883,9 +883,9 @@
             // Smooth feedback loop: gently zoom, rotate, hue-shift and soften prior frames.
             dst.save(); dst.translate(w * 0.5, h * 0.5); dst.rotate(spin); dst.scale(zoom, zoom);
             dst.translate(-w * 0.5, -h * 0.5);
-            dst.globalCompositeOperation = voiceBlend.chroma > 0.72 || modeBlend.vsyncTears > 1.12 ? 'lighter' : preset.composite;
+            dst.globalCompositeOperation = 'soft-light';
             dst.globalAlpha = fbAlpha;
-            dst.filter = `hue-rotate(${(hueBase * 0.18 + modeBlend.ghostChroma * 12 + voiceBlend.chroma * 28).toFixed(1)}deg) saturate(${(1.08 + modeBlend.hardLight * 0.12 + voiceBlend.chroma * 0.45).toFixed(2)}) blur(${(0.28 + bass * 0.65 + modeBlend.softEye * 0.12).toFixed(2)}px)`;
+            dst.filter = `hue-rotate(${(hueBase * 0.16 + modeBlend.ghostChroma * 8 + voiceBlend.chroma * 18).toFixed(1)}deg) saturate(${(1.02 + modeBlend.hardLight * 0.04 + voiceBlend.chroma * 0.12).toFixed(2)}) blur(${(0.22 + bass * 0.45 + modeBlend.softEye * 0.08).toFixed(2)}px)`;
             dst.drawImage(this.milkdropFeedbackCanvas, 0, 0, w, h); dst.restore(); dst.filter = 'none';
             // Distinctive Milkdrop-style polar waveforms, driven by the analyser when available.
             const cx = w * 0.5, cy = h * 0.5, minDim = Math.min(w, h);
@@ -905,25 +905,25 @@
                     if (!i) dst.moveTo(x, y); else dst.lineTo(x, y);
                 }
                 dst.closePath(); dst.globalCompositeOperation = 'screen';
-                dst.globalAlpha = Math.min(0.52, 0.07 + preset.bloom * 0.08 + 0.10 * bass + 0.05 * beat + modeBlend.ghostLines * 0.035 + voiceBlend.chroma * 0.08);
-                dst.strokeStyle = `hsla(${(hueBase + ring * 92 + voiceBlend.chroma * 36) % 360},100%,${Math.min(82, 58 + ring * 5 + modeBlend.hardLight * 5)}%,0.95)`;
-                dst.lineWidth = Math.max(1.25, minDim * (0.0015 + ring * 0.00042) * modeBlend.ghostGlow); dst.stroke();
+                dst.globalAlpha = Math.min(0.12, 0.016 + preset.bloom * 0.022 + 0.030 * bass + 0.012 * beat + modeBlend.ghostLines * 0.008 + voiceBlend.chroma * 0.015);
+                dst.strokeStyle = `hsla(${(hueBase + ring * 72 + voiceBlend.chroma * 24) % 360},86%,${Math.min(62, 45 + ring * 2 + modeBlend.hardLight * 1.5)}%,0.72)`;
+                dst.lineWidth = Math.max(0.8, minDim * (0.0009 + ring * 0.00022) * Math.min(1.15, modeBlend.ghostGlow)); dst.stroke();
             }
             // Soft liquid blooms: layered radial gradients create a soup-like colour mashup.
-            dst.globalCompositeOperation = voiceBlend.chroma > 0.55 ? 'lighter' : 'screen';
-            dst.filter = `blur(${(minDim * (0.008 + modeBlend.softEye * 0.003 + voiceBlend.texture * 0.002)).toFixed(1)}px)`;
-            const bloomCount = Math.max(3, Math.min(9, 3 + (preset.id % 5) + (voiceBlend.texture > 0.60 ? 1 : 0) + (voiceBlend.geometry > 0.78 ? 1 : 0)));
+            dst.globalCompositeOperation = 'soft-light';
+            dst.filter = `blur(${(minDim * (0.005 + modeBlend.softEye * 0.0015 + voiceBlend.texture * 0.0008)).toFixed(1)}px)`;
+            const bloomCount = Math.max(2, Math.min(5, 2 + (preset.id % 3) + (voiceBlend.texture > 0.78 ? 1 : 0)));
             for (let i = 0; i < bloomCount; i++) {
                 const a = t * (0.18 + i * 0.025) + i * Math.PI * 0.4;
                 const x = cx + Math.cos(a * (0.82 + voiceBlend.geometry * 0.30)) * minDim * (0.15 + 0.045 * Math.sin(t * 0.37 + i) + voiceBlend.geometry * 0.025);
                 const y = cy + Math.sin(a * (1.05 + modeBlend.phase * 0.12)) * minDim * (0.10 + 0.04 * Math.cos(t * 0.29 + i) + voiceBlend.texture * 0.02);
                 const r = minDim * (0.04 + preset.bloom * 0.022 + 0.025 * bass + voiceBlend.geometry * 0.012 + 0.01 * Math.sin(t * 0.6 + i));
                 const grad = dst.createRadialGradient(x, y, r * 0.05, x, y, r);
-                grad.addColorStop(0, `hsla(${(hueBase + i * (45 + modeBlend.ghostChroma * 9) + voiceBlend.chroma * 42) % 360},100%,${Math.min(88, 66 + modeBlend.hardLight * 6)}%,${(0.08 + bass * 0.08 + voiceBlend.activity * 0.06).toFixed(3)})`);
-                grad.addColorStop(0.48, `hsla(${(hueBase + i * 61 + 28 + voiceBlend.rhythm * 24) % 360},96%,58%,${(0.045 + voiceBlend.texture * 0.025).toFixed(3)})`);
+                grad.addColorStop(0, `hsla(${(hueBase + i * (45 + modeBlend.ghostChroma * 9) + voiceBlend.chroma * 34) % 360},88%,${Math.min(66, 52 + modeBlend.hardLight * 3)}%,${(0.030 + bass * 0.025 + voiceBlend.activity * 0.018).toFixed(3)})`);
+                grad.addColorStop(0.48, `hsla(${(hueBase + i * 61 + 28 + voiceBlend.rhythm * 18) % 360},84%,52%,${(0.016 + voiceBlend.texture * 0.010).toFixed(3)})`);
                 grad.addColorStop(1, 'hsla(0,0%,0%,0)');
-                dst.globalAlpha = 0.62; dst.fillStyle = grad; dst.beginPath(); dst.arc(x, y, r, 0, Math.PI * 2); dst.fill();
-                if (preset.mirror && i % 2 === 0) { dst.globalAlpha = 0.30; dst.beginPath(); dst.arc(w - x, h - y, r * 0.78, 0, Math.PI * 2); dst.fill(); }
+                dst.globalAlpha = 0.34; dst.fillStyle = grad; dst.beginPath(); dst.arc(x, y, r, 0, Math.PI * 2); dst.fill();
+                if (preset.mirror && i % 2 === 0) { dst.globalAlpha = 0.16; dst.beginPath(); dst.arc(w - x, h - y, r * 0.78, 0, Math.PI * 2); dst.fill(); }
             }
             dst.filter = 'none'; dst.restore();
             // Persist the composite for the next frame, then place it back on the voice canvas.

@@ -1,16 +1,16 @@
 # ⚡ AI WARP ENGINE — Windows App (R3 Canvas Edition v6.4)
 
 <p align="center">
-  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.18" width="720">
+  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.19" width="720">
 </p>
 
 A public-domain glitch visual synthesizer and audio-reactive media playground, packaged as a standalone Windows app with a one-click installer.
 
-**Status: Complete · Ready** (v6.4.18) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
+**Status: Complete · Ready** (v6.4.19) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
 
 ## Install
 
-1. Download `AI-WARP-ENGINE-6.4.18-x64-setup.exe` from the latest release.
+1. Download `AI-WARP-ENGINE-6.4.19-x64-setup.exe` from the latest release.
 2. Run it, accept the licence terms, and finish the wizard. No admin rights are needed.
 3. The app installs to `Desktop\AI WARP ENGINE`, with a launcher shortcut, a Start Menu entry and an uninstaller.
 
@@ -55,11 +55,13 @@ Each voice has its own on/off, level, size and depth.
 
 Each of the 29 AI Warp modes now has a deterministic blend profile that tunes Ghost Protocol and V-Sync color, split, scan, warp and automation pacing. R3 factory effects, Canvas warp strength, Hard Light, Soft-Eye and audio-ear response follow the active profile while preserving the existing master levels and user-protected voice intent.
 
-### DROP THE MILK? (v6.4.18)
+### DROP THE MILK? subtle blends (v6.4.19)
 
-Adds original, dependency-free Milkdrop-inspired Canvas feedback with audio-reactive polar waveforms, liquid colour blooms, and 80 shuffled presets. Presets cross-blend with active AI Warp modes and FX voices. The opacity slider follows preset automation while unlocked; lock it to hold a chosen level. The slider value and lock state persist across reloads. Press `D` to toggle the effect.
+The Milkdrop-inspired Canvas feedback now uses the subtler blends from the 6.4.35 web template: softer feedback, waveforms and blooms with lower preset opacity, while keeping all 80 shuffled presets, audio response, mode/voice blending and opacity locking.
 
-See the [v6.4.18 release notes](RELEASE_NOTES_6.4.18.md) for details and installer checksum.
+Suggested/featured playlists now use the standalone AI WARP LENS path, with the lens audio feeding the analyser. Starting another playback source closes the lens and stops its audio.
+
+See the [v6.4.19 release notes](RELEASE_NOTES_6.4.19.md) for details and installer checksum.
 ### Capture and audio
 
 - **Display capture** (`N`) shares a tab, window or screen as the source.
@@ -129,6 +131,7 @@ The web app is plain HTML / JS / CSS, so you can also run it in any Chromium bro
 
 | Version | Highlights |
 |---------|------------|
+| v6.4.19 | Softer Milkdrop subtle blends; suggested playlists stay in the audio-aware LENS and stop when another source starts |
 | v6.4.18 | DROP THE MILK? adds 80 shuffled, audio-reactive Milkdrop-inspired Canvas presets, FX blending and persistent opacity lock |
 | v6.4.17 | Mode-aware FX profiles for all 29 AI Warp modes, deterministic automation, and blended Ghost/V-Sync/R3/Canvas effects |
 | v6.4.16 | Final: YT LENS audio now uses the direct Windows process-loopback audio driver (only this app's sound, system loopback fallback) |

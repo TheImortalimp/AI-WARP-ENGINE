@@ -3,7 +3,7 @@
 **AI WARP ENGINE (R3 Canvas Edition v6.4)** is a public-domain visual synthesizer, audio-reactive media playground and live Canvas glitch suite, shipped as a standalone Windows app.
 
 - **Author:** River Lyle Reuveni (Imortalimp), [imortalimp.nl](https://imortalimp.nl)
-- **Version:** 6.4 (installer release v6.4.18) — **Complete · Ready**
+- **Version:** 6.4 (installer release v6.4.19) — **Complete · Ready**
 - **Platform:** Windows 10/11 x64 (WebView2 host, .NET bundled)
 - **Install location:** `Desktop\AI WARP ENGINE` (per-user, no admin)
 - **Licence:** CC0 1.0 / The Unlicense (software); CC BY 4.0 (imortalimp.nl site content)
@@ -18,7 +18,7 @@ Takes a live source and runs it through a real-time Canvas effects pipeline, dri
 - 34 independently controllable glitch voices: 17 core (Neon Grad, Scanlines, Data Bands, Flash, HSL Rainbow, ASCII, Font Burn, Strobe, Gemini Bomb, Tech Artist, VHS Glitch, Data Bomb, Ink Glyphs, Matrix ASCII, Matrix Chord, B&W Invert, Hue/Color Cycle) plus 17 Glitch Revision 3 `GC#(3)` counterparts.
 - 29 AI Warp modes: 12 algorithmic (liquid, prism, breathe, fold, aurora, vortex, cybergrid, hyperdrive, kaleidoscope, quantum, ripple, analog CRT) and 17 NewBlue-inspired (roll, active cam, shear, wiggle, zoom blur, video tile, twirl, light ring, earthquake, water drop, RGB shift, quad mirror, fish eye, pinch, solarize, cathode beam, neon edges), plus a compositor-level SVG Warp Lens for YouTube.
 - Ghost Protocol R3 (DIA, SPECTRUM, CRT, PLASMA, LED) and V-Sync R3 (Scanphasing, Color Harmony, Sharp) overlays, with Soft-Eye, Crescendo and 29 mode-aware FX blend profiles.
-- **DROP THE MILK?** — original Milkdrop-inspired Canvas feedback with audio-reactive polar waves, liquid-colour blooms and 80 shuffled presets; presets blend with active warp modes/voices, and opacity automation has a persistent user lock.
+- **DROP THE MILK?** — original Milkdrop-inspired Canvas feedback with audio-reactive polar waves, liquid-colour blooms and 80 shuffled presets; v6.4.19 adds subtler feedback, wave and bloom blending.
 
 **Automation:** Auto Glitch, Continual Random, Automated Masters, Timed Automation, Wired mode, Soft-Eye and Crescendo.
 
@@ -34,6 +34,7 @@ Enable the DROP THE MILK? toolbar button or press `D`. The effect composites a s
 
 ## Release history
 
+- **v6.4.19** — Added subtle Milkdrop blends; routed playlist-only suggestions through the audio-aware YT LENS and stopped lens playback when another source starts.
 - **v6.4.18** — Added DROP THE MILK? Milkdrop-inspired audio-reactive Canvas feedback, 80 shuffled presets, mode/voice blending and persistent opacity lock.
 - **v6.4.17** — Mode-aware FX blending for all 29 AI Warp modes, deterministic automation and coordinated Ghost / V-Sync / R3 / Canvas effects.
 - **v6.4.16** — Final: YT LENS audio captured with the direct per-process audio driver (system loopback fallback) to drive the audio monitor, cadence and EAR modes.

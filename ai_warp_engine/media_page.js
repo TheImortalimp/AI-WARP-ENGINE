@@ -253,6 +253,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     let captureReturnToYouTube = false;
     const lensBridge = window.chrome && window.chrome.webview ? window.chrome.webview : null;
     let lensActive = false;
+    let lensOpenPending = false;
+    let lensRequestGeneration = 0;
     let lensFailed = false;
     let lensFrameCanvas = null;
     let lensFrameBusy = false;
@@ -522,6 +524,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function playSynthTrack(trackName) {
+        pauseAllOtherMedia();
         initAudioContext();
         if (audioCtx.state === 'suspended') audioCtx.resume();
         if (synthInterval) clearInterval(synthInterval);
@@ -1438,6 +1441,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             currentMediaKind = returnToYouTube ? 'youtube' : null;
             syncPlaybackClasses(currentMediaKind);
             if (aiWarp) aiWarp.setSourceMode(returnToYouTube ? 'youtube' : 'generative');
+            if (returnToYouTube) {
+                const frame = ytPlayerMount && ytPlayerMount.querySelector('#ytIframe');
+                if (frame && frame.contentWindow) {
+                    frame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), 'https://www.youtube-nocookie.com');
+                }
+            }
         }
         if (wasActive) captureReturnToYouTube = false;
         if (lensActive && wasActive) { lensActive = false; try { lensBridge.postMessage('lens:frames|stop'); lensBridge.postMessage('lens:close'); } catch (e) {} }
@@ -1461,7 +1470,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return Promise.resolve(s);
     }
 
-    async function startTabCapture(fromLens = false) {
+    async function startTabCapture(fromLens = false, expectedLensRequest = null) {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
             showHudNotification('🖥 SCREEN CAPTURE NOT SUPPORTED HERE — use a secure page in a supported browser');
             return;
@@ -1481,13 +1490,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             return;
         }
-        pauseAllOtherMedia();
+        if (fromLens) {
+            if (expectedLensRequest !== lensRequestGeneration || !lensActive) {
+                stream.getTracks().forEach(tr => tr.stop());
+                return;
+            }
+        } else {
+            pauseAllOtherMedia();
+        }
         captureStream = stream;
 
         // Video frames → reuse #localVideo so engine drawCover + R3 factories sample real pixels
         localVideo.muted = true; // audio is analyzed via Web Audio only — never double-played
         localVideo.srcObject = stream;
         try { await localVideo.play(); } catch (e) { console.warn('capture play notice:', e); }
+        if (captureStream !== stream || (fromLens && expectedLensRequest !== lensRequestGeneration)) return;
         if (aiWarp) aiWarp.setSourceMode('video', localVideo);
 
         // Teardown when the user hits the browser's "Stop sharing" or closes the tab
@@ -1500,6 +1517,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 initAudioContext();
                 if (audioCtx && audioCtx.state === 'suspended') await audioCtx.resume().catch(() => {});
+                if (captureStream !== stream || (fromLens && expectedLensRequest !== lensRequestGeneration)) return;
                 if (audioCtx && masterAnalyser) {
                     captureSourceNode = audioCtx.createMediaStreamSource(stream);
                     captureGainNode = audioCtx.createGain();
@@ -1510,6 +1528,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } catch (e) { console.warn('capture audio routing notice:', e); hasAudio = false; }
         }
 
+        if (captureStream !== stream || (fromLens && expectedLensRequest !== lensRequestGeneration)) return;
         currentMediaKind = 'capture';
         syncPlaybackClasses('capture');
         const capBtn = document.getElementById('ytCaptureTabBtn');
@@ -1521,8 +1540,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.stopTabCapture = stopTabCapture;
 
     function pauseAllOtherMedia() {
+        lensRequestGeneration++;
+        const closeUncapturedLens = lensOpenPending || (lensActive && !captureStream);
+        lensOpenPending = false;
         syncPlaybackClasses(null);
         stopTabCapture(false);
+        if (closeUncapturedLens) {
+            lensActive = false;
+            if (lensBridge) {
+                lensBridge.postMessage('lens:frames|stop');
+                lensBridge.postMessage('lens:close');
+            }
+        }
+        const embeddedYouTubeFrame = ytPlayerMount && ytPlayerMount.querySelector('#ytIframe');
+        if (embeddedYouTubeFrame && embeddedYouTubeFrame.contentWindow) {
+            embeddedYouTubeFrame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }), 'https://www.youtube-nocookie.com');
+        }
+        if (!captureReturnToYouTube) {
+            if (ytPlayerMount) ytPlayerMount.replaceChildren();
+            if (ytWarpShell) ytWarpShell.style.display = 'none';
+        }
         stopSyntheticAudio();
         if (activeAudioElement && typeof activeAudioElement.pause === 'function') activeAudioElement.pause();
         if (localAudio && typeof localAudio.pause === 'function') localAudio.pause();
@@ -1549,33 +1586,78 @@ document.addEventListener('DOMContentLoaded', async () => {
     // separate "AI WARP LENS" window which is captured (auto-selected) and fed through the full canvas pipeline.
     async function loadYouTubeViaLens(videoObj, embedUrl) {
         if (ytUrlInput) {
-            const listStr = videoObj.playlistId ? `&list=${videoObj.playlistId}` : '';
-            ytUrlInput.value = `https://www.youtube.com/watch?v=${videoObj.id}${listStr}`;
+            ytUrlInput.value = videoObj.id
+                ? `https://www.youtube.com/watch?v=${videoObj.id}${videoObj.playlistId ? `&list=${videoObj.playlistId}` : ''}`
+                : `https://www.youtube.com/playlist?list=${videoObj.playlistId}`;
         }
         if (lensActive && captureStream) {
             lensBridge.postMessage('lens:open|' + embedUrl);
             return true;
         }
         pauseAllOtherMedia();
+        const requestGeneration = ++lensRequestGeneration;
+        lensOpenPending = true;
+        if (ytPlayerMount) ytPlayerMount.replaceChildren();
+        if (ytWarpShell) ytWarpShell.style.display = 'none';
         lensBridge.postMessage('lens:open|' + embedUrl);
         await new Promise(r => setTimeout(r, 2500)); // the lens window must exist before it can be captured
+        if (requestGeneration !== lensRequestGeneration) return null;
+        lensOpenPending = false;
         lensActive = true;
         captureReturnToYouTube = false;
-        await startTabCapture(true);
-        if (!captureStream) { lensActive = false; lensBridge.postMessage('lens:close'); return false; }
+        await startTabCapture(true, requestGeneration);
+        if (requestGeneration !== lensRequestGeneration) return null;
+        if (!captureStream) {
+            lensActive = false;
+            lensBridge.postMessage('lens:close');
+            return false;
+        }
         showHudNotification('YT LENS LIVE: real YouTube pixels now drive all 34 voices + 29 warp modes');
         updateYouTubeUi();
         return true;
     }
 
-    function loadYouTube(videoObj) {
-        if (!videoObj || !videoObj.id) return;
+    function buildYouTubeEmbedUrl(videoObj) {
+        const params = new URLSearchParams({
+            autoplay: '1',
+            enablejsapi: '1',
+            playsinline: '1',
+            controls: '1',
+            rel: '0',
+            modestbranding: '1',
+            loop: '1'
+        });
+        if (videoObj.id) {
+            if (videoObj.playlistId) params.set('list', videoObj.playlistId);
+            else params.set('playlist', videoObj.id);
+            return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoObj.id)}?${params}`;
+        }
+        params.set('listType', 'playlist');
+        params.set('list', videoObj.playlistId);
+        return `https://www.youtube-nocookie.com/embed/videoseries?${params}`;
+    }
+
+    function loadYouTube(videoObj, { requireLens = false } = {}) {
+        if (!videoObj || (!videoObj.id && !videoObj.playlistId)) return;
+        const embedUrl = buildYouTubeEmbedUrl(videoObj);
+        const lensRequired = requireLens && !!lensBridge;
         if (lensBridge && !lensFailed) {
-            const plp = videoObj.playlistId ? `&list=${videoObj.playlistId}` : `&playlist=${videoObj.id}`;
-            const embed = `https://www.youtube-nocookie.com/embed/${videoObj.id}?autoplay=1&enablejsapi=1&playsinline=1&controls=1&rel=0&modestbranding=1&loop=1${plp}`;
-            loadYouTubeViaLens(videoObj, embed).then((ok) => {
-                if (!ok) { lensFailed = true; showHudNotification('YT LENS UNAVAILABLE — using the in-page player'); loadYouTube(videoObj); }
+            loadYouTubeViaLens(videoObj, embedUrl).then((ok) => {
+                if (ok === false) {
+                    lensFailed = true;
+                    if (lensRequired) {
+                        showHudNotification('YT LENS UNAVAILABLE — playlist playback stopped');
+                        return;
+                    }
+                    showHudNotification('YT LENS UNAVAILABLE — using the in-page player');
+                    loadYouTube(videoObj);
+                }
             });
+            return;
+        }
+        if (lensRequired) {
+            pauseAllOtherMedia();
+            showHudNotification('YT LENS UNAVAILABLE — playlist playback stopped');
             return;
         }
         pauseAllOtherMedia();
@@ -1583,11 +1665,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         syncPlaybackClasses('youtube');
 
         // Mount iframe
-        const plParam = videoObj.playlistId ? `&list=${videoObj.playlistId}` : `&playlist=${videoObj.id}`;
         if (ytPlayerMount) {
             ytPlayerMount.innerHTML = `
                 <iframe id="ytIframe"
-                    src="https://www.youtube-nocookie.com/embed/${videoObj.id}?autoplay=1&enablejsapi=1&playsinline=1&controls=1&rel=0&modestbranding=1&loop=1${plParam}"
+                    src="${embedUrl}"
                     allow="autoplay; encrypted-media; picture-in-picture"
                     allowfullscreen>
                 </iframe>
@@ -1596,8 +1677,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (ytWarpShell) ytWarpShell.style.display = 'block';
 
         if (ytUrlInput) {
-            const listStr = videoObj.playlistId ? `&list=${videoObj.playlistId}` : '';
-            ytUrlInput.value = `https://www.youtube.com/watch?v=${videoObj.id}${listStr}`;
+            ytUrlInput.value = videoObj.id
+                ? `https://www.youtube.com/watch?v=${videoObj.id}${videoObj.playlistId ? `&list=${videoObj.playlistId}` : ''}`
+                : `https://www.youtube.com/playlist?list=${videoObj.playlistId}`;
         }
 
         if (aiWarp) {
@@ -1670,7 +1752,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             ytHistory.push(stored);
             ytHistoryIndex = ytHistory.length - 1;
-            loadYouTube(stored);
+            loadYouTube(stored, { requireLens: !!extractedPlaylist });
             showHudNotification(`SAVED TO KB & PLAYING: https://youtu.be/${primaryId}`);
         } else if (extractedPlaylist) {
             // Only a playlist link was given
@@ -1680,25 +1762,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const picked = res.items[Math.floor(Math.random() * res.items.length)];
                 ytHistory.push(picked);
                 ytHistoryIndex = ytHistory.length - 1;
-                loadYouTube(picked);
+                loadYouTube(picked, { requireLens: true });
                 showHudNotification(`🎲 REROLLED FROM EXTRACTED PLAYLIST: ${picked.title || picked.id}`);
             } else {
-                // Mount playlist directly in player
-                pauseAllOtherMedia();
-                currentMediaKind = 'youtube';
-                syncPlaybackClasses('youtube');
-                if (ytPlayerMount) {
-                    ytPlayerMount.innerHTML = `
-                        <iframe id="ytIframe"
-                            src="https://www.youtube-nocookie.com/embed?listType=playlist&list=${extractedPlaylist}&autoplay=1&enablejsapi=1&playsinline=1&controls=1"
-                            allow="autoplay; encrypted-media; picture-in-picture"
-                            allowfullscreen>
-                        </iframe>
-                    `;
-                }
-                if (ytWarpShell) ytWarpShell.style.display = 'block';
-                if (aiWarp) aiWarp.setSourceMode('youtube');
-                updateYouTubeUi();
+                loadYouTube({ playlistId: extractedPlaylist }, { requireLens: true });
             }
         } else {
             alert('Please enter a valid YouTube video URL, playlist link, or 11-character video ID');
@@ -1739,7 +1806,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const pick = res.items[Math.floor(Math.random() * res.items.length)];
                     ytHistory.push(pick);
                     ytHistoryIndex = ytHistory.length - 1;
-                    loadYouTube(pick);
+                    loadYouTube(pick, { requireLens: true });
                     showHudNotification(`🎲 REROLLED FROM EXTRACTED PLAYLIST: ${pick.title || pick.id}`);
                 }
             } else {
