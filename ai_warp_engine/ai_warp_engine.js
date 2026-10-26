@@ -39,6 +39,39 @@
         return a + (b - a) * t;
     }
 
+    function buildMilkdropPresetBank() {
+        const families = [
+            { name:'Liquid Orbits', composite:'screen', yScale:0.78 },
+            { name:'Spiral Soup', composite:'lighter', yScale:0.92 },
+            { name:'Plasma Ribbons', composite:'screen', yScale:0.62 },
+            { name:'Kaleido Foam', composite:'lighter', yScale:1.00 },
+            { name:'Vortex Bloom', composite:'screen', yScale:0.70 },
+            { name:'Phosphor Nebula', composite:'soft-light', yScale:0.86 },
+            { name:'Lissajous Milk', composite:'lighter', yScale:1.08 },
+            { name:'Caustic Swirl', composite:'screen', yScale:0.74 }
+        ];
+        return Array.from({ length: 80 }, (_, index) => {
+            const familyIndex = Math.floor(index / 10), variation = index % 10, family = families[familyIndex];
+            return {
+                id: index + 1,
+                name: `${family.name} ${String(variation + 1).padStart(2, '0')}`,
+                family: family.name,
+                composite: family.composite,
+                hueOffset: (index * 47 + variation * 19) % 360,
+                zoomBias: (variation - 4.5) * 0.0013 + (familyIndex - 3.5) * 0.00065,
+                twist: 0.46 + familyIndex * 0.13 + variation * 0.095,
+                feedback: 0.27 + (variation % 6) * 0.026 + familyIndex * 0.012,
+                rings: 1 + ((familyIndex * 2 + variation) % 4),
+                waveFreq: 3 + ((familyIndex * 3 + variation) % 10),
+                waveAmp: 0.022 + (variation % 5) * 0.008 + familyIndex * 0.002,
+                bloom: 0.42 + ((familyIndex + variation) % 6) * 0.085,
+                opacity: 0.52 + ((familyIndex * 3 + variation) % 10) * 0.045,
+                yScale: family.yScale + (variation - 4.5) * 0.012,
+                mirror: ((familyIndex + variation) % 2) === 0
+            };
+        });
+    }
+
     function drawCover(ctx, media, cw, ch) {
         if (!media) return;
         const mw = media.videoWidth || media.naturalWidth || media.width || cw;
@@ -157,6 +190,17 @@
             this.softEyeK = 0.0;
             this.onSoftEyeProgress = null;
             this.hardLightActive = false;
+            this.milkdropActive = false;
+            this.milkdropOpacity = 0.82;
+            this.milkdropTargetOpacity = 0.82;
+            this.milkdropOpacityLocked = false;
+            this.milkdropLastRenderAt = 0;
+            this.milkdropStartAt = 0;
+            this.milkdropPresetIndex = -1;
+            this.milkdropPresetDeck = buildMilkdropPresetBank();
+            this.shuffleMilkdropPresetDeck();
+            this.milkdropCurrentPreset = null;
+            this.onMilkdropPresetChange = null;
             this.crescendo = null;
             this.burstGate = null;
             this.ear = null;
@@ -168,6 +212,10 @@
             this.ghostCtx = this.ghostCanvas.getContext('2d');
             this.genCanvas = document.createElement('canvas');
             this.genCtx = this.genCanvas.getContext('2d');
+            this.milkdropFeedbackCanvas = document.createElement('canvas');
+            this.milkdropFeedbackCtx = this.milkdropFeedbackCanvas.getContext('2d');
+            this.milkdropNextCanvas = document.createElement('canvas');
+            this.milkdropNextCtx = this.milkdropNextCanvas.getContext('2d');
 
             // Three.js Tech Artist Shader
             this.techArtistShader = null;
@@ -284,7 +332,7 @@
                 this.canvas.width = Math.round(w * dpr);
                 this.canvas.height = Math.round(h * dpr);
             }
-            [this.workCanvas, this.ghostCanvas, this.genCanvas].forEach(c => {
+            [this.workCanvas, this.ghostCanvas, this.genCanvas, this.milkdropFeedbackCanvas, this.milkdropNextCanvas].forEach(c => {
                 if (c && (c.width !== this.canvas.width || c.height !== this.canvas.height)) {
                     c.width = this.canvas.width;
                     c.height = this.canvas.height;
@@ -707,6 +755,7 @@
             this.isTimedAuto = false;
             this.softEyeActive = false;
             this.softEyeModeIndex = 0; // 'OFF'
+            this.setMilkdropActive(false);
             if (typeof this.onAutomationChange === 'function') {
                 this.onAutomationChange();
             }
@@ -731,6 +780,159 @@
                 startTime: now,
                 duration
             });
+        }
+
+        shuffleMilkdropPresetDeck() {
+            for (let i = this.milkdropPresetDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [this.milkdropPresetDeck[i], this.milkdropPresetDeck[j]] = [this.milkdropPresetDeck[j], this.milkdropPresetDeck[i]];
+            }
+        }
+
+        setMilkdropOpacity(value) {
+            const level = clamp01(parseFloat(value));
+            this.milkdropOpacity = level;
+            this.milkdropTargetOpacity = level;
+            return level;
+        }
+
+        setMilkdropActive(active) {
+            this.milkdropActive = !!active;
+            this.milkdropStartAt = this.milkdropActive ? performance.now() : 0;
+            this.milkdropLastRenderAt = 0;
+            if (this.milkdropActive) this.shuffleMilkdropPresetDeck();
+            this.milkdropPresetIndex = -1;
+            this.milkdropCurrentPreset = null;
+            [this.milkdropFeedbackCtx, this.milkdropNextCtx].forEach(ctx => {
+                if (ctx) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); }
+            });
+            return this.milkdropActive;
+        }
+
+        milkdropVoiceBlend() {
+            const totals = { weight:0, chroma:0, rhythm:0, texture:0, geometry:0 };
+            const names = this.effectNames || [];
+            for (let i = 0; i < names.length; i++) {
+                const name = names[i];
+                if (!this.effectEnabled[name]) continue;
+                const level = clamp01((this.effectAlphas[name] || 0) * this.masterOpacity);
+                if (level <= 0.005) continue;
+                const base = String(name).replace(/ GC#\(3\)$/, '');
+                let hash = 2166136261;
+                for (let j = 0; j < base.length; j++) hash = Math.imul(hash ^ base.charCodeAt(j), 16777619) >>> 0;
+                const grain = (hash % 997) / 996;
+                const isChroma = /Neon Grad|HSL Rainbow|Hue\/Color Cycle|B&W Invert/.test(base);
+                const isRhythm = /Flash|Strobe|Scanlines|Data Bands|VHS Glitch|Data Bomb/.test(base);
+                const isTexture = /ASCII|Font Burn|Ink Glyphs|Matrix|Gemini Bomb/.test(base);
+                const isGeometry = /Tech Artist|Neon Grad|VHS Glitch|Data Bands|Gemini Bomb/.test(base);
+                totals.weight += level;
+                totals.chroma += level * (isChroma ? 1.25 : 0.55 + grain * 0.35);
+                totals.rhythm += level * (isRhythm ? 1.2 : 0.42 + (1 - grain) * 0.35);
+                totals.texture += level * (isTexture ? 1.2 : 0.45 + grain * 0.28);
+                totals.geometry += level * (isGeometry ? 1.15 : 0.48 + (1 - grain) * 0.3);
+            }
+            const d = totals.weight || 1;
+            return {
+                activity: clamp01(totals.weight / 3.2),
+                chroma: clamp01(totals.chroma / d), rhythm: clamp01(totals.rhythm / d),
+                texture: clamp01(totals.texture / d), geometry: clamp01(totals.geometry / d)
+            };
+        }
+
+        /* Milkdrop/projectM-inspired Canvas feedback and wave automations.
+           This is an original, dependency-free renderer: zoom/rotation feedback,
+           audio-reactive polar waveforms, and soft metaball-like colour blooms. */
+        renderMilkdrop(now) {
+            if (!this.milkdropActive) return;
+            const w = this.canvas.width, h = this.canvas.height;
+            if (!w || !h || !this.milkdropNextCtx || !this.milkdropFeedbackCtx) return;
+            if (!this.milkdropStartAt) this.milkdropStartAt = now;
+            const elapsed = Math.max(0, now - this.milkdropStartAt);
+            const modeBlend = this.getWarpBlendProfile();
+            const presetDuration = 14000 / Math.max(0.65, modeBlend.automation);
+            const presetIndex = Math.floor(elapsed / presetDuration) % this.milkdropPresetDeck.length;
+            if (presetIndex !== this.milkdropPresetIndex || !this.milkdropCurrentPreset) {
+                this.milkdropPresetIndex = presetIndex;
+                this.milkdropCurrentPreset = this.milkdropPresetDeck[presetIndex];
+                if (!this.milkdropOpacityLocked) this.milkdropTargetOpacity = this.milkdropCurrentPreset.opacity;
+                if (typeof this.onMilkdropPresetChange === 'function') this.onMilkdropPresetChange(this.milkdropCurrentPreset, presetIndex);
+            }
+            const preset = this.milkdropCurrentPreset;
+            const opacityDt = this.milkdropLastRenderAt ? Math.max(0, Math.min(0.1, (now - this.milkdropLastRenderAt) / 1000)) : 0;
+            this.milkdropLastRenderAt = now;
+            this.milkdropOpacity = lerp(this.milkdropOpacity, this.milkdropTargetOpacity, 1 - Math.exp(-opacityDt * 2.4));
+            const t = elapsed * 0.001;
+            const voiceBlend = this.milkdropVoiceBlend();
+            const audio = this.audioDrive || {};
+            const bass = clamp01((audio.bass || audio.drive || 0) * modeBlend.ear * (0.86 + voiceBlend.rhythm * 0.14));
+            const mid = clamp01((audio.mid || audio.drive || 0) * modeBlend.ear * (0.88 + voiceBlend.texture * 0.12));
+            const treble = clamp01((audio.treble || 0) * modeBlend.ear * (0.88 + voiceBlend.chroma * 0.12));
+            const beat = clamp01((audio.beat || 0) * modeBlend.ear * (0.85 + voiceBlend.rhythm * 0.15));
+            const hueBase = ((this.videoPalette.hue || 0) + preset.hueOffset + t * (8 + treble * 26 * modeBlend.vsyncSpeed) + modeBlend.huePhase) % 360;
+            const zoom = 1.002 + preset.zoomBias + 0.006 * Math.sin(t * 0.42 + preset.id) + bass * 0.009
+                + (modeBlend.canvas - 1) * 0.002 + voiceBlend.geometry * 0.0015;
+            const spin = Math.sin(t * 0.31 + preset.id * 0.8) * (0.002 + beat * 0.012) * preset.twist
+                * (0.72 + modeBlend.vsyncSpeed * 0.14 + modeBlend.vsyncRoll * 0.14) * modeBlend.phase;
+            const fbAlpha = Math.min(0.78, preset.feedback + 0.08 * (0.5 + 0.5 * Math.sin(t * 0.47))
+                + bass * 0.10 + modeBlend.ghostWarp * 0.035 + modeBlend.softEye * 0.025
+                + voiceBlend.texture * 0.065 + voiceBlend.activity * 0.04);
+            const dst = this.milkdropNextCtx, fb = this.milkdropFeedbackCtx;
+            dst.save(); dst.setTransform(1, 0, 0, 1, 0, 0); dst.clearRect(0, 0, w, h);
+            dst.globalCompositeOperation = 'source-over'; dst.globalAlpha = 1; dst.filter = 'none';
+            dst.drawImage(this.canvas, 0, 0, w, h);
+            // Smooth feedback loop: gently zoom, rotate, hue-shift and soften prior frames.
+            dst.save(); dst.translate(w * 0.5, h * 0.5); dst.rotate(spin); dst.scale(zoom, zoom);
+            dst.translate(-w * 0.5, -h * 0.5);
+            dst.globalCompositeOperation = voiceBlend.chroma > 0.72 || modeBlend.vsyncTears > 1.12 ? 'lighter' : preset.composite;
+            dst.globalAlpha = fbAlpha;
+            dst.filter = `hue-rotate(${(hueBase * 0.18 + modeBlend.ghostChroma * 12 + voiceBlend.chroma * 28).toFixed(1)}deg) saturate(${(1.08 + modeBlend.hardLight * 0.12 + voiceBlend.chroma * 0.45).toFixed(2)}) blur(${(0.28 + bass * 0.65 + modeBlend.softEye * 0.12).toFixed(2)}px)`;
+            dst.drawImage(this.milkdropFeedbackCanvas, 0, 0, w, h); dst.restore(); dst.filter = 'none';
+            // Distinctive Milkdrop-style polar waveforms, driven by the analyser when available.
+            const cx = w * 0.5, cy = h * 0.5, minDim = Math.min(w, h);
+            const rings = Math.max(1, Math.min(5, preset.rings + (voiceBlend.geometry > 0.72 ? 1 : 0) + (modeBlend.vsyncTears > 1.18 ? 1 : 0)));
+            for (let ring = 0; ring < rings; ring++) {
+                const points = 192 + Math.round(voiceBlend.texture * 48);
+                const baseR = minDim * (0.14 + ring * 0.065 + bass * 0.035 + modeBlend.ghostSplit * 0.004);
+                dst.beginPath();
+                for (let i = 0; i <= points; i++) {
+                    const a = i / points * Math.PI * 2;
+                    const wave = Math.sin(a * (preset.waveFreq + ring * 2 + Math.round(modeBlend.vsyncTears * 0.6)) + t * (1.1 + ring * 0.24) * modeBlend.vsyncSpeed) * (preset.waveAmp * (0.78 + modeBlend.ghostWarp * 0.16 + voiceBlend.rhythm * 0.28) + mid * 0.085 + beat * 0.035)
+                        + Math.sin(a * (7 + ring * 2 + Math.round(voiceBlend.chroma * 2)) - t * 0.73 * modeBlend.phase) * (0.012 + treble * 0.045);
+                    const r = baseR * (1 + wave);
+                    const angle = a + t * (0.07 + modeBlend.vsyncRoll * 0.012) * (ring % 2 ? -1 : 1);
+                    const x = cx + Math.cos(angle) * r;
+                    const y = cy + Math.sin(angle) * r * Math.max(0.48, Math.min(1.35, preset.yScale * modeBlend.canvas + 0.12 * Math.sin(t * 0.18)));
+                    if (!i) dst.moveTo(x, y); else dst.lineTo(x, y);
+                }
+                dst.closePath(); dst.globalCompositeOperation = 'screen';
+                dst.globalAlpha = Math.min(0.52, 0.07 + preset.bloom * 0.08 + 0.10 * bass + 0.05 * beat + modeBlend.ghostLines * 0.035 + voiceBlend.chroma * 0.08);
+                dst.strokeStyle = `hsla(${(hueBase + ring * 92 + voiceBlend.chroma * 36) % 360},100%,${Math.min(82, 58 + ring * 5 + modeBlend.hardLight * 5)}%,0.95)`;
+                dst.lineWidth = Math.max(1.25, minDim * (0.0015 + ring * 0.00042) * modeBlend.ghostGlow); dst.stroke();
+            }
+            // Soft liquid blooms: layered radial gradients create a soup-like colour mashup.
+            dst.globalCompositeOperation = voiceBlend.chroma > 0.55 ? 'lighter' : 'screen';
+            dst.filter = `blur(${(minDim * (0.008 + modeBlend.softEye * 0.003 + voiceBlend.texture * 0.002)).toFixed(1)}px)`;
+            const bloomCount = Math.max(3, Math.min(9, 3 + (preset.id % 5) + (voiceBlend.texture > 0.60 ? 1 : 0) + (voiceBlend.geometry > 0.78 ? 1 : 0)));
+            for (let i = 0; i < bloomCount; i++) {
+                const a = t * (0.18 + i * 0.025) + i * Math.PI * 0.4;
+                const x = cx + Math.cos(a * (0.82 + voiceBlend.geometry * 0.30)) * minDim * (0.15 + 0.045 * Math.sin(t * 0.37 + i) + voiceBlend.geometry * 0.025);
+                const y = cy + Math.sin(a * (1.05 + modeBlend.phase * 0.12)) * minDim * (0.10 + 0.04 * Math.cos(t * 0.29 + i) + voiceBlend.texture * 0.02);
+                const r = minDim * (0.04 + preset.bloom * 0.022 + 0.025 * bass + voiceBlend.geometry * 0.012 + 0.01 * Math.sin(t * 0.6 + i));
+                const grad = dst.createRadialGradient(x, y, r * 0.05, x, y, r);
+                grad.addColorStop(0, `hsla(${(hueBase + i * (45 + modeBlend.ghostChroma * 9) + voiceBlend.chroma * 42) % 360},100%,${Math.min(88, 66 + modeBlend.hardLight * 6)}%,${(0.08 + bass * 0.08 + voiceBlend.activity * 0.06).toFixed(3)})`);
+                grad.addColorStop(0.48, `hsla(${(hueBase + i * 61 + 28 + voiceBlend.rhythm * 24) % 360},96%,58%,${(0.045 + voiceBlend.texture * 0.025).toFixed(3)})`);
+                grad.addColorStop(1, 'hsla(0,0%,0%,0)');
+                dst.globalAlpha = 0.62; dst.fillStyle = grad; dst.beginPath(); dst.arc(x, y, r, 0, Math.PI * 2); dst.fill();
+                if (preset.mirror && i % 2 === 0) { dst.globalAlpha = 0.30; dst.beginPath(); dst.arc(w - x, h - y, r * 0.78, 0, Math.PI * 2); dst.fill(); }
+            }
+            dst.filter = 'none'; dst.restore();
+            // Persist the composite for the next frame, then place it back on the voice canvas.
+            fb.save(); fb.setTransform(1, 0, 0, 1, 0, 0); fb.clearRect(0, 0, w, h); fb.drawImage(this.milkdropNextCanvas, 0, 0); fb.restore();
+            const g = this.gctx; g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+            g.globalCompositeOperation = 'source-over'; g.filter = 'none';
+            g.globalAlpha = clamp01(this.milkdropOpacity);
+            if (g.globalAlpha > 0.001) g.drawImage(this.milkdropNextCanvas, 0, 0);
+            g.restore();
         }
 
         renderTransientEffects(now) {
@@ -3057,6 +3259,7 @@
             //    the iframe itself remains protected by browser cross-origin rules and
             //    is warped by the CSS Warp Bus above (or by captured source frames).
             this.renderAiWarp(now);
+            this.renderMilkdrop(now);
 
             // 7. Transient Button Effects Overlay
             this.renderTransientEffects(now);

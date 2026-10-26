@@ -1,16 +1,16 @@
 # ⚡ AI WARP ENGINE — Windows App (R3 Canvas Edition v6.4)
 
 <p align="center">
-  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.17" width="720">
+  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.18" width="720">
 </p>
 
 A public-domain glitch visual synthesizer and audio-reactive media playground, packaged as a standalone Windows app with a one-click installer.
 
-**Status: Complete · Ready** (v6.4.17) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
+**Status: Complete · Ready** (v6.4.18) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
 
 ## Install
 
-1. Download `AI-WARP-ENGINE-6.4.17-x64-setup.exe` from the latest release.
+1. Download `AI-WARP-ENGINE-6.4.18-x64-setup.exe` from the latest release.
 2. Run it, accept the licence terms, and finish the wizard. No admin rights are needed.
 3. The app installs to `Desktop\AI WARP ENGINE`, with a launcher shortcut, a Start Menu entry and an uninstaller.
 
@@ -55,7 +55,11 @@ Each voice has its own on/off, level, size and depth.
 
 Each of the 29 AI Warp modes now has a deterministic blend profile that tunes Ghost Protocol and V-Sync color, split, scan, warp and automation pacing. R3 factory effects, Canvas warp strength, Hard Light, Soft-Eye and audio-ear response follow the active profile while preserving the existing master levels and user-protected voice intent.
 
-See the [v6.4.17 release notes](RELEASE_NOTES_6.4.17.md) for details and installer checksum.
+### DROP THE MILK? (v6.4.18)
+
+Adds original, dependency-free Milkdrop-inspired Canvas feedback with audio-reactive polar waveforms, liquid colour blooms, and 80 shuffled presets. Presets cross-blend with active AI Warp modes and FX voices. The opacity slider follows preset automation while unlocked; lock it to hold a chosen level. The slider value and lock state persist across reloads. Press `D` to toggle the effect.
+
+See the [v6.4.18 release notes](RELEASE_NOTES_6.4.18.md) for details and installer checksum.
 ### Capture and audio
 
 - **Display capture** (`N`) shares a tab, window or screen as the source.
@@ -77,6 +81,7 @@ Press `?` in the app for the in-app shortcut list. Hotkeys are ignored while a t
 | `R` | Randomise |
 | `T` | Timed Automation |
 | `C` | Crescendo |
+| `D` | Toggle DROP THE MILK? feedback FX |
 | `Z` | Zero everything |
 | `S` | Freeze frame |
 | `M` | Toggle microphone |
@@ -124,6 +129,7 @@ The web app is plain HTML / JS / CSS, so you can also run it in any Chromium bro
 
 | Version | Highlights |
 |---------|------------|
+| v6.4.18 | DROP THE MILK? adds 80 shuffled, audio-reactive Milkdrop-inspired Canvas presets, FX blending and persistent opacity lock |
 | v6.4.17 | Mode-aware FX profiles for all 29 AI Warp modes, deterministic automation, and blended Ghost/V-Sync/R3/Canvas effects |
 | v6.4.16 | Final: YT LENS audio now uses the direct Windows process-loopback audio driver (only this app's sound, system loopback fallback) |
 | v6.4.15 | YT LENS audio is now real: the shell captures the app's own audio with the direct per-process audio driver (system-loopback fallback) and drives the audio monitor, cadence and EAR modes |

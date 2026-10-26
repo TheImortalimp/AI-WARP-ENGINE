@@ -112,6 +112,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.AiWarpEngine) {
         aiWarp = new window.AiWarpEngine('glitchCanvas');
         window.aiWarpEngine = aiWarp;
+        try {
+            const savedMilkdrop = JSON.parse(localStorage.getItem('ai_warp_milkdrop_control') || 'null');
+            if (savedMilkdrop && Number.isFinite(+savedMilkdrop.opacity)) aiWarp.setMilkdropOpacity(savedMilkdrop.opacity);
+            if (savedMilkdrop) aiWarp.milkdropOpacityLocked = !!savedMilkdrop.locked;
+        } catch (e) {}
         aiWarp.onAutomationChange = () => {
             const now = performance.now();
             if (now - lastAutomationSync > 50) { // ~20fps UI throttling
@@ -119,6 +124,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (typeof syncUiFromEngine === 'function') syncUiFromEngine();
             }
         };
+        aiWarp.onMilkdropPresetChange = () => {
+            if (typeof syncUiFromEngine === 'function') syncUiFromEngine();
+            saveMilkdropControlState();
+        };
+    }
+
+    function saveMilkdropControlState() {
+        if (!aiWarp) return;
+        try {
+            localStorage.setItem('ai_warp_milkdrop_control', JSON.stringify({
+                opacity: aiWarp.milkdropTargetOpacity,
+                locked: !!aiWarp.milkdropOpacityLocked
+            }));
+        } catch (e) {}
     }
 
     function generateFallbackPresets(customSeed) {
@@ -2652,6 +2671,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             softEyeBtn.classList.toggle('active', mode !== 'OFF');
         }
 
+        const milkdropBtn = document.getElementById('milkdropBtn');
+        if (milkdropBtn) {
+            const preset = aiWarp.milkdropCurrentPreset;
+            milkdropBtn.textContent = aiWarp.milkdropActive && preset
+                ? `DROP THE MILK? ${String(aiWarp.milkdropPresetIndex + 1).padStart(2, '0')}/80`
+                : `DROP THE MILK? ${aiWarp.milkdropActive ? 'ON' : 'OFF'}`;
+            milkdropBtn.title = aiWarp.milkdropActive && preset
+                ? `Now playing ${preset.name}; shuffled 80-effect deck auto-advances on a mode-aware ~12–17 second cadence.`
+                : 'Toggle DROP THE MILK? — randomized 80-effect Milkdrop/projectM-inspired feedback automation.';
+            milkdropBtn.classList.toggle('active', !!aiWarp.milkdropActive);
+        }
+        const milkdropOpacitySlider = document.getElementById('milkdropOpacitySlider');
+        const milkdropOpacityValBadge = document.getElementById('milkdropOpacityValBadge');
+        const milkdropOpacityLockBtn = document.getElementById('milkdropOpacityLockBtn');
+        const milkdropOpacity = aiWarp.milkdropTargetOpacity == null ? aiWarp.milkdropOpacity : aiWarp.milkdropTargetOpacity;
+        if (milkdropOpacitySlider) milkdropOpacitySlider.value = milkdropOpacity;
+        if (milkdropOpacityValBadge) milkdropOpacityValBadge.textContent = `${Math.round(milkdropOpacity * 100)}%`;
+        if (milkdropOpacityLockBtn) {
+            milkdropOpacityLockBtn.textContent = aiWarp.milkdropOpacityLocked ? '🔒' : '🔓';
+            milkdropOpacityLockBtn.classList.toggle('locked', !!aiWarp.milkdropOpacityLocked);
+            milkdropOpacityLockBtn.title = aiWarp.milkdropOpacityLocked ? 'Milkdrop opacity locked; preset automation will leave this level unchanged.' : 'Lock Milkdrop opacity against preset automation.';
+        }
+
         const earBtn = document.getElementById('earBtn');
         if (earBtn) {
             const m = aiWarp.earMode || 'auto';
@@ -2860,6 +2902,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
+    const milkdropBtn = document.getElementById('milkdropBtn');
+    if (milkdropBtn) {
+        milkdropBtn.onclick = () => {
+            aiWarp.setMilkdropActive(!aiWarp.milkdropActive);
+            syncUiFromEngine();
+            showHudNotification(aiWarp.milkdropActive
+                ? 'DROP THE MILK? [ON] · SOUPY FEEDBACK / POLAR WAVES / AUTO PRESETS'
+                : 'DROP THE MILK? [OFF]');
+        };
+    }
+
     if (aiWarp) {
         aiWarp.onSoftEyeProgress = (k, mode) => {
             if (softEyeBtn) softEyeBtn.style.setProperty('--k', k.toFixed(3));
@@ -2998,12 +3051,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const vsyncLockBtn = document.getElementById('vsyncLockBtn');
+    const milkdropOpacitySlider = document.getElementById('milkdropOpacitySlider');
+    const milkdropOpacityValBadge = document.getElementById('milkdropOpacityValBadge');
+    const milkdropOpacityLockBtn = document.getElementById('milkdropOpacityLockBtn');
+    const nullMilkdropOpacityBtn = document.getElementById('null-milkdrop-opacity-btn');
     if (vsyncLockBtn) {
         vsyncLockBtn.onclick = () => {
             aiWarp.vsyncLocked = !aiWarp.vsyncLocked;
             vsyncLockBtn.textContent = aiWarp.vsyncLocked ? '🔒' : '🔓';
             vsyncLockBtn.classList.toggle('locked', aiWarp.vsyncLocked);
             showHudNotification(`V-SYNC ${aiWarp.vsyncLocked ? 'LOCKED' : 'UNLOCKED'}`);
+        };
+    }
+    if (milkdropOpacityLockBtn) {
+        milkdropOpacityLockBtn.onclick = () => {
+            aiWarp.milkdropOpacityLocked = !aiWarp.milkdropOpacityLocked;
+            if (!aiWarp.milkdropOpacityLocked && aiWarp.milkdropCurrentPreset) {
+                aiWarp.milkdropTargetOpacity = aiWarp.milkdropCurrentPreset.opacity;
+            }
+            syncUiFromEngine();
+            saveMilkdropControlState();
+            showHudNotification(`DROP THE MILK OPACITY ${aiWarp.milkdropOpacityLocked ? 'LOCKED' : 'UNLOCKED'}`);
+        };
+    }
+    if (nullMilkdropOpacityBtn) {
+        nullMilkdropOpacityBtn.onclick = () => {
+            aiWarp.setMilkdropOpacity(0);
+            syncUiFromEngine();
+            saveMilkdropControlState();
+            showHudNotification('DROP THE MILK OPACITY: 0%');
         };
     }
 
@@ -3093,6 +3169,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 aiWarp.setVsyncMode('OFF');
             }
             syncUiFromEngine();
+        };
+    }
+    if (milkdropOpacitySlider) {
+        milkdropOpacitySlider.oninput = () => {
+            const val = parseFloat(milkdropOpacitySlider.value);
+            aiWarp.setMilkdropOpacity(val);
+            if (milkdropOpacityValBadge) milkdropOpacityValBadge.textContent = `${Math.round(val * 100)}%`;
+            saveMilkdropControlState();
         };
     }
 
@@ -3575,6 +3659,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (key === 'c') {
             const cBtn = document.getElementById('crescendoBtn');
             if (cBtn) cBtn.click();
+            return;
+        }
+
+        if (key === 'd') {
+            const milkBtn = document.getElementById('milkdropBtn');
+            if (milkBtn) milkBtn.click();
             return;
         }
 

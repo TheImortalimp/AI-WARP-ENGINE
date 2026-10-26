@@ -60,7 +60,7 @@
     <header id="glitch-top-bar">
         <div class="hud-title-cluster">
             <h1>AI Warp Engine</h1>
-            <span class="hud-version-badge">v6.0 · OMNI</span>
+            <span class="hud-version-badge">v6.4.18 · FX</span>
         </div>
 
         <div class="hud-visualizer-group">
@@ -212,6 +212,7 @@
             <button id="autoMastersBtn" class="wired-button" title="Toggle Automated Drift for Speed, Opacity & Motion">AUTO MASTERS: OFF</button>
             <button id="hardLightBtn" class="wired-button" title="Toggle High-Contrast Electric Blend Mode">HARD-LIGHT: OFF</button>
             <button id="softEyeBtn" class="wired-button" title="Toggle Soft-Eye Crescendo Scheduler & Pacing">SOFT-EYE: CALM</button>
+            <button id="milkdropBtn" class="wired-button" title="Toggle Drop the Milk? — soupy, audio-reactive Milkdrop/projectM-inspired feedback FX">DROP THE MILK? OFF</button>
             <button id="earBtn" class="wired-button" title="Audio Reactive Ear: AUTO / AUDIO / CANVAS">EAR: AUTO</button>
             <button id="timedAutoBtn" class="wired-button" title="Toggle Timed Effects Automation Cadence">TIMED AUTO: OFF</button>
             <button id="crescendoBtn" class="wired-button" title="Trigger Soft-Eye Crescendo Overdrive">CRESCENDO ⚡</button>
@@ -261,6 +262,13 @@
                 <input id="vsyncScanSlider" type="range" min="0" max="1" step="0.01" value="0">
                 <button id="vsyncLockBtn" class="lock-btn" title="Lock V-Sync against Automation">🔓</button>
                 <span id="vsyncValBadge" class="slider-val-badge">0%</span>
+            </div>
+            <div class="slider-group milkdrop-opacity-group" title="Milkdrop opacity; unlocked presets may automate this level.">
+                <button id="null-milkdrop-opacity-btn" class="null-btn" title="Set Drop the Milk opacity to zero">0</button>
+                <label for="milkdropOpacitySlider">MILKDROP</label>
+                <input id="milkdropOpacitySlider" type="range" min="0" max="1" step="0.01" value="0.82" aria-label="Drop the Milk opacity">
+                <button id="milkdropOpacityLockBtn" class="lock-btn" title="Lock Milkdrop opacity against preset automation" aria-label="Lock Milkdrop opacity">🔓</button>
+                <span id="milkdropOpacityValBadge" class="slider-val-badge">82%</span>
             </div>
         </div>
     </footer>
@@ -361,6 +369,7 @@
                     <div class="shortcut-item"><kbd>R</kbd><span>Toggle Continual LFO Randomization</span></div>
                     <div class="shortcut-item"><kbd>T</kbd><span>Toggle Timed Effects Automation</span></div>
                     <div class="shortcut-item"><kbd>C</kbd><span>Trigger Soft-Eye Crescendo Overdrive ⚡</span></div>
+                    <div class="shortcut-item"><kbd>D</kbd><span>Toggle DROP THE MILK? soupy feedback and wave automation</span></div>
                     <div class="shortcut-item"><kbd>Z</kbd><span>EMP Purge / Zero All Active Channels</span></div>
                     <div class="shortcut-item"><kbd>M</kbd><span>Toggle the live microphone audio input</span></div>
                     <div class="shortcut-item"><kbd>Y</kbd><span>Load the featured YouTube playlist into the YouTube canvas feed</span></div>

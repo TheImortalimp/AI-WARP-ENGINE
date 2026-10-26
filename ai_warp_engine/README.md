@@ -15,6 +15,7 @@
 4. **V-Sync R3/v11** — Scanphasing, Color Harmony, and Sharp modes with scan bands, tracking tears, roll, phosphor texture, per-mode levels, V-Sync locking, and retained OFF rails.
 5. **R3 automation confluence** — Auto Glitch, Continual Randomization, Timed Automation, Automated Masters, Soft-Eye/Crescendo, and visual/audio-ear signals can drive Ghost/V-Sync targets and synchronized light bursts.
 5a. **Mode-aware FX blending** — each AI Warp mode deterministically tunes Ghost/V-Sync color, split, scan, warp, and automation pacing; the original master levels and protected voice intent remain respected.
+5b. **DROP THE MILK? (v6.4.18)** — original Milkdrop-inspired Canvas feedback with analyser-reactive polar waves and liquid colour blooms, 80 shuffled presets blended with AI Warp modes and active voices, and persistent preset-driven opacity with a manual lock.
 6. **Canvas/WebGL effects core** — all voice rendering stays on Canvas/WebGL. The single sanctioned SVG usage (v6.3.1) is the compositor-level Warp Lens (`feTurbulence → feDisplacementMap`) on the YouTube shell only — still no JS pixel readback, no SVG DOM mutation beyond the two animated displacement attributes, and no SVG filters in the canvas pipeline.
 7. **Media studio** — local image/video/audio support, YouTube controls and knowledgebase, microphone monitoring, and procedural synthetic audio.
 8. **Performance controls** — held Ghost/V-Sync rails, direct null controls, locks, 80 randomized machine presets, user presets, live mixer levels, and keyboard shortcuts.
@@ -93,6 +94,7 @@ Internally these correspond to `ON`, `GHOST_OFF`, and `FULL` R3 methods.
 | **Auto Masters** | Retargets unlocked Ghost/V-Sync rails and a complementary core/R3 accent pair with the master board. |
 | **Soft-Eye** | Drives the R3 crescendo state machine, visual/audio ear, and burst gate. |
 | **Crescendo** | Triggers a high-impact Ghost/V-Sync burst plus temporary Flash/Strobe flares in both voice banks. |
+| **DROP THE MILK?** | Layers audio-reactive Canvas feedback and polar waveforms; cycles 80 shuffled presets whose opacity can be automated or locked by the user. |
 | **Presets** | Store and restore Ghost mode/level and V-Sync mode-specific rail levels. |
 
 ---
@@ -109,6 +111,7 @@ Internally these correspond to `ON`, `GHOST_OFF`, and `FULL` R3 methods.
 | `R` | Randomize the effects board |
 | `T` | Cycle Timed Automation cadence |
 | `C` | Trigger Crescendo |
+| `D` | Toggle DROP THE MILK? feedback FX |
 | `Z` | EMP Purge / zero all voices and R3 rails |
 | `M` | Toggle microphone monitor |
 | `H` | Toggle fullscreen HUD state |
