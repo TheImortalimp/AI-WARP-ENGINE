@@ -1,3 +1,4 @@
+;/* ===== r3_ghost_vsync.js ===== */
 /**
  * R3 GHOST PROTOCOL + V-SYNC ENGINE
  * Canvas-only integration of the Ghost Protocol v11 / V-Sync v11 behaviour from
@@ -27,6 +28,63 @@
         GHOST_OFF: { bar: 0.35, tears: 0.12, roll: 0.14, hum: 0.18, snap: 0, sharp: 0.40, scanphase: 0.32, harmony: 1.00 },
         FULL:      { bar: 1.15, tears: 1.00, roll: 0.85, hum: 0.85, snap: 1, sharp: 1.00, scanphase: 0.88, harmony: 0.55 }
     };
+
+    // Deterministic per-AI-Warp blend tuning. Values are intentionally restrained;
+    // they shape Ghost/V-Sync character without changing the user's master levels.
+    const WARP_BLEND = {
+        liquid:                 [1.06,0.96,0.90,0.90,0.92, 0.82,0.82,0.70,0.86, 0],
+        prism:                  [0.82,1.08,1.06,1.02,1.04, 1.02,0.92,0.78,0.92, 72],
+        breathe:                [0.94,0.90,0.78,0.78,0.84, 0.72,0.72,0.62,0.78, 144],
+        fold:                   [0.88,1.05,1.14,1.10,0.96, 0.92,1.08,0.94,1.02, 216],
+        aurora:                 [1.12,1.08,0.82,0.86,1.12, 0.76,0.78,0.66,0.80, 288],
+        vortex:                 [1.10,1.10,1.00,1.16,0.96, 1.08,1.14,1.04,1.08, 36],
+        cybergrid:              [0.80,0.96,1.20,1.10,0.84, 1.10,1.12,0.92,1.12, 108],
+        hyperdrive:              [1.18,1.04,0.92,1.14,1.08, 1.22,1.16,1.20,1.18, 180],
+        kaleidoscope:           [0.88,1.18,0.92,0.96,1.02, 0.88,0.84,0.76,0.90, 252],
+        quantum:                [1.04,1.20,1.12,1.10,0.90, 1.16,1.22,1.02,1.18, 324],
+        ripple:                 [1.08,0.92,0.84,0.92,0.90, 0.78,0.86,0.74,0.84, 18],
+        analog_crt:             [0.76,0.90,1.16,0.88,0.74, 0.82,1.00,0.78,0.92, 90],
+        newblue_roll:           [0.92,0.98,1.02,0.96,0.88, 1.18,1.10,1.30,1.12, 162],
+        newblue_active_cam:     [1.10,1.08,1.10,1.10,1.00, 1.12,1.08,1.12,1.12, 234],
+        newblue_shear:          [0.82,0.98,1.12,1.14,0.88, 0.94,1.18,0.96,1.06, 306],
+        newblue_wiggle:         [1.14,1.02,1.16,1.06,0.92, 1.20,1.06,1.08,1.14, 45],
+        newblue_zoom_blur:      [1.16,0.92,0.90,1.12,1.06, 1.18,0.96,1.12,1.14, 117],
+        newblue_video_tile:     [0.80,1.12,1.10,0.94,0.86, 0.98,1.12,0.82,1.02, 189],
+        newblue_twirl:          [1.12,1.08,0.94,1.10,1.00, 0.96,0.98,0.92,0.98, 261],
+        newblue_light_ring:     [0.94,0.98,0.78,0.82,1.18, 0.82,0.72,0.68,0.78, 333],
+        newblue_earthquake:     [1.16,1.16,1.18,1.18,0.90, 1.24,1.24,1.18,1.22, 54],
+        newblue_water_drop:     [1.08,0.94,0.84,0.92,1.00, 0.78,0.88,0.74,0.84, 126],
+        newblue_rgb_shift:      [1.22,1.20,0.96,1.02,0.96, 1.02,0.94,0.82,0.96, 198],
+        newblue_quad_mirror:    [0.80,1.10,0.92,0.90,0.94, 0.90,0.84,0.76,0.88, 270],
+        newblue_fish_eye:       [1.06,0.92,0.86,0.98,0.98, 0.86,0.82,0.72,0.84, 342],
+        newblue_pinch:          [0.92,0.94,0.90,0.94,0.92, 0.88,0.86,0.76,0.86, 63],
+        newblue_solarize:       [0.92,1.14,0.94,0.98,1.02, 1.04,0.94,0.80,0.98, 135],
+        newblue_cathode_beam:   [0.74,0.90,1.20,0.94,0.78, 0.84,1.08,0.82,0.94, 207],
+        newblue_neon_edges:     [1.02,1.16,0.88,0.96,1.20, 0.94,0.82,0.74,0.90, 279]
+    };
+    const WARP_AUX = {
+        liquid:[0.82,0.92,0.90,1.02,0.88], prism:[1.08,0.98,1.02,0.94,1.02], breathe:[0.78,0.88,0.92,0.88,0.78],
+        fold:[1.04,0.96,0.94,1.06,0.98], aurora:[0.92,1.08,1.06,0.98,0.90], vortex:[1.06,1.02,1.06,1.10,1.08],
+        cybergrid:[1.08,0.94,0.96,1.04,1.06], hyperdrive:[1.12,1.08,1.04,1.12,1.18], kaleidoscope:[0.98,1.02,0.98,0.96,0.92],
+        quantum:[1.14,1.10,1.12,1.10,1.14], ripple:[0.84,0.90,0.94,0.92,0.82], analog_crt:[0.92,0.90,0.88,0.86,0.82],
+        newblue_roll:[1.02,1.04,1.02,1.02,1.02], newblue_active_cam:[1.08,1.08,1.10,1.06,1.08], newblue_shear:[1.04,0.98,0.98,1.02,1.00],
+        newblue_wiggle:[0.96,1.00,1.04,1.00,1.02], newblue_zoom_blur:[1.06,1.04,1.08,1.06,1.10], newblue_video_tile:[0.96,0.94,0.92,0.98,0.92],
+        newblue_twirl:[1.00,1.00,1.02,1.00,1.00], newblue_light_ring:[0.90,1.00,1.00,0.94,0.88], newblue_earthquake:[1.16,1.12,1.08,1.16,1.18],
+        newblue_water_drop:[0.86,0.92,0.96,0.92,0.84], newblue_rgb_shift:[1.10,1.04,1.00,1.04,1.04], newblue_quad_mirror:[0.94,0.96,0.94,0.96,0.90],
+        newblue_fish_eye:[0.94,0.94,0.98,0.96,0.92], newblue_pinch:[0.92,0.94,0.96,0.94,0.90], newblue_solarize:[1.06,1.00,0.98,1.02,1.02],
+        newblue_cathode_beam:[0.90,0.90,0.88,0.90,0.84], newblue_neon_edges:[1.08,1.06,1.02,1.02,1.04]
+    };
+    const DEFAULT_WARP_BLEND = [1,1,1,1,1,1,1,1,1,0];
+    function warpBlendFor(mode) {
+        const v = WARP_BLEND[mode] || DEFAULT_WARP_BLEND, a = WARP_AUX[mode] || [1,1,1,1,1];
+        return { ghostSplit:v[0], ghostChroma:v[1], ghostLines:v[2], ghostWarp:v[3], ghostGlow:v[4],
+            vsyncSpeed:v[5], vsyncTears:v[6], vsyncRoll:v[7], phase:v[8], huePhase:v[9],
+            hardLight:a[0], softEye:a[1], ear:a[2], canvas:a[3], automation:a[4] };
+    }
+    function noise01(slot, salt) {
+        const n = Math.sin(slot * 12.9898 + salt * 78.233) * 43758.5453;
+        return n - Math.floor(n);
+    }
 
     function palette(engine) {
         const p = engine.videoPalette || {};
@@ -61,6 +119,7 @@
     }
 
     function create(engine) {
+        const random = () => typeof engine.nextDeterministicValue === 'function' ? engine.nextDeterministicValue() : Math.random();
         const scripts = {
             ON: { level: Math.max(0.01, engine.vsyncLevel || 0.60), target: Math.max(0.01, engine.vsyncLevel || 0.60), nextAt: 0, lastPct: -1 },
             GHOST_OFF: { level: 0.60, target: 0.60, nextAt: 0, lastPct: -1 },
@@ -158,7 +217,7 @@
                 const next = level == null ? Math.max(0.35, state.level, heldLevel * 0.75) : clamp01(level);
                 state.level = next;
                 state.target = next;
-                state.nextAt = performance.now() + 1400 + Math.random() * 1600;
+                state.nextAt = performance.now() + (1400 + random() * 1600) / warpBlendFor(engine.aiWarpMode).automation;
                 heldLevel = Math.max(heldLevel, next);
                 engine.vsyncLevel = next;
             } else {
@@ -203,9 +262,9 @@
         }
 
         function requestBurst(now, source, strength, kind) {
-            const duration = 700 + Math.random() * 1400;
+            const duration = 700 + random() * 1400;
             burstOverride = {
-                source: source || 'manual', kind: kind || (Math.random() < 0.42 ? 'dia' : Math.random() < 0.62 ? 'color' : 'both'),
+                source: source || 'manual', kind: kind || (random() < 0.42 ? 'dia' : random() < 0.62 ? 'color' : 'both'),
                 start: now, duration, amp: clamp(strength == null ? 0.72 : strength, 0.2, 1)
             };
             if (engine.crescendo && typeof engine.crescendo.request === 'function') {
@@ -235,13 +294,15 @@
             if (!engine.ear || typeof engine.ear.feedVisual !== 'function') return null;
             const a = engine.audioDrive || {};
             const p = palette(engine);
-            const energy = clamp01(Math.max(a.drive || 0, a.rms || 0, p.energy));
-            const motion = clamp01(Math.max(p.motion, a.treble || 0));
+            const blend = warpBlendFor(engine.aiWarpMode);
+            const energy = clamp01(Math.max(a.drive || 0, a.rms || 0, p.energy) * blend.ear);
+            const motion = clamp01(Math.max(p.motion, a.treble || 0) * blend.canvas);
             try { return engine.ear.feedVisual(energy, motion, dt); } catch (e) { return null; }
         }
 
         function stepSoftEye(now, dt) {
             const ear = feedEar(dt);
+            const blend = warpBlendFor(engine.aiWarpMode);
             let k = engine.softEyeK || 0;
             if (engine.crescendo && typeof engine.crescendo.step === 'function') {
                 try { k = engine.crescendo.step(now, dt, engine.ear ? engine.ear.state : ear); } catch (e) {}
@@ -249,7 +310,7 @@
             if (engine.burstGate && typeof engine.burstGate.step === 'function') {
                 try { engine.burstGate.step(now, dt, k, engine.ear ? engine.ear.state : ear); } catch (e) {}
             }
-            engine.softEyeK = clamp01(k);
+            engine.softEyeK = clamp01(k * blend.softEye);
             const softModes = engine.softEyeModes || ['OFF', 'CALM', 'SURGE', 'CRESCENDO'];
             if (typeof engine.onSoftEyeProgress === 'function') engine.onSoftEyeProgress(engine.softEyeK, softModes[engine.softEyeModeIndex || 0] || 'CALM');
         }
@@ -265,11 +326,11 @@
                 state.target = state.level;
             } else if (automatic && !manual && now >= state.nextAt) {
                 const band = mode === 'FULL' ? [0.40, 1.00] : mode === 'GHOST_OFF' ? [0.35, 1.00] : [0.30, 0.95];
-                const dramatic = systemK > 0.55 && !engine.aiWarpActive && Math.random() < 0.16;
-                state.target = dramatic ? (Math.random() < 0.5 ? 1 : 0.05) : band[0] + Math.random() * (band[1] - band[0]);
+                const dramatic = systemK > 0.55 && !engine.aiWarpActive && random() < 0.16;
+                state.target = dramatic ? (random() < 0.5 ? 1 : 0.05) : band[0] + random() * (band[1] - band[0]);
                 if (engine.aiWarpActive) state.target = Math.min(state.target, 0.90);
                 const base = mode === 'FULL' ? 2600 : mode === 'ON' ? 3000 : 3600;
-                state.nextAt = now + base * (0.6 + Math.random()) * (engine.aiWarpActive ? 1.7 : 1) * lerp(1.9, 1, systemK);
+                state.nextAt = now + base * (0.6 + random()) * (engine.aiWarpActive ? 1.7 : 1) * lerp(1.9, 1, systemK) / warpBlendFor(engine.aiWarpMode).automation;
             }
             if (!manual && !engine.vsyncLocked) {
                 const rate = (mode === 'FULL' ? 1.35 : mode === 'ON' ? 1 : 0.85) * (engine.aiWarpActive ? 0.65 : 1) * lerp(0.55, 1.2, systemK);
@@ -284,8 +345,8 @@
             if (engine.isContinualRandom && now >= nextGhostRetargetAt && now >= manualGhostUntil) {
                 const p = palette(engine);
                 const upper = systemK > 0.55 ? 1 : 0.86;
-                ghostTarget = clamp(0.22 + Math.random() * (0.58 + p.energy * 0.18), 0.15, upper);
-                nextGhostRetargetAt = now + (2200 + Math.random() * 3600) * lerp(1.8, 1, systemK);
+                ghostTarget = clamp(0.22 + random() * (0.58 + p.energy * 0.18), 0.15, upper);
+                nextGhostRetargetAt = now + (2200 + random() * 3600) * lerp(1.8, 1, systemK) / warpBlendFor(engine.aiWarpMode).automation;
             }
             if ((engine.isContinualRandom || engine.isAutoGlitch || engine.isTimedAuto || engine.isAutomatedMasters) && now >= manualGhostUntil) {
                 const rate = (engine.isTimedAuto ? 1.8 : 0.8) * lerp(0.5, 1.25, systemK);
@@ -306,7 +367,7 @@
             stepGhostAutomation(now, dt, systemK);
 
             if (automatic && engine.isAutoGlitch && now >= nextSystemBurstAt) {
-                nextSystemBurstAt = now + (5400 + Math.random() * 7200) * lerp(1.65, 0.72, systemK);
+                nextSystemBurstAt = now + (5400 + random() * 7200) * lerp(1.65, 0.72, systemK);
                 if (getGhostMode() !== 'OFF' || getVsyncMode() !== 'OFF') requestBurst(now, 'auto-glitch', 0.46 + 0.40 * (engine.autoGlitchPower || 0.75));
             }
             const b = burstState(now);
@@ -328,6 +389,7 @@
             const t = now * 0.001;
             const p = palette(engine);
             const mp = getGhostProfile(mode);
+            const blend = warpBlendFor(engine.aiWarpMode);
             const baseStrength = clamp01(engine.ghostLevel);
             const intensity = baseStrength * Math.max(0.05, engine.masterOpacity || 0) * 0.025;
             if (intensity <= 0) return;
@@ -353,22 +415,31 @@
             preCtx.restore();
             preCtx.filter = 'none';
 
-            const split = (1.2 + intensity * 150) * (mp.split || 1) * (0.82 + 0.30 * p.energy);
-            const channelAlpha = Math.min(0.30, (0.05 + intensity * 10) * (mp.chan || 1)) * dampK;
-            const lineAlpha = Math.min(0.16, (0.025 + intensity * 5) * (mp.lines || 1)) * dampK;
-            const warpAlpha = Math.min(0.16, (0.015 + intensity * 5.5) * (mp.warp || 1)) * dampK;
+            const split = Math.min(20, (0.7 + baseStrength * 8) * (mp.split || 1) * blend.ghostSplit * (0.86 + 0.20 * p.energy));
+            const channelAlpha = Math.min(0.20, (0.035 + intensity * 6.0) * (mp.chan || 1) * blend.ghostChroma) * dampK;
+            const lineAlpha = Math.min(0.11, (0.012 + intensity * 3.0) * (mp.lines || 1) * blend.ghostLines) * dampK;
+            const warpAlpha = Math.min(0.12, (0.010 + intensity * 3.2) * (mp.warp || 1) * blend.ghostWarp) * dampK;
             const burst = burstState(now);
 
             g.save();
+            // Five softly offset spectral ghost copies replace the old purple edge.
+            // 72-degree hue spacing covers the full RGB spectrum at once; the shared
+            // phase drifts continuously so the color does not settle into one cast.
             g.globalCompositeOperation = 'screen';
-            g.globalAlpha = channelAlpha;
-            g.drawImage(pre, -split, 0, w, h);
-            g.drawImage(pre, split * 0.85, split * 0.20, w, h);
-            // The Revision 3 Old-Soul echo: softened alongside the hard channel split.
-            g.globalAlpha = channelAlpha * 0.55;
-            g.filter = `blur(${((0.35 + intensity * 45) * (mp.blur || 1) * (0.80 + 0.40 * p.motion)).toFixed(2)}px)`;
-            g.drawImage(pre, -split * 0.60, 0, w, h);
-            g.drawImage(pre, split * 0.50, split * 0.18, w, h);
+            const rgbHue = mod(confluenceHue(now, t * 26) + blend.huePhase, 360);
+            const rgbOffsets = [-split, -split * 0.5, 0, split * 0.5, split];
+            for (let channel = 0; channel < 5; channel++) {
+                g.filter = `hue-rotate(${mod(rgbHue + channel * 72, 360)}deg) saturate(1.26)`;
+                g.globalAlpha = channelAlpha * 0.25;
+                const yNudge = (channel - 2) * Math.max(0.35, split * 0.045);
+                g.drawImage(pre, rgbOffsets[channel], yNudge, w, h);
+            }
+            g.filter = 'none';
+            // Softer Old-Soul echo; retain the depth without a hard colored double edge.
+            g.globalAlpha = channelAlpha * 0.18;
+            g.filter = `blur(${((0.25 + intensity * 22) * (mp.blur || 1) * (0.85 + 0.25 * p.motion)).toFixed(2)}px)`;
+            g.drawImage(pre, -split * 0.32, 0, w, h);
+            g.drawImage(pre, split * 0.28, split * 0.08, w, h);
             g.filter = 'none';
 
             g.globalCompositeOperation = 'lighter';
@@ -383,7 +454,7 @@
             g.globalAlpha = warpAlpha;
             const columns = mp.crt ? 10 : 14;
             const columnWidth = Math.ceil(w / columns);
-            const warpAmp = 1 + intensity * 110;
+            const warpAmp = (0.5 + intensity * 58) * blend.ghostWarp;
             for (let col = 0; col < columns; col++) {
                 const sx = col * columnWidth, sw = Math.min(columnWidth, w - sx);
                 if (sw <= 0) continue;
@@ -406,7 +477,11 @@
             }
             if (mp.dia) {
                 const dia = g.createLinearGradient(0, 0, w, h);
-                dia.addColorStop(0, 'hsla(313,90%,55%,1)'); dia.addColorStop(0.5, 'hsla(145,80%,50%,1)'); dia.addColorStop(1, 'hsla(313,90%,55%,1)');
+                const diaHue = mod(confluenceHue(now, t * 34), 360);
+                dia.addColorStop(0, `hsla(${diaHue},84%,56%,1)`);
+                dia.addColorStop(0.34, `hsla(${mod(diaHue + 120, 360)},82%,54%,1)`);
+                dia.addColorStop(0.67, `hsla(${mod(diaHue + 240, 360)},84%,56%,1)`);
+                dia.addColorStop(1, `hsla(${diaHue},84%,56%,1)`);
                 g.globalCompositeOperation = 'soft-light'; g.globalAlpha = Math.min(0.12, 0.03 + intensity * 3.5); g.fillStyle = dia; g.fillRect(0, 0, w, h);
             }
             const curve = g.createLinearGradient(0, 0, 0, h);
@@ -431,7 +506,7 @@
             const sweep = g.createLinearGradient(0, sweepY - 1, 0, sweepY + 1);
             const sweepHue = confluenceHue(now, mp.hueA * 0.5);
             sweep.addColorStop(0, `hsla(${sweepHue},100%,72%,0)`); sweep.addColorStop(0.5, `hsla(${sweepHue},100%,80%,1)`); sweep.addColorStop(1, `hsla(${sweepHue},100%,72%,0)`);
-            g.globalCompositeOperation = 'lighter'; g.globalAlpha = Math.min(0.22, 0.05 + intensity * 4) * (mp.glow || 1) * 1.4 * dampK; g.fillStyle = sweep; g.fillRect(0, sweepY - 1, w, 2);
+            g.globalCompositeOperation = 'lighter'; g.globalAlpha = Math.min(0.22, 0.05 + intensity * 4) * (mp.glow || 1) * blend.ghostGlow * 1.4 * dampK; g.fillStyle = sweep; g.fillRect(0, sweepY - 1, w, 2);
             g.restore();
         }
 
@@ -441,37 +516,53 @@
             if (mode === 'OFF' || levelRaw <= 0.01 || !snapshot) return;
             const g = engine.gctx, w = engine.canvas.width, h = engine.canvas.height;
             if (!w || !h) return;
-            const p = palette(engine), method = getVsyncMethod(mode), t = now * 0.001;
+            const p = palette(engine), method = getVsyncMethod(mode), blend = warpBlendFor(engine.aiWarpMode), t = now * 0.001;
             const level = Math.min(1, levelRaw * (mode === 'FULL' ? 1.5 : 1.25)) * (engine.aiWarpActive ? 1 : 0.9);
             const fade = clamp01(0.10 + engine.masterOpacity * 0.30);
             const ghostOn = getGhostMode() !== 'OFF' && engine.ghostLevel > 0.01;
             const ghostSync = ghostOn ? clamp01(engine.ghostLevel * 1.2) : 0;
             const bw = bwMap(voiceLevel('B&W Invert'));
-            const scanHue = confluenceHue(now, (ghostOn ? Math.sin(t * 1.2) * 18 : Math.sin(t * 0.7) * 16) + (method.harmony || 0) * 180 * ((bw.invert || 0) / 0.75));
-            const speed = (0.22 + level * 0.30) * (engine.aiWarpActive ? 0.85 : 1) * (0.85 + 0.30 * p.energy) * (0.55 + 0.45 * (method.scanphase == null ? 1 : method.scanphase));
+            const scanHue = mod(confluenceHue(now, (ghostOn ? Math.sin(t * 1.2) * 18 : Math.sin(t * 0.7) * 16) + (method.harmony || 0) * 180 * ((bw.invert || 0) / 0.75)) + t * 20 * blend.vsyncSpeed + blend.huePhase, 360);
+            const speed = (0.22 + level * 0.30) * blend.vsyncSpeed * (engine.aiWarpActive ? 0.85 : 1) * (0.85 + 0.30 * p.energy) * (0.55 + 0.45 * (method.scanphase == null ? 1 : method.scanphase));
             const scanY = mod(t * speed + Math.sin(t * 0.23) * 0.06 + Math.cos(t * 0.11 + 1.2) * 0.04, 1) * h;
-            const phase = Math.sin(t * 1.35 * (0.6 + 0.4 * method.tears)) * 0.22 + Math.cos(t * 0.53) * 0.11 + Math.sin(t * 62.832) * (0.012 + level * 0.035) * method.hum * (0.80 + 0.40 * p.motion);
-            const rollActive = method.roll > 0 && phase < -0.03 && Math.sin(t * 0.9 + 1.3) > -0.1;
-            const rollPhase = rollActive ? mod(t * (0.05 + level * 0.12) * (phase >= 0 ? 1 : -1) * (0.6 + 0.4 * method.roll), 1) : 0;
-            const tearCount = Math.max(1, Math.round((mode === 'FULL' ? 14 : mode === 'ON' ? 8 : 3) * method.tears * (0.35 + 0.65 * level) * (0.85 + 0.35 * p.motion)));
+            const phase = (Math.sin(t * 1.35 * (0.6 + 0.4 * method.tears)) * 0.22 + Math.cos(t * 0.53) * 0.11 + Math.sin(t * 62.832) * (0.012 + level * 0.035) * method.hum * (0.80 + 0.40 * p.motion)) * blend.phase;
+            const rollActive = method.roll * blend.vsyncRoll > 0 && phase < -0.03 && Math.sin(t * 0.9 + 1.3) > -0.1;
+            const rollPhase = rollActive ? mod(t * (0.05 + level * 0.12) * (phase >= 0 ? 1 : -1) * (0.6 + 0.4 * method.roll * blend.vsyncRoll), 1) : 0;
+            const tearCount = Math.max(1, Math.round((mode === 'FULL' ? 9 : mode === 'ON' ? 5 : 2) * method.tears * blend.vsyncTears * (0.30 + 0.48 * level) * (0.80 + 0.20 * p.motion)));
             const tearGap = Math.max(2, Math.round(h / tearCount));
             const tearPulse = 0.6 + 0.4 * Math.abs(Math.sin(t * 1.2 + 0.7));
-            const sliceHeight = Math.max(method.sharp > 0.85 ? 1 : 2, Math.round(h * (0.006 / (0.70 + 0.55 * method.sharp)) * tearPulse));
-            const jam = level * (0.24 + 0.19 * Math.abs(Math.sin(t * 6.13 + 1.7))) * method.tears * (0.75 + 0.45 * p.energy + 0.25 * p.motion);
+            const sliceHeight = Math.max(1, Math.round(h * (0.0035 / (0.80 + 0.35 * method.sharp)) * tearPulse));
+            const jam = level * (0.12 + 0.10 * Math.abs(Math.sin(t * 6.13 + 1.7))) * method.tears * blend.vsyncTears * (0.78 + 0.22 * p.energy + 0.12 * p.motion);
             const burst = burstState(now);
+            const noiseFrame = Math.floor(now / 50);
 
             g.save();
-            const thick = Math.max(1, h * 0.008);
+            const thick = Math.max(1, h * 0.0045);
             const head = g.createLinearGradient(0, scanY - thick * 4, 0, scanY + thick * 4);
-            head.addColorStop(0, 'rgba(0,0,0,0)'); head.addColorStop(0.5, 'hsla(0,0%,8%,1)'); head.addColorStop(1, 'rgba(0,0,0,0)');
-            g.globalCompositeOperation = 'source-over'; g.globalAlpha = Math.min(0.5, 0.05 + level * 0.16) * fade * (rollActive ? 1.55 : 1) * 0.6; g.fillStyle = head; g.fillRect(0, scanY - thick * 4, w, thick * 8);
-            if (rollActive) { g.globalCompositeOperation = 'screen'; g.globalAlpha = 0.12; g.fillStyle = `hsla(${scanHue},85%,62%,1)`; g.fillRect(0, scanY - thick * 14, w, Math.max(1, thick)); }
+            head.addColorStop(0, 'rgba(0,0,0,0)');
+            head.addColorStop(0.25, `hsla(${scanHue},82%,52%,0.30)`);
+            head.addColorStop(0.50, `hsla(${mod(scanHue + 144, 360)},86%,56%,0.48)`);
+            head.addColorStop(0.75, `hsla(${mod(scanHue + 288, 360)},82%,52%,0.30)`);
+            head.addColorStop(1, 'rgba(0,0,0,0)');
+            g.globalCompositeOperation = 'source-over'; g.globalAlpha = Math.min(0.25, 0.025 + level * 0.085) * fade * (rollActive ? 1.25 : 1) * 0.55; g.fillStyle = head; g.fillRect(0, scanY - thick * 4, w, thick * 8);
+            if (rollActive) { g.globalCompositeOperation = 'screen'; g.globalAlpha = 0.065; g.fillStyle = `hsla(${scanHue},82%,62%,1)`; g.fillRect(0, scanY - thick * 14, w, Math.max(1, thick)); }
 
             const coreY = Math.max(1, Math.min(h - 1, Math.floor(scanY)));
-            const halo = g.createLinearGradient(0, coreY - 4, 0, coreY + 4);
-            halo.addColorStop(0, `hsla(${scanHue},95%,70%,0)`); halo.addColorStop(0.5, `hsla(${scanHue},95%,68%,${Math.min(0.22, (0.08 + level * 0.10) * method.bar * (0.85 + 0.15 * (1 + ghostSync))).toFixed(3)})`); halo.addColorStop(1, `hsla(${scanHue},95%,70%,0)`);
-            g.globalCompositeOperation = 'screen'; g.globalAlpha = fade * 0.6; g.fillStyle = halo; g.fillRect(0, coreY - 4, w, 8);
-            g.globalAlpha = Math.min(0.9, (0.40 + level * 0.5) * method.bar) * (0.5 + fade * 0.5); g.fillStyle = `hsla(${scanHue},96%,76%,1)`; g.fillRect(0, coreY, w, 1);
+            const halo = g.createLinearGradient(0, coreY - 5, 0, coreY + 5);
+            const haloA = Math.min(0.14, (0.04 + level * 0.065) * method.bar * (0.88 + 0.12 * ghostSync));
+            halo.addColorStop(0, `hsla(${scanHue},92%,68%,0)`);
+            halo.addColorStop(0.25, `hsla(${mod(scanHue + 72, 360)},94%,66%,${(haloA * 0.65).toFixed(3)})`);
+            halo.addColorStop(0.50, `hsla(${mod(scanHue + 144, 360)},96%,68%,${haloA.toFixed(3)})`);
+            halo.addColorStop(0.75, `hsla(${mod(scanHue + 216, 360)},94%,66%,${(haloA * 0.65).toFixed(3)})`);
+            halo.addColorStop(1, `hsla(${scanHue},92%,68%,0)`);
+            g.globalCompositeOperation = 'screen'; g.globalAlpha = fade * 0.42; g.fillStyle = halo; g.fillRect(0, coreY - 5, w, 10);
+            const beamAlpha = Math.min(0.48, (0.20 + level * 0.22) * method.bar) * (0.58 + fade * 0.42);
+            // Five thin RGB-spectrum scan echoes replace the single warm-colored line.
+            for (let channel = 0; channel < 5; channel++) {
+                g.globalAlpha = beamAlpha * 0.24;
+                g.fillStyle = `hsla(${mod(scanHue + channel * 72, 360)},94%,72%,1)`;
+                g.fillRect(0, coreY + channel - 2, w, 1);
+            }
 
             g.globalCompositeOperation = 'source-over'; g.globalAlpha = clamp01(0.55 + level * 0.4) * (0.55 + fade * 0.45);
             for (let i = 0; i < tearCount; i++) {
@@ -486,20 +577,20 @@
                 g.globalAlpha = clamp01(0.25 + level * 0.30) * method.roll; g.fillStyle = 'rgba(0,0,0,0.55)'; g.fillRect(0, rY, w, 1); g.fillRect(0, rY + bandH, w, 1);
                 for (let y = scanY - thick * 10; y < scanY + thick * 10; y += 2 + Math.floor(level * 2)) {
                     if (y < 0 || y >= h) continue;
-                    g.globalCompositeOperation = 'soft-light'; g.globalAlpha = (0.025 + Math.random() * 0.05) * level * fade * 0.7; g.fillStyle = `hsla(${mod(scanHue + 14 + Math.sin(t * 8.4 + y * 0.11) * 12, 360)},95%,60%,1)`; g.fillRect(0, y, w, 1);
+                    g.globalCompositeOperation = 'soft-light'; g.globalAlpha = (0.025 + noise01(noiseFrame + Math.floor(y * 0.1), 7) * 0.05) * level * fade * 0.7; g.fillStyle = `hsla(${mod(scanHue + 14 + Math.sin(t * 8.4 + y * 0.11) * 12, 360)},95%,60%,1)`; g.fillRect(0, y, w, 1);
                 }
             }
             if (!ghostOn) {
                 const spacing = Math.max(4, Math.round(Math.max(1, h * 0.008) * (14 - level * 9)));
                 for (let y = mod(scanY, spacing); y < h; y += spacing) {
-                    g.globalCompositeOperation = 'source-over'; g.globalAlpha = (0.03 + Math.random() * 0.07) * level * fade * 0.6;
-                    g.fillStyle = `hsla(${mod(scanHue + Math.random() * 30 - 15, 360)},${Math.round(55 + Math.min(40, p.sat * 0.45))}%,58%,1)`; g.fillRect(0, y, w, 1);
+                    g.globalCompositeOperation = 'source-over'; g.globalAlpha = (0.03 + noise01(noiseFrame + Math.floor(y * 0.13), 11) * 0.07) * level * fade * 0.6;
+                    g.fillStyle = `hsla(${mod(scanHue + noise01(noiseFrame + Math.floor(y * 0.09), 13) * 30 - 15, 360)},${Math.round(55 + Math.min(40, p.sat * 0.45))}%,58%,1)`; g.fillRect(0, y, w, 1);
                 }
             }
             const sheen = g.createLinearGradient(0, scanY - thick * 9, 0, scanY + thick * 9);
             sheen.addColorStop(0, 'hsla(0,0%,0%,0)'); sheen.addColorStop(0.5, `hsla(${ghostSync > 0 ? scanHue : mod(195 + Math.sin(t * 0.8) * 12, 360)},90%,${ghostSync > 0 ? 46 : 58}%,1)`); sheen.addColorStop(1, 'hsla(0,0%,0%,0)');
-            g.globalCompositeOperation = 'soft-light'; g.globalAlpha = Math.min(0.2, 0.02 + level * 0.1 + ghostSync * 0.06 + (rollActive ? 0.035 : 0)) * fade * 0.75; g.fillStyle = sheen; g.fillRect(0, scanY - thick * 9, w, thick * 18);
-            if (level > 0.55) { g.globalCompositeOperation = 'overlay'; g.globalAlpha = (level - 0.55) * 0.35 * method.hum; g.fillStyle = 'rgba(0,0,0,0.5)'; for (let y = mod(t * 40, 3); y < h; y += 3) g.fillRect(0, y, w, 1); }
+            g.globalCompositeOperation = 'soft-light'; g.globalAlpha = Math.min(0.11, 0.012 + level * 0.055 + ghostSync * 0.035 + (rollActive ? 0.02 : 0)) * fade * 0.72; g.fillStyle = sheen; g.fillRect(0, scanY - thick * 9, w, thick * 18);
+            if (level > 0.68) { g.globalCompositeOperation = 'overlay'; g.globalAlpha = (level - 0.68) * 0.20 * method.hum; g.fillStyle = 'rgba(0,0,0,0.5)'; for (let y = mod(t * 40, 3); y < h; y += 3) g.fillRect(0, y, w, 1); }
 
             if (burst.env > 0.01) {
                 const bands = engine.softEyeK > 0.5 ? 5 : 3, bandH = h / bands, travel = 0.5 * (1 - Math.cos(Math.PI * clamp01(burst.env)));
@@ -523,5 +614,5 @@
         };
     }
 
-    root.R3GhostVsync = { create };
+    root.R3GhostVsync = { create, getWarpBlendProfile: warpBlendFor };
 })(typeof window !== 'undefined' ? window : this);

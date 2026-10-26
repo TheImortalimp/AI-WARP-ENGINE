@@ -14,6 +14,7 @@
 3. **Ghost Protocol R3/v11** — DIA, SPECTRUM, CRT, PLASMA, and LED modes with channel splits, Old-Soul echo, scan/warp behavior, CRT/LED texture, and color/DIA confluence.
 4. **V-Sync R3/v11** — Scanphasing, Color Harmony, and Sharp modes with scan bands, tracking tears, roll, phosphor texture, per-mode levels, V-Sync locking, and retained OFF rails.
 5. **R3 automation confluence** — Auto Glitch, Continual Randomization, Timed Automation, Automated Masters, Soft-Eye/Crescendo, and visual/audio-ear signals can drive Ghost/V-Sync targets and synchronized light bursts.
+5a. **Mode-aware FX blending** — each AI Warp mode deterministically tunes Ghost/V-Sync color, split, scan, warp, and automation pacing; the original master levels and protected voice intent remain respected.
 6. **Canvas/WebGL effects core** — all voice rendering stays on Canvas/WebGL. The single sanctioned SVG usage (v6.3.1) is the compositor-level Warp Lens (`feTurbulence → feDisplacementMap`) on the YouTube shell only — still no JS pixel readback, no SVG DOM mutation beyond the two animated displacement attributes, and no SVG filters in the canvas pipeline.
 7. **Media studio** — local image/video/audio support, YouTube controls and knowledgebase, microphone monitoring, and procedural synthetic audio.
 8. **Performance controls** — held Ghost/V-Sync rails, direct null controls, locks, 80 randomized machine presets, user presets, live mixer levels, and keyboard shortcuts.

@@ -1,3 +1,4 @@
+;/* ===== ai_warp_engine.js ===== */
 /**
  * AI WARP ENGINE — HYPER-INTEGRATED SYNTHESIS (v6.4.0-TAB-CAPTURE)
  *
@@ -63,6 +64,8 @@
             }
             this.gctx = this.canvas.getContext('2d', { alpha: true, desynchronized: true });
             this.options = options;
+            this._deterministicState = 0x6D2B79F5;
+            this.automationPass = 0;
 
             // Warp Modes (12 Algorithmic Visual Deformations)
             this.aiWarpActive = options.aiWarpActive !== undefined ? !!options.aiWarpActive : true;
@@ -233,10 +236,30 @@
             this.animFrameId = requestAnimationFrame((now) => this.mainRenderLoop(now));
         }
 
+        nextDeterministicValue() {
+            this._deterministicState = (Math.imul(this._deterministicState, 1664525) + 1013904223) >>> 0;
+            return this._deterministicState / 4294967296;
+        }
+
+        getWarpBlendProfile() {
+            return window.R3GhostVsync && typeof window.R3GhostVsync.getWarpBlendProfile === 'function'
+                ? window.R3GhostVsync.getWarpBlendProfile(this.aiWarpMode)
+                : { hardLight:1, softEye:1, ear:1, canvas:1, automation:1 };
+        }
+
         initSoftEye() {
             if (window.GlitchEngine) {
-                this.crescendo = window.GlitchEngine.createCrescendo();
-                this.burstGate = window.GlitchEngine.createBurstGate();
+                const rng = () => this.nextDeterministicValue();
+                const blend = this.getWarpBlendProfile();
+                const calmK = Math.max(0.75, blend.softEye);
+                this.crescendo = window.GlitchEngine.createCrescendo({
+                    rng,
+                    calmMs: [40000 / calmK, 85000 / calmK],
+                    swellMs: [2800 / calmK, 5000 / calmK],
+                    wildMs: [4500 / calmK, 9500 / calmK],
+                    releaseMs: [5200 / calmK, 8800 / calmK]
+                });
+                this.burstGate = window.GlitchEngine.createBurstGate({ rng });
                 this.ear = window.GlitchEngine.createEar();
             }
         }
@@ -377,7 +400,7 @@
             const wob = 1 + 0.22 * Math.sin(t * 0.63) + 0.13 * Math.sin(t * 1.17) + bass * 0.18;
             let scale = amp * s * wob;
             scale *= 1 + (fx.vhs * 0.7) + (fx.bands * 0.9) + (fx.strobe * 0.35) + (fx.bomb * 0.5);
-            if (this.hardLightActive) scale *= 1.2;
+            if (this.hardLightActive) scale *= 1.2 * this.getWarpBlendProfile().hardLight;
             scale = Math.max(0, Math.min(160, scale));
             return {
                 bfX: bfX * (1 + 0.18 * Math.sin(t * 0.41)),
@@ -496,7 +519,15 @@
                 ? baseCandidates.map(name => this.baseEffectName(name))
                 : this.coreEffectNames.slice();
             const bases = [...new Set(requested.filter(base => this.coreEffectNames.includes(base)))];
-            const shuffled = bases.sort(() => Math.random() - 0.5);
+            const turn = this.automationPass++;
+            const modeKey = this.aiWarpMode || 'liquid';
+            const score = (name) => {
+                let h = 2166136261;
+                const text = `${modeKey}|${turn}|${name}`;
+                for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619) >>> 0;
+                return h;
+            };
+            const shuffled = bases.sort((a, b) => score(a) - score(b));
             const both = [], singles = [];
             shuffled.forEach(base => {
                 const pair = [base, this.gc3EffectName(base)].filter(name => this.isAutomationEligible(name, respectUserDisabled));
@@ -523,13 +554,17 @@
 
         activateAutomationVoices(names, now, low = 0.24, high = 0.60, trackContinual = false) {
             const selected = Array.isArray(names) ? names : [];
+            const blend = this.getWarpBlendProfile();
+            const turn = this.automationPass++;
             selected.forEach((name, index) => {
                 if (!this.isAutomationEligible(name)) return;
                 const bankBias = this.isGC3Effect(name) ? 0.92 : 1.0;
-                const level = clamp01((low + Math.random() * Math.max(0.01, high - low)) * bankBias);
+                const levelPick = this.nextDeterministicValue();
+                const targetPick = this.nextDeterministicValue();
+                const level = clamp01((low + levelPick * Math.max(0.01, high - low)) * bankBias * blend.automation);
                 this.effectAlphas[name] = +level.toFixed(3);
-                this.effectTargets[name] = +(low + Math.random() * Math.max(0.01, high - low)).toFixed(3);
-                this.effectRetargetAt[name] = now + 1100 + Math.random() * 2300 + index * 120;
+                this.effectTargets[name] = +clamp01((low + targetPick * Math.max(0.01, high - low)) * blend.automation).toFixed(3);
+                this.effectRetargetAt[name] = now + (1100 + (this.nextDeterministicValue() * 2300) + index * 120) / blend.automation;
                 this.effectEnabled[name] = true;
                 this.effectUserDisabled[name] = false;
                 if (trackContinual) this.continualAutomationVoices.add(name);
@@ -539,7 +574,7 @@
 
         rotateContinualConfluence(now) {
             if (now < this.nextContinualSelectionAt) return;
-            this.nextContinualSelectionAt = now + 3600 + Math.random() * 3600;
+            this.nextContinualSelectionAt = now + 4800 / this.getWarpBlendProfile().automation;
             const selected = this.pickConfluenceVoices(null, 2, true);
             if (!selected.length) return;
             const selectedSet = new Set(selected);
@@ -756,6 +791,8 @@
                     }
                 } else if (eff.type === 'ghost_pulse') {
                     const sweepX = progress * w * 1.3;
+                    // One-shot mode-change sweep only: keep it at 5% opacity.
+                    g.globalAlpha = 0.05;
                     const grad = g.createLinearGradient(sweepX - 120, 0, sweepX, 0);
                     grad.addColorStop(0, 'rgba(0, 255, 200, 0)');
                     grad.addColorStop(0.7, 'rgba(220, 20, 255, 0.45)');
@@ -764,6 +801,8 @@
                     g.fillRect(sweepX - 120, 0, 120, h);
                 } else if (eff.type === 'vsync_pulse') {
                     const zapY = progress * h;
+                    // One-shot mode-change scan line only: keep it at 5% opacity.
+                    g.globalAlpha = 0.05;
                     g.fillStyle = `rgba(255, 255, 255, ${(1.0 - progress) * 0.9})`;
                     g.fillRect(0, zapY - 2, w, 4);
                     g.fillStyle = `rgba(255, 150, 0, ${(1.0 - progress) * 0.6})`;
@@ -924,12 +963,13 @@
         stepAutomatedMasters(now, dt) {
             if (!this.isAutomatedMasters) return;
             if (!this.nextMasterRetargetAt || now > this.nextMasterRetargetAt) {
-                this.nextMasterRetargetAt = now + 2400 + Math.random() * 3200;
-                this.targetGlitchSpeed = +(0.5 + Math.random() * 2.0).toFixed(2);
-                this.targetMasterOpacity = +(0.75 + Math.random() * 0.25).toFixed(2);
+                const blend = this.getWarpBlendProfile();
+                this.nextMasterRetargetAt = now + 4000 / blend.automation;
+                this.targetGlitchSpeed = +(0.5 + this.nextDeterministicValue() * 2.0).toFixed(2);
+                this.targetMasterOpacity = +(0.75 + this.nextDeterministicValue() * 0.25).toFixed(2);
                 if (this.r3GhostVsync) {
-                    if (this.ghostModes[this.ghostModeIndex] !== 'OFF') this.r3GhostVsync.setGhostLevel(0.24 + Math.random() * 0.62, false);
-                    if (this.vsyncModes[this.vsyncModeIndex] !== 'OFF' && !this.vsyncLocked) this.r3GhostVsync.setVsyncLevel(0.32 + Math.random() * 0.58, false);
+                    if (this.ghostModes[this.ghostModeIndex] !== 'OFF') this.r3GhostVsync.setGhostLevel(0.24 + this.nextDeterministicValue() * 0.62, false);
+                    if (this.vsyncModes[this.vsyncModeIndex] !== 'OFF' && !this.vsyncLocked) this.r3GhostVsync.setVsyncLevel(0.32 + this.nextDeterministicValue() * 0.58, false);
                 }
                 const masterPair = this.pickConfluenceVoices(null, 2, true);
                 this.activateAutomationVoices(masterPair, now, 0.18, 0.46);
@@ -976,7 +1016,7 @@
             const burstList = ['Flash', 'Strobe', 'Flash GC#(3)', 'Strobe GC#(3)'];
             burstList.forEach(name => {
                 if (this.effectNames.includes(name) && !this.effectLocks[name] && !this.effectUserDisabled[name]) {
-                    this.effectAlphas[name] = +(0.70 + Math.random() * 0.25).toFixed(2);
+                    this.effectAlphas[name] = +(0.70 + this.nextDeterministicValue() * 0.25).toFixed(2);
                     this.effectEnabled[name] = true;
                 }
             });
@@ -1856,7 +1896,7 @@
             const w = this.canvas.width, h = this.canvas.height;
             if (!w || !h) return;
 
-            const s = this.aiWarpStrength * this.masterOpacity;
+            const s = this.aiWarpStrength * this.masterOpacity * this.getWarpBlendProfile().canvas;
             const t = now * 0.001 * this.glitchSpeed;
             const gctx = this.gctx;
             const mode = this.aiWarpMode;
@@ -2566,9 +2606,10 @@
 
             let hue = 0;
             let invertPct = Math.round(vInvert * 100);
-            let brightness = 1.0 + (this.hardLightActive ? 0.20 : 0);
-            let contrast   = 1.0 + (this.hardLightActive ? 0.45 : 0);
-            let saturate   = 1.0 + (this.hardLightActive ? 0.60 : 0) + treble * 0.4;
+            const warpBlend = this.getWarpBlendProfile();
+            let brightness = 1.0 + (this.hardLightActive ? 0.20 * warpBlend.hardLight : 0);
+            let contrast   = 1.0 + (this.hardLightActive ? 0.45 * warpBlend.hardLight : 0);
+            let saturate   = 1.0 + (this.hardLightActive ? 0.60 * warpBlend.hardLight : 0) + treble * 0.4;
             let blurPx = 0, grayscale = 0, sepia = 0;
             let jx = 0, jy = 0, skewImm = 0, spin = 0, flipX = 1;
             let clipCss = '';
@@ -2964,6 +3005,12 @@
                 this.gctx.clearRect(0, 0, cw, ch);
                 drawCover(this.gctx, this.activeImageElement, cw, ch);
             } else if (this.sourceMode === 'youtube') {
+                // Embedded YouTube is cross-origin and cannot be sampled by Canvas.
+                // Keep the video in its iframe and leave this canvas transparent here;
+                // active voice renderers below paint their own FX layers onto it. The
+                // original AI Warp Mode pass then processes those voice graphics (not
+                // a synthetic/test bed). The CSS Warp Bus continues to affect the
+                // iframe shell; capture the separate YouTube tab to process its pixels.
                 this.gctx.clearRect(0, 0, cw, ch);
                 this.updateYouTubeTransformsAndFilters(now, dt);
             }
@@ -3005,12 +3052,11 @@
             this.renderVsync(now, r3SystemSnapshot);
             this.renderGhostProtocol(now, r3SystemSnapshot);
 
-            // 6. Canvas AI Warp Slicer (29 Modes)
-            //    In YouTube mode the Warp Bus warps #ytWarpShell directly — slicing the
-            //    transparent overlay canvas here would only smear the overlay voices.
-            if (this.sourceMode !== 'youtube') {
-                this.renderAiWarp(now);
-            }
+            // 6. Run the original 29-mode Canvas Warp Slicer for every source. For
+            //    YouTube, this processes the translucent in-page procedural FX bed;
+            //    the iframe itself remains protected by browser cross-origin rules and
+            //    is warped by the CSS Warp Bus above (or by captured source frames).
+            this.renderAiWarp(now);
 
             // 7. Transient Button Effects Overlay
             this.renderTransientEffects(now);
@@ -3026,7 +3072,7 @@
             // Auto Glitch: Spontaneous high-impact surges on 1-2 voices only (respect userDisabled!)
             if (this.isAutoGlitch) {
                 if (!this.nextAutoGlitchAt || now > this.nextAutoGlitchAt) {
-                    this.nextAutoGlitchAt = now + 2400 + Math.random() * 3000;
+                    this.nextAutoGlitchAt = now + 3600 / this.getWarpBlendProfile().automation;
                     const selection = this.pickConfluenceVoices(null, 2, true);
                     if (selection.length > 0) {
                         this.activateAutomationVoices(selection, now, 0.35, 0.80);
@@ -3043,12 +3089,14 @@
                 this.effectNames.forEach((name, idx) => {
                     if (this.effectLocks[name] || this.effectUserDisabled[name] || !this.effectEnabled[name]) return;
                     if (now > (this.effectRetargetAt[name] || 0)) {
-                        this.effectRetargetAt[name] = now + 1600 + Math.random() * 2500;
-                        this.effectTargets[name] = +(0.20 + Math.random() * 0.55).toFixed(2);
+                        const blend = this.getWarpBlendProfile();
+                        this.effectRetargetAt[name] = now + 2600 / blend.automation;
+                        const seed = this.nextDeterministicValue();
+                        this.effectTargets[name] = +clamp01((0.20 + seed * 0.55) * blend.automation).toFixed(2);
                     }
                     const target = this.effectTargets[name] || 0.40;
                     const oldVal = this.effectAlphas[name] || 0;
-                    const osc = 0.02 * Math.sin(t * 3.2 + idx * 0.75);
+                    const osc = 0.02 * this.getWarpBlendProfile().automation * Math.sin(t * 3.2 + idx * 0.75);
                     const nextVal = clamp01(lerp(oldVal, target, 0.05) + osc);
                     if (Math.abs(nextVal - oldVal) > 0.005) {
                         this.effectAlphas[name] = +nextVal.toFixed(3);

@@ -1,16 +1,16 @@
 # ⚡ AI WARP ENGINE — Windows App (R3 Canvas Edition v6.4)
 
 <p align="center">
-  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.16" width="720">
+  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.17" width="720">
 </p>
 
 A public-domain glitch visual synthesizer and audio-reactive media playground, packaged as a standalone Windows app with a one-click installer.
 
-**Status: Complete · Ready** (v6.4.16) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
+**Status: Complete · Ready** (v6.4.17) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
 
 ## Install
 
-1. Download `AI-WARP-ENGINE-6.4.16-x64-setup.exe` from the latest release.
+1. Download `AI-WARP-ENGINE-6.4.17-x64-setup.exe` from the latest release.
 2. Run it, accept the licence terms, and finish the wizard. No admin rights are needed.
 3. The app installs to `Desktop\AI WARP ENGINE`, with a launcher shortcut, a Start Menu entry and an uninstaller.
 
@@ -51,9 +51,11 @@ Each voice has its own on/off, level, size and depth.
 - **V-Sync:** OFF, **SCANPHASING**, **COLOR HARMONY**, **SHARP** (the Full mode), each with its own level, rolling scan bars, tears and tracking.
 - **Soft-Eye** (OFF, CALM, SURGE, CRESCENDO) ramps intensity over time, and **Crescendo** fires a short burst.
 
-### Effects are verbatim (v6.4.16)
+### Mode-aware FX (v6.4.17)
 
-`ai_warp_engine.js`, `glitch_engine.js` and the Ghost Protocol / V-Sync engine (`r3_ghost_vsync.js`) are byte-identical to the files served at imortalimp.nl/ai_warp_engine: no boosts, no added clamps, no extra overlays. The app runs them unchanged.
+Each of the 29 AI Warp modes now has a deterministic blend profile that tunes Ghost Protocol and V-Sync color, split, scan, warp and automation pacing. R3 factory effects, Canvas warp strength, Hard Light, Soft-Eye and audio-ear response follow the active profile while preserving the existing master levels and user-protected voice intent.
+
+See the [v6.4.17 release notes](RELEASE_NOTES_6.4.17.md) for details and installer checksum.
 ### Capture and audio
 
 - **Display capture** (`N`) shares a tab, window or screen as the source.
@@ -122,8 +124,9 @@ The web app is plain HTML / JS / CSS, so you can also run it in any Chromium bro
 
 | Version | Highlights |
 |---------|------------|
-| v6.4.15 | YT LENS audio is now real: the shell captures the app's own audio with the direct per-process audio driver (system-loopback fallback) and drives the audio monitor, cadence and EAR modes |
+| v6.4.17 | Mode-aware FX profiles for all 29 AI Warp modes, deterministic automation, and blended Ghost/V-Sync/R3/Canvas effects |
 | v6.4.16 | Final: YT LENS audio now uses the direct Windows process-loopback audio driver (only this app's sound, system loopback fallback) |
+| v6.4.15 | YT LENS audio is now real: the shell captures the app's own audio with the direct per-process audio driver (system-loopback fallback) and drives the audio monitor, cadence and EAR modes |
 | v6.4.14 | Fixed: local-media pause button (double toggle) and YT LENS frames lost after switching to local media and back |
 | v6.4.13 | Window keeps its border and stays resizable/draggable while the lens runs (no forced full screen) |
 | v6.4.12 | Lens window hidden off-screen, audio monitor / cadence / EAR driven by picture motion |

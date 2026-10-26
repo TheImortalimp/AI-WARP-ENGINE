@@ -1,3 +1,4 @@
+;/* ===== r3_gc3_factories.js ===== */
 /**
  * GC#(3) FACTORY BANK — Glitch Revision 3 integration
  * Source factory block: https://www.imortalimp.nl/glitch-canvas-html/Glitch-Revision-3.html
@@ -2388,17 +2389,19 @@
         const p = engine.videoPalette || {};
         const saturation = p.sat == null ? 65 : (p.sat <= 1.001 ? p.sat * 100 : p.sat);
         const brightness = p.brightness == null ? 0.45 : p.brightness;
+        const blend = root.R3GhostVsync && typeof root.R3GhostVsync.getWarpBlendProfile === 'function'
+            ? root.R3GhostVsync.getWarpBlendProfile(engine.aiWarpMode) : { canvas:1, softEye:1, ear:1 };
         videoPalette = {
             hue: p.hue == null ? 205 : p.hue,
             sat: clamp(saturation, 10, 100),
             light: clamp(brightness <= 1.001 ? brightness * 100 : brightness, 10, 90),
-            energy: clamp01(p.energy == null ? (engine.audioDrive || {}).drive || 0.5 : p.energy),
-            motion: clamp01(p.motion == null ? 0.1 : p.motion),
+            energy: clamp01((p.energy == null ? (engine.audioDrive || {}).drive || 0.5 : p.energy) * blend.canvas),
+            motion: clamp01((p.motion == null ? 0.1 : p.motion) * blend.canvas),
             darkness: clamp01(p.darkness == null ? 1 - brightness : p.darkness)
         };
         comboProfile = { glowMult: 0.9 + videoPalette.energy * 0.25, satMult: 1, contrastMult: 1 };
-        SOFT.k = clamp01(engine.softEyeK == null ? 1 : engine.softEyeK || 1);
-        SOFT.beat = clamp01((engine.audioDrive || {}).beat || 0);
+        SOFT.k = clamp01((engine.softEyeK == null ? 1 : engine.softEyeK || 1) * blend.softEye);
+        SOFT.beat = clamp01(((engine.audioDrive || {}).beat || 0) * blend.ear);
         beat = SOFT.beat;
         effectAlphas = new Proxy(Object.create(null), {
             get: (_, key) => typeof key === 'string' ? clamp01(engine.effectAlphas[key + GC3_SUFFIX] || 0) : 0,
