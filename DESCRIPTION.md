@@ -3,7 +3,7 @@
 **AI WARP ENGINE (R3 Canvas Edition v6.4)** is a public-domain visual synthesizer, audio-reactive media playground and live Canvas glitch suite, shipped as a standalone Windows app.
 
 - **Author:** River Lyle Reuveni (Imortalimp), [imortalimp.nl](https://imortalimp.nl)
-- **Version:** 6.4 (installer release v6.4.20) — **Complete · Ready**
+- **Version:** 6.4 (installer release v6.4.21) — **Complete · Ready**
 - **Platform:** Windows 10/11 x64 (WebView2 host, .NET bundled)
 - **Install location:** `Desktop\AI WARP ENGINE` (per-user, no admin)
 - **Licence:** CC0 1.0 / The Unlicense (software); CC BY 4.0 (imortalimp.nl site content)
@@ -26,7 +26,7 @@ Takes a live source and runs it through a real-time Canvas effects pipeline, dri
 
 ## RAUM · X-R
 
-The **RAUM · X-R (4)** drawer replaces the former Pole · R showcase. These tracks are original, fully synthesized works bundled with the app, so they play offline and drive the audio-reactive analyser.
+The **RAUM · X-R (4)** drawer replaces the former Pole · R showcase. These tracks are original, fully synthesized works bundled with the app, so they play offline and drive the audio-reactive analyser. **Artwork slideshow and exclusive glitch sequences (v6.4.21):** while a RAUM · X-R track plays, the main canvas switches to a slideshow of the four covers and the back cover, replacing the init artwork or any other source, and is warped by original glitch sequences that follow the track clock and its audio: TEAR, GRID, MIRROR (backwards-Я fold), SMEAR (datamosh trail), COLUMNS and RIPPLE (glass-bell halos, ambient tracks), plus a decoding caption, a giant reversed Я that surfaces during beat silence, a reversal flash when the beat re-enters, and a hidden SIGNATURE lattice every 64 seconds of track time. Pausing or starting any other source restores the previous visuals.
 
 - **Credits:** created by GitHub Copilot (AI), prompted and directed by River Lyle Reuveni. Dedicated to Stefan Betke (Pole) and the artists of the 1998 album *R* (Daniel Meteo, Burnt Friedman, Kit Clayton). Not affiliated with them; no recordings by them are used.
 - **Support the original:** <https://pole-stefanbetke.bandcamp.com/album/r>
@@ -41,6 +41,7 @@ Enable the DROP THE MILK? toolbar button or press `D`. The effect composites a s
 
 ## Release history
 
+- **v6.4.21** — While a Raum X-R track plays, the main canvas runs the cover artwork as a slideshow with exclusive audio-aware glitch sequences and a hidden signature easter egg.
 - **v6.4.20** — Replaced the Pole · R showcase with four original synthesized Raum X-R tracks (two jungle/breakcore, two ambient), bundled for offline, audio-reactive playback with cover art, back cover and full credits.
 - **v6.4.19** — Added subtle Milkdrop blends; routed playlist-only suggestions through the audio-aware YT LENS and stopped lens playback when another source starts.
 - **v6.4.18** — Added DROP THE MILK? Milkdrop-inspired audio-reactive Canvas feedback, 80 shuffled presets, mode/voice blending and persistent opacity lock.

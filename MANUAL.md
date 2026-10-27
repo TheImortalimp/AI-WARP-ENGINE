@@ -1,9 +1,9 @@
 # AI WARP ENGINE — User Manual
 
-**Applies to:** AI WARP ENGINE standalone Windows app, release 6.4.20  
+**Applies to:** AI WARP ENGINE standalone Windows app, release 6.4.21  
 **Platform:** Windows 10/11 x64
 
-AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media source, then layer AI Warp modes, glitch voices, Ghost Protocol, V-Sync and audio-reactive automation over it. The 6.4.20 release adds the bundled RAUM · X-R showcase of four original tracks. The 6.4.19 release added the subtle-blend DROP THE MILK? feedback effect and audio-aware YouTube playlist playback in the standalone YT LENS.
+AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media source, then layer AI Warp modes, glitch voices, Ghost Protocol, V-Sync and audio-reactive automation over it. The 6.4.21 release runs the Raum cover artwork as a slideshow with exclusive glitch sequences while those tracks play. The 6.4.20 release adds the bundled RAUM · X-R showcase of four original tracks. The 6.4.19 release added the subtle-blend DROP THE MILK? feedback effect and audio-aware YouTube playlist playback in the standalone YT LENS.
 
 ## Contents
 
@@ -20,7 +20,7 @@ AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media sourc
 
 ## Install and launch
 
-1. Download `AI-WARP-ENGINE-6.4.20-x64-setup.exe` from the [latest GitHub release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
+1. Download `AI-WARP-ENGINE-6.4.21-x64-setup.exe` from the [latest GitHub release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
 2. Run the installer and accept the licence terms. It installs for the current user and does not require administrator access.
 3. Launch **AI WARP ENGINE** from the desktop shortcut or Start Menu.
 
@@ -66,6 +66,10 @@ Click **RAUM · X-R (4)** in the toolbar to open the showcase drawer. It lists f
 - The files ship inside the app, so no internet connection is needed. The audio feeds the analyser, so the visual effects react to it.
 - Starting one track pauses the others; starting any other source (YouTube, local media, synth, capture) stops the showcase, and the reverse is also true.
 - **Credits:** created by GitHub Copilot (AI), prompted and directed by River Lyle Reuveni. Dedicated to Stefan Betke (Pole) and the artists of the 1998 album *R* on DIN: Daniel Meteo, Burnt Friedman and Kit Clayton. The tracks contain no samples or recordings by them and are not affiliated with them. Support the original: <https://pole-stefanbetke.bandcamp.com/album/r>
+
+### RAUM · X-R artwork slideshow and glitch sequences
+
+**Artwork slideshow and exclusive glitch sequences (v6.4.21):** while a RAUM · X-R track plays, the main canvas switches to a slideshow of the four covers and the back cover, replacing the init artwork or any other source, and is warped by original glitch sequences that follow the track clock and its audio: TEAR, GRID, MIRROR (backwards-Я fold), SMEAR (datamosh trail), COLUMNS and RIPPLE (glass-bell halos, ambient tracks), plus a decoding caption, a giant reversed Я that surfaces during beat silence, a reversal flash when the beat re-enters, and a hidden SIGNATURE lattice every 64 seconds of track time. Pausing or starting any other source restores the previous visuals.
 
 ### Microphone and screen capture
 
@@ -238,8 +242,9 @@ Press `Z` to clear/reset effect levels, then re-enable only the modes and voices
 
 ## Release and project files
 
-- Current standalone release: [AI WARP ENGINE 6.4.20](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.20)
+- Current standalone release: [AI WARP ENGINE 6.4.21](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.21)
 - [README and project overview](README.md)
 - [Short project description](DESCRIPTION.md)
-- [6.4.20 release notes and installer checksum](RELEASE_NOTES_6.4.20.md)
+- [6.4.21 release notes and installer checksum](RELEASE_NOTES_6.4.21.md)
+- [6.4.20 release notes](RELEASE_NOTES_6.4.20.md)
 - The app’s HTML, CSS and JavaScript sources are in `ai_warp_engine/`; the Windows WebView2 host and installer sources are in `shell/`.

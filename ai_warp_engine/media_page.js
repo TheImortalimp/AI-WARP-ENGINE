@@ -2453,6 +2453,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     ];
 
     const poleGrid = document.getElementById('poleR-grid');
+    const raumImages = [1, 2, 3, 4].map(n => { const im = new Image(); im.src = `audio/cover-raum-${n}.jpg`; return im; });
+    const raumBack = new Image(); raumBack.src = 'audio/back-cover.jpg';
+    raumImages.push(raumBack);
     if (poleGrid) {
         poleTracks.forEach(t => {
             const item = document.createElement('article');
@@ -2475,7 +2478,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const playBtn = item.querySelector('.poleR-play-btn');
             const audioEl = item.querySelector('audio');
-
+            if (audioEl) {
+                const leaveShow = () => { if (aiWarp && aiWarp.endRaumShow) aiWarp.endRaumShow(audioEl); };
+                audioEl.addEventListener('pause', leaveShow);
+                audioEl.addEventListener('ended', () => {
+                    leaveShow();
+                    const b = item.querySelector('.poleR-play-btn');
+                    if (b) b.textContent = 'PLAY ▶';
+                });
+            }
             if (playBtn && audioEl) {
                 playBtn.onclick = () => {
                     initAudioContext();
@@ -2500,6 +2511,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         });
                         playBtn.textContent = 'PAUSE ❚❚';
                         activeAudioElement = audioEl;
+                        // Artwork slideshow + exclusive glitch sequences replace whatever was on the canvas
+                        if (aiWarp && aiWarp.startRaumShow) {
+                            const order = raumImages.slice(t.n - 1, 4).concat(raumImages.slice(0, t.n - 1), [raumBack]);
+                            aiWarp.startRaumShow(order, audioEl, t.n);
+                        }
                     } else {
                         audioEl.pause();
                         playBtn.textContent = 'PLAY ▶';

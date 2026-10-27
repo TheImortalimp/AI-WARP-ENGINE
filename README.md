@@ -1,16 +1,16 @@
 # ⚡ AI WARP ENGINE — Windows App (R3 Canvas Edition v6.4)
 
 <p align="center">
-  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.20" width="720">
+  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.21" width="720">
 </p>
 
 A public-domain glitch visual synthesizer and audio-reactive media playground, packaged as a standalone Windows app with a one-click installer.
 
-**Status: Complete · Ready** (v6.4.20) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
+**Status: Complete · Ready** (v6.4.21) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
 
 ## Install
 
-1. Download `AI-WARP-ENGINE-6.4.20-x64-setup.exe` from the latest release.
+1. Download `AI-WARP-ENGINE-6.4.21-x64-setup.exe` from the latest release.
 2. Run it, accept the licence terms, and finish the wizard. No admin rights are needed.
 3. The app installs to `Desktop\AI WARP ENGINE`, with a launcher shortcut, a Start Menu entry and an uninstaller.
 
@@ -78,7 +78,9 @@ Open them from the **RAUM · X-R (4)** button. The drawer shows each track's cov
 
 **Credits:** created by GitHub Copilot (AI) as an original work, prompted and directed by River Lyle Reuveni (Imortalimp). Dedicated to Stefan Betke (Pole) and the artists of the 1998 album *R* on DIN: Daniel Meteo, Burnt Friedman and Kit Clayton. These tracks contain no samples or recordings by them and are not affiliated with them. Please support the original album: <https://pole-stefanbetke.bandcamp.com/album/r>.
 
-See the [v6.4.20 release notes](RELEASE_NOTES_6.4.20.md) for details and the installer checksum.
+**Artwork slideshow and exclusive glitch sequences (v6.4.21):** while a RAUM · X-R track plays, the main canvas switches to a slideshow of the four covers and the back cover, replacing the init artwork or any other source, and is warped by original glitch sequences that follow the track clock and its audio: TEAR, GRID, MIRROR (backwards-Я fold), SMEAR (datamosh trail), COLUMNS and RIPPLE (glass-bell halos, ambient tracks), plus a decoding caption, a giant reversed Я that surfaces during beat silence, a reversal flash when the beat re-enters, and a hidden SIGNATURE lattice every 64 seconds of track time. Pausing or starting any other source restores the previous visuals.
+
+See the [v6.4.21 release notes](RELEASE_NOTES_6.4.21.md) for details and the installer checksum.
 
 ### Capture and audio
 
@@ -150,6 +152,7 @@ The web app is plain HTML / JS / CSS, so you can also run it in any Chromium bro
 
 | Version | Highlights |
 |---------|------------|
+| v6.4.21 | Raum tracks now run the cover artwork as a main-canvas slideshow with exclusive audio-aware glitch sequences and a hidden signature easter egg |
 | v6.4.20 | Pole · R showcase replaced by four original synthesized Raum X-R tracks (bundled, offline) with cover art, back cover and full credits |
 | v6.4.19 | Softer Milkdrop subtle blends; suggested playlists stay in the audio-aware LENS and stop when another source starts |
 | v6.4.18 | DROP THE MILK? adds 80 shuffled, audio-reactive Milkdrop-inspired Canvas presets, FX blending and persistent opacity lock |

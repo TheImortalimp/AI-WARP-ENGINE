@@ -371,6 +371,280 @@
             }
         }
 
+        /* ── RAUM · X-R SHOW ─────────────────────────────────────────────────────
+           Exclusive source mode for the bundled "pole - Я - raum" tracks: the album
+           artwork runs as a slideshow on the main canvas and is warped by original
+           glitch sequences that follow the track clock and its audio (beat re-entry,
+           beat silence, crescendos). Leaving the mode restores the previous source. */
+        startRaumShow(images, audioEl, trackNo) {
+            if (!images || !images.length) return;
+            const rs = this._raum || (this._raum = {
+                scratch: document.createElement('canvas'), trail: document.createElement('canvas'),
+                burst: 0, peak: 0.0001, bassAvg: 0, silent: false, silentSince: 0, reentry: 0, lastBeat: 0, prev: null
+            });
+            if (this.sourceMode !== 'raum') {
+                rs.prev = { mode: this.sourceMode, video: this.activeVideoElement, image: this.activeImageElement };
+            }
+            rs.imgs = images; rs.audio = audioEl; rs.track = trackNo;
+            rs.startedAt = performance.now(); rs.silent = false; rs.reentry = 0; rs.burst = 0.8;
+            this.setSourceMode('raum');
+        }
+
+        endRaumShow(audioEl) {
+            const rs = this._raum;
+            if (!rs || this.sourceMode !== 'raum') return;
+            if (audioEl && rs.audio !== audioEl) return;
+            const p = rs.prev && rs.prev.mode !== 'raum' ? rs.prev : { mode: 'generative' };
+            this.setSourceMode(p.mode, p.mode === 'video' ? p.video : p.image);
+        }
+
+        renderRaumShow(now, dt) {
+            const rs = this._raum;
+            const cw = this.canvas.width, ch = this.canvas.height;
+            const g = this.gctx;
+            if (!rs || !rs.imgs || !cw || !ch) return;
+            const ad = this.audioDrive;
+            const t = rs.audio ? rs.audio.currentTime : (now - rs.startedAt) / 1000;
+            const ambient = rs.track >= 3;
+            const bass = clamp01(ad.bass || 0), level = clamp01(ad.rms || 0);
+
+            // Adaptive beat / silence detection (independent of the analyser's absolute scale)
+            rs.peak = Math.max(level, rs.peak * 0.9993);
+            rs.bassAvg += (bass - rs.bassAvg) * Math.min(1, dt * 3);
+            if (bass > rs.bassAvg * 1.35 + 0.05 && now - rs.lastBeat > 150) {
+                rs.burst = Math.min(1.6, 0.55 + bass);
+                rs.lastBeat = now;
+            }
+            const quiet = level < rs.peak * 0.14;
+            if (quiet && !rs.silent) { if (!rs.silentSince) rs.silentSince = now; if (now - rs.silentSince > 450) rs.silent = true; }
+            if (!quiet) {
+                rs.silentSince = 0;
+                if (rs.silent) { rs.silent = false; rs.reentry = 1; rs.burst = 1.6; }
+            }
+            rs.burst *= Math.exp(-dt * 5);
+            rs.reentry *= Math.exp(-dt * 1.8);
+            rs.hush = (rs.hush || 0) + ((rs.silent ? 1 : 0) - (rs.hush || 0)) * Math.min(1, dt * 2.5);
+
+            // Artwork slideshow with crossfade + Ken Burns drift
+            const n = rs.imgs.length;
+            const slideLen = ambient ? 11 : 7, fade = 1.6;
+            const sIdx = Math.floor(t / slideLen), within = t - sIdx * slideLen;
+            const drawSlide = (img, alpha, k) => {
+                if (!img || !(img.naturalWidth > 0) || alpha <= 0.002) return;
+                const z = 1.05 + 0.09 * k + bass * 0.03 + rs.burst * 0.02;
+                const w = cw * z, h = ch * z;
+                const sc = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+                const iw = img.naturalWidth * sc, ih = img.naturalHeight * sc;
+                const px = Math.sin(t * 0.07 + sIdx) * cw * 0.02, py = Math.cos(t * 0.05 + sIdx) * ch * 0.02;
+                g.globalAlpha = alpha;
+                g.drawImage(img, (cw - iw) / 2 + px, (ch - ih) / 2 + py, iw, ih);
+            };
+            g.save();
+            g.globalCompositeOperation = 'source-over';
+            g.fillStyle = '#000'; g.fillRect(0, 0, cw, ch);
+            const k = within / slideLen;
+            drawSlide(rs.imgs[((sIdx % n) + n) % n], 1, k);
+            if (within > slideLen - fade) {
+                drawSlide(rs.imgs[(((sIdx + 1) % n) + n) % n], (within - (slideLen - fade)) / fade, 0);
+            }
+            g.globalAlpha = 1;
+            g.restore();
+
+            // Pick the glitch sequence from the track clock; envelope gives each sequence a crescendo
+            const jungle = [0, 1, 3, 4, 2, 1, 0, 4], soft = [5, 3, 5, 2, 5, 0];
+            const pool = ambient ? soft : jungle;
+            const segLen = ambient ? 16 : 10;
+            const seg = Math.floor(t / segLen), p = (t / segLen) - seg;
+            let seq = pool[((seg % pool.length) + pool.length) % pool.length];
+            const env = Math.sin(Math.PI * p);
+            let amp = (ambient ? 0.18 : 0.35) + (ambient ? 0.45 : 0.65) * env;
+            amp = Math.min(1.4, amp + rs.burst * (ambient ? 0.35 : 0.8) + rs.reentry * 0.5);
+            amp *= 1 - rs.hush * 0.75;
+
+            // Hidden signature sequence every 64 s of track time
+            const sigPhase = t % 64;
+            const signature = sigPhase > 41 && sigPhase < 45;
+            const frameSeed = Math.floor(now / (ambient ? 140 : 70));
+            const rnd = (() => { let s = (frameSeed * 2654435761 + seg * 97 + rs.track) >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let x = s; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296; }; })();
+
+            const sc = rs.scratch;
+            if (sc.width !== cw || sc.height !== ch) { sc.width = cw; sc.height = ch; }
+            const sx = sc.getContext('2d');
+            sx.globalCompositeOperation = 'copy';
+            sx.drawImage(this.canvas, 0, 0);
+            sx.globalCompositeOperation = 'source-over';
+
+            if (amp > 0.03) {
+                g.save();
+                if (signature) this._raumSignature(g, sc, cw, ch, t, rnd, sigPhase - 41);
+                else if (rs.reentry > 0.55 && !ambient) this._raumReversal(g, sc, cw, ch, rnd, rs.reentry);
+                else if (seq === 0) this._raumTear(g, sc, cw, ch, rnd, amp);
+                else if (seq === 1) this._raumGrid(g, sc, cw, ch, rnd, amp);
+                else if (seq === 2) this._raumMirror(g, sc, cw, ch, t, amp);
+                else if (seq === 3) this._raumSmear(g, sc, cw, ch, rs, amp);
+                else if (seq === 4) this._raumColumns(g, sc, cw, ch, rnd, amp);
+                else this._raumRipple(g, cw, ch, t, amp, bass);
+                g.restore();
+            }
+            // Always keep the trail buffer fresh for the datamosh smear
+            const tr = rs.trail;
+            if (tr.width !== cw || tr.height !== ch) { tr.width = cw; tr.height = ch; }
+            tr.getContext('2d').drawImage(this.canvas, 0, 0);
+
+            // Beat silence: giant reversed Я surfaces out of the dark
+            if (rs.hush > 0.02) this._raumGlyph(g, cw, ch, t, rs.hush, 0.55);
+
+            // Caption that decodes itself on track start
+            this._raumCaption(g, cw, ch, now, rs);
+        }
+
+        _raumGlyph(g, cw, ch, t, a, size) {
+            g.save();
+            g.globalAlpha = Math.min(0.85, a * 0.8);
+            g.translate(cw / 2, ch / 2);
+            g.scale(-1, 1);
+            g.font = `900 ${Math.floor(Math.min(cw, ch) * size * (1 + 0.02 * Math.sin(t * 2)))}px "Arial Black", Impact, sans-serif`;
+            g.textAlign = 'center'; g.textBaseline = 'middle';
+            g.fillStyle = '#fff'; g.globalCompositeOperation = 'difference';
+            g.fillText('R', 0, 0);
+            g.restore();
+        }
+
+        _raumCaption(g, cw, ch, now, rs) {
+            const age = (now - rs.startedAt) / 1000;
+            const full = `pole - Я - raum ${rs.track} - variant X-R  ·  AI WARP × COPILOT × RIVER LYLE REUVENI`;
+            const shown = Math.min(full.length, Math.floor(age * 28));
+            const glyphs = 'Я▓░▒#@%&01<>/\\';
+            let text = '';
+            for (let i = 0; i < full.length; i++) {
+                text += i < shown || full[i] === ' ' ? full[i] : glyphs[(i * 7 + Math.floor(now / 60)) % glyphs.length];
+            }
+            const fs = Math.max(11, Math.floor(ch * 0.022));
+            g.save();
+            g.globalAlpha = age < 14 ? Math.min(1, (14 - age) / 3) * 0.9 : 0;
+            g.font = `bold ${fs}px "Courier New", monospace`;
+            g.textAlign = 'left'; g.textBaseline = 'bottom';
+            g.fillStyle = 'rgba(0,0,0,0.55)'; g.fillRect(0, ch - fs * 2.2, g.measureText(text).width + fs * 2, fs * 2.2);
+            g.fillStyle = '#fff'; g.fillText(text, fs, ch - fs * 0.6);
+            g.restore();
+        }
+
+        // 0 · TEAR — horizontal strips shear sideways with a hue-split ghost
+        _raumTear(g, src, cw, ch, rnd, amp) {
+            const strips = Math.floor(6 + amp * 22);
+            for (let i = 0; i < strips; i++) {
+                const y = Math.floor(rnd() * ch), h = Math.floor(4 + rnd() * ch * 0.07 * amp);
+                const dx = (rnd() - 0.5) * cw * 0.18 * amp;
+                g.drawImage(src, 0, y, cw, h, dx, y, cw, h);
+            }
+            g.globalCompositeOperation = 'screen'; g.globalAlpha = Math.min(0.6, 0.18 + amp * 0.3);
+            g.filter = 'hue-rotate(160deg) saturate(1.8)';
+            g.drawImage(src, cw * 0.012 * amp, 0);
+            g.filter = 'hue-rotate(-90deg) saturate(1.8)';
+            g.drawImage(src, -cw * 0.012 * amp, 0);
+            g.filter = 'none';
+        }
+
+        // 1 · GRID — echoes the boxed-grid artwork: tiles swap, flip and punch in
+        _raumGrid(g, src, cw, ch, rnd, amp) {
+            const cols = 6, rows = 4, tw = cw / cols, th = ch / rows;
+            const hits = Math.floor(3 + amp * 12);
+            for (let i = 0; i < hits; i++) {
+                const c = Math.floor(rnd() * cols), r = Math.floor(rnd() * rows);
+                const c2 = Math.floor(rnd() * cols), r2 = Math.floor(rnd() * rows);
+                const flip = rnd() < 0.4;
+                g.save();
+                g.translate(c * tw + tw / 2, r * th + th / 2);
+                if (flip) g.scale(-1, 1);
+                const s = 1 + (rnd() - 0.3) * 0.25 * amp;
+                g.scale(s, s);
+                g.drawImage(src, c2 * tw, r2 * th, tw, th, -tw / 2, -th / 2, tw, th);
+                g.restore();
+                if (rnd() < 0.35) { g.strokeStyle = 'rgba(255,255,255,0.8)'; g.lineWidth = 2; g.strokeRect(c * tw + 1, r * th + 1, tw - 2, th - 2); }
+            }
+        }
+
+        // 2 · MIRROR — the backwards-Я fold: left half reflected onto the right
+        _raumMirror(g, src, cw, ch, t, amp) {
+            const fold = cw * (0.5 + 0.12 * Math.sin(t * 0.6));
+            g.save();
+            g.globalAlpha = Math.min(1, 0.45 + amp * 0.5);
+            g.translate(fold * 2, 0); g.scale(-1, 1);
+            g.drawImage(src, 0, 0, fold, ch, 0, 0, fold, ch);
+            g.restore();
+            g.globalCompositeOperation = 'difference'; g.globalAlpha = 0.25 * amp;
+            g.fillStyle = '#fff'; g.fillRect(fold - 1, 0, 2, ch);
+        }
+
+        // 3 · SMEAR — datamosh-style persistence: previous frame drags, zooms and bleeds
+        _raumSmear(g, src, cw, ch, rs, amp) {
+            const tr = rs.trail;
+            if (!tr.width) return;
+            g.globalAlpha = Math.min(0.92, 0.45 + amp * 0.4);
+            const z = 1.012 + amp * 0.02;
+            g.drawImage(tr, -(cw * (z - 1)) / 2, -(ch * (z - 1)) / 2 - amp * 2, cw * z, ch * z);
+            g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.12 * amp;
+            g.filter = 'hue-rotate(40deg)';
+            g.drawImage(src, 0, 0); g.filter = 'none';
+        }
+
+        // 4 · COLUMNS — vertical pixel-drag: single columns are stretched down or up
+        _raumColumns(g, src, cw, ch, rnd, amp) {
+            const cols = Math.floor(10 + amp * 40);
+            for (let i = 0; i < cols; i++) {
+                const x = Math.floor(rnd() * cw), w = Math.floor(2 + rnd() * cw * 0.02);
+                const y0 = Math.floor(rnd() * ch * 0.8), len = Math.floor(ch * (0.1 + rnd() * 0.5 * amp));
+                const down = rnd() < 0.5;
+                g.drawImage(src, x, y0, w, 2, x, down ? y0 : y0 - len, w, len);
+            }
+        }
+
+        // 5 · RIPPLE — slow glass-bell halos, for the ambient pair
+        _raumRipple(g, cw, ch, t, amp, bass) {
+            g.globalCompositeOperation = 'lighter';
+            const cx = cw / 2 + Math.sin(t * 0.21) * cw * 0.1, cy = ch / 2 + Math.cos(t * 0.17) * ch * 0.1;
+            const maxR = Math.hypot(cw, ch) * 0.55;
+            for (let i = 0; i < 6; i++) {
+                const ph = ((t * 0.12 + i / 6) % 1);
+                const r = ph * maxR;
+                g.strokeStyle = `hsla(${(200 + i * 28 + t * 4) % 360}, 70%, 75%, ${(1 - ph) * 0.35 * amp * (0.6 + bass)})`;
+                g.lineWidth = 2 + (1 - ph) * 10 * amp;
+                g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.stroke();
+            }
+        }
+
+        // Beat re-entry after silence — the frame is cut, reversed and flashed
+        _raumReversal(g, src, cw, ch, rnd, a) {
+            g.save();
+            g.translate(cw, 0); g.scale(-1, 1);
+            g.globalAlpha = Math.min(1, a);
+            g.drawImage(src, 0, 0);
+            g.restore();
+            this._raumTear(g, src, cw, ch, rnd, 1.2 * a);
+            g.globalCompositeOperation = 'difference'; g.globalAlpha = 0.35 * a;
+            g.fillStyle = '#fff'; g.fillRect(0, 0, cw, ch);
+        }
+
+        // Signature (every 64 s): the album art tiles into a mirrored Я lattice
+        _raumSignature(g, src, cw, ch, t, rnd, ph) {
+            const a = Math.sin(Math.PI * Math.min(1, ph / 4));
+            const n = 4, tw = cw / n, th = ch / n;
+            g.globalAlpha = a;
+            for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+                g.save();
+                g.translate(c * tw + tw / 2, r * th + th / 2);
+                if ((r + c) % 2) g.scale(-1, 1);
+                if (r % 2) g.scale(1, -1);
+                g.drawImage(src, -tw / 2, -th / 2, tw, th);
+                g.restore();
+            }
+            g.globalAlpha = 1;
+            this._raumGlyph(g, cw, ch, t, a * 0.9, 0.7);
+            g.globalCompositeOperation = 'source-over'; g.globalAlpha = a;
+            g.fillStyle = '#fff'; g.font = `bold ${Math.floor(ch * 0.035)}px "Courier New", monospace`;
+            g.textAlign = 'center'; g.fillText('AI WARP · Я · X-R · SIGNATURE', cw / 2, ch * 0.94);
+        }
+
         setAudioDrive(driveData) {
             if (!driveData) return;
             Object.assign(this.audioDrive, driveData);
@@ -3206,6 +3480,8 @@
             } else if (this.sourceMode === 'image' && this.activeImageElement) {
                 this.gctx.clearRect(0, 0, cw, ch);
                 drawCover(this.gctx, this.activeImageElement, cw, ch);
+            } else if (this.sourceMode === 'raum') {
+                this.renderRaumShow(now, dt);
             } else if (this.sourceMode === 'youtube') {
                 // Embedded YouTube is cross-origin and cannot be sampled by Canvas.
                 // Keep the video in its iframe and leave this canvas transparent here;
