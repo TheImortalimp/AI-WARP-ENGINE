@@ -1,7 +1,7 @@
 {
   "engine": {
     "name": "AI Warp Engine — R3 Canvas Edition",
-    "version": "6.4.19-milkdrop-subtle-blends",
+    "version": "6.4.20-raum-xr",
     "author": "IMORTALIMP.NL & Arena AI",
     "ghostKey": "Gh0sTs 1n Th3 Sh3lLs - D1giTaL R3BiRtHs - f34Rd0t.C0mM4",
     "ghostKeyStanzas": [
@@ -15,98 +15,44 @@
       0.75,
       1.0
     ],
-    "releaseNotes": "34 voices; 29 mode-aware AI Warp profiles; R3 Ghost Protocol and V-Sync v11; YouTube Warp Bus and browser display capture. v6.4.18 adds DROP THE MILK?, an original Milkdrop-inspired audio-reactive Canvas feedback effect with 80 shuffled presets and a persistent manual opacity lock. v6.4.19 adds subtle Milkdrop blends and routes suggested playlists through the audio-aware YT LENS, stopping lens playback when another source starts."
+    "releaseNotes": "34 voices; 29 mode-aware AI Warp profiles; R3 Ghost Protocol and V-Sync v11; YouTube Warp Bus and browser display capture. v6.4.18 adds DROP THE MILK?, an original Milkdrop-inspired audio-reactive Canvas feedback effect with 80 shuffled presets and a persistent manual opacity lock. v6.4.19 adds subtle Milkdrop blends and routes suggested playlists through the audio-aware YT LENS, stopping lens playback when another source starts. v6.4.20 replaces the Pole - R showcase with four original synthesized Raum X-R tracks, bundled for offline playback with cover art and full credits."
   },
   "tracks": [
     {
       "n": 1,
-      "t": "raum 1 variation",
-      "s": "R1·VAR",
-      "d": 308,
+      "t": "pole - Я - raum 1 - variant X-R",
+      "s": "R1·XR",
+      "d": 435,
       "r": 1,
-      "c": "written & produced by stefan betke · feat. daniel meteo (guitar)",
-      "file": "01 raum 1 variation.mp3"
+      "c": "original synthesized work by GitHub Copilot, prompted by River Lyle Reuveni · dedicated to Stefan Betke (Pole)",
+      "file": "audio/pole - Я - raum 1 - variant X-R.mp3"
     },
     {
       "n": 2,
-      "t": "raum 2 variation",
-      "s": "R2·VAR",
-      "d": 363,
+      "t": "pole - Я - raum 2 - variant X-R",
+      "s": "R2·XR",
+      "d": 485,
       "r": 2,
-      "c": "written & produced by stefan betke · feat. daniel meteo (guitar)",
-      "file": "02 raum 2 variation.mp3"
+      "c": "original synthesized work by GitHub Copilot, prompted by River Lyle Reuveni · dedicated to Stefan Betke (Pole)",
+      "file": "audio/pole - Я - raum 2 - variant X-R.mp3"
     },
     {
       "n": 3,
-      "t": "raum 3",
-      "s": "R3",
-      "d": 286,
+      "t": "pole - Я - raum 3 - variant X-R",
+      "s": "R3·XR",
+      "d": 543,
       "r": 3,
-      "c": "written & produced by stefan betke · feat. daniel meteo (guitar)",
-      "file": "03 raum 3.mp3"
+      "c": "original ambient synthesized work by GitHub Copilot, prompted by River Lyle Reuveni · dedicated to Stefan Betke (Pole)",
+      "file": "audio/pole - Я - raum 3 - variant X-R.mp3"
     },
     {
       "n": 4,
-      "t": "raum 4",
-      "s": "R4",
-      "d": 311,
+      "t": "pole - Я - raum 4 - variant X-R",
+      "s": "R4·XR",
+      "d": 543,
       "r": 4,
-      "c": "written & produced by stefan betke · feat. daniel meteo (guitar)",
-      "file": "04 raum 4.mp3"
-    },
-    {
-      "n": 5,
-      "t": "raum 1 variation (burnt friedman)",
-      "s": "R1·BF",
-      "d": 355,
-      "r": 1,
-      "c": "reworked by burnt friedman",
-      "file": "05 raum 1 variation (burnt friedman).mp3"
-    },
-    {
-      "n": 6,
-      "t": "raum 2 variation (burnt friedman)",
-      "s": "R2·BF",
-      "d": 317,
-      "r": 2,
-      "c": "reworked by burnt friedman",
-      "file": "06 raum 2 variation (burnt friedman).mp3"
-    },
-    {
-      "n": 7,
-      "t": "raum 1 original",
-      "s": "R1·ORG",
-      "d": 452,
-      "r": 1,
-      "c": "originally released on DIN records, 1998",
-      "file": "07 raum 1 original.mp3"
-    },
-    {
-      "n": 8,
-      "t": "raum 2 original",
-      "s": "R2·ORG",
-      "d": 375,
-      "r": 2,
-      "c": "originally released on DIN records, 1998",
-      "file": "08 raum 2 original.mp3"
-    },
-    {
-      "n": 9,
-      "t": "raum 1 variation (Kit clayton)",
-      "s": "R1·KC",
-      "d": 359,
-      "r": 1,
-      "c": "reworked by kit clayton",
-      "file": "09 raum 1 variation (Kit clayton).mp3"
-    },
-    {
-      "n": 10,
-      "t": "raum 2 variation (Kit clayton)",
-      "s": "R2·KC",
-      "d": 375,
-      "r": 2,
-      "c": "reworked by kit clayton",
-      "file": "10 raum 2 variation (Kit clayton).mp3"
+      "c": "original ambient synthesized work by GitHub Copilot, prompted by River Lyle Reuveni · dedicated to Stefan Betke (Pole)",
+      "file": "audio/pole - Я - raum 4 - variant X-R.mp3"
     }
   ],
   "warpModes": {

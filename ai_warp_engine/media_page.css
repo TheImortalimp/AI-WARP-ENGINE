@@ -812,6 +812,42 @@ body {
     margin-bottom: 6px;
 }
 
+.raum-thanks {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border: 1px solid rgba(0, 255, 255, 0.25);
+    border-radius: 4px;
+    font-size: 10px;
+    line-height: 1.5;
+    color: #c5d6de;
+}
+
+.raum-thanks h3 {
+    margin: 0 0 6px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #00e5ff;
+}
+
+.raum-thanks p { margin: 0 0 6px; }
+.raum-back-cover {
+    display: block;
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.raum-thanks a { color: #00e5ff; }
+
+.poleR-cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    margin-bottom: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
 .poleR-controls {
     display: flex;
     justify-content: flex-end;

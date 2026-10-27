@@ -1,20 +1,20 @@
 # ⚡ AI WARP ENGINE — Windows App (R3 Canvas Edition v6.4)
 
 <p align="center">
-  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.19" width="720">
+  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.20" width="720">
 </p>
 
 A public-domain glitch visual synthesizer and audio-reactive media playground, packaged as a standalone Windows app with a one-click installer.
 
-**Status: Complete · Ready** (v6.4.19) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
+**Status: Complete · Ready** (v6.4.20) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
 
 ## Install
 
-1. Download `AI-WARP-ENGINE-6.4.19-x64-setup.exe` from the latest release.
+1. Download `AI-WARP-ENGINE-6.4.20-x64-setup.exe` from the latest release.
 2. Run it, accept the licence terms, and finish the wizard. No admin rights are needed.
 3. The app installs to `Desktop\AI WARP ENGINE`, with a launcher shortcut, a Start Menu entry and an uninstaller.
 
-Requires Windows 10/11 x64 with the Microsoft Edge WebView2 runtime (included with current Windows). The .NET runtime is bundled, so nothing else needs installing. The installer is about 64 MB.
+Requires Windows 10/11 x64 with the Microsoft Edge WebView2 runtime (included with current Windows). The .NET runtime is bundled, so nothing else needs installing. The installer is about 140 MB because it bundles the four Raum X-R tracks.
 
 ## What it does
 
@@ -62,6 +62,24 @@ The Milkdrop-inspired Canvas feedback now uses the subtler blends from the 6.4.3
 Suggested/featured playlists now use the standalone AI WARP LENS path, with the lens audio feeding the analyser. Starting another playback source closes the lens and stops its audio.
 
 See the [v6.4.19 release notes](RELEASE_NOTES_6.4.19.md) for details and installer checksum.
+
+### RAUM · X-R showcase (v6.4.20)
+
+The old Pole · R showcase, whose remote tracks could not play, is replaced by four **original, fully synthesized** tracks bundled inside the app, so they play offline and feed the audio-reactive analyser like any other source:
+
+| # | Title | Length | Style |
+|---|---|---|---|
+| 1 | pole - Я - raum 1 - variant X-R | 7:15 | ripple flow + jungle breakcore with tempo drops, beat silences and crescendos |
+| 2 | pole - Я - raum 2 - variant X-R | 8:05 | ripple flow + jungle breakcore with tempo drops, beat silences and crescendos |
+| 3 | pole - Я - raum 3 - variant X-R | 9:03 | ambient harmonic beats and glitches under glass-bell drones |
+| 4 | pole - Я - raum 4 - variant X-R | 9:03 | ambient harmonic beats and glitches under glass-bell drones |
+
+Open them from the **RAUM · X-R (4)** button. The drawer shows each track's cover art, the back cover with the tracklist, and the thanks and dedication panel.
+
+**Credits:** created by GitHub Copilot (AI) as an original work, prompted and directed by River Lyle Reuveni (Imortalimp). Dedicated to Stefan Betke (Pole) and the artists of the 1998 album *R* on DIN: Daniel Meteo, Burnt Friedman and Kit Clayton. These tracks contain no samples or recordings by them and are not affiliated with them. Please support the original album: <https://pole-stefanbetke.bandcamp.com/album/r>.
+
+See the [v6.4.20 release notes](RELEASE_NOTES_6.4.20.md) for details and the installer checksum.
+
 ### Capture and audio
 
 - **Display capture** (`N`) shares a tab, window or screen as the source.
@@ -132,6 +150,7 @@ The web app is plain HTML / JS / CSS, so you can also run it in any Chromium bro
 
 | Version | Highlights |
 |---------|------------|
+| v6.4.20 | Pole · R showcase replaced by four original synthesized Raum X-R tracks (bundled, offline) with cover art, back cover and full credits |
 | v6.4.19 | Softer Milkdrop subtle blends; suggested playlists stay in the audio-aware LENS and stop when another source starts |
 | v6.4.18 | DROP THE MILK? adds 80 shuffled, audio-reactive Milkdrop-inspired Canvas presets, FX blending and persistent opacity lock |
 | v6.4.17 | Mode-aware FX profiles for all 29 AI Warp modes, deterministic automation, and blended Ghost/V-Sync/R3/Canvas effects |
@@ -160,3 +179,5 @@ The software is dedicated to the public domain under [CC0 1.0](https://creativec
 ## Credits
 
 River Lyle Reuveni ([imortalimp.nl](https://imortalimp.nl) · [@TheImortalimp](https://github.com/TheImortalimp)), [Arena.ai](https://arena.ai) Agent Mode, and GitHub Copilot.
+
+The four Raum X-R tracks were created by GitHub Copilot as original synthesized works, prompted and directed by River Lyle Reuveni, and are dedicated to Stefan Betke (Pole) and the artists of the album *R* (Daniel Meteo, Burnt Friedman, Kit Clayton). Support the original: <https://pole-stefanbetke.bandcamp.com/album/r>

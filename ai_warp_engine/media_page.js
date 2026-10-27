@@ -4,7 +4,7 @@
  * Features:
  * - Web Audio API Analysis (Sub, Bass, Mid, Treble, Beat Transients, RMS)
  * - Synthetic Beat & Dub Music Engine (Self-contained Web Audio generator)
- * - Pole - R Showcase Audio Player (10 tracks by Stefan Betke / DIN)
+ * - Raum 1 & 2 ~ variant X-R showcase player (2 original synthesized tracks, bundled)
  * - Spectrum Analyzer & Waveform Oscilloscope HUD
  * - Stereo VU Meters (Dual 12-segment ballistic LED bars)
  * - Theme Turbo Engine (Cyber, Neon, Gold, Cyan, CRT, Retro HUD)
@@ -667,7 +667,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (localVideo && !localVideo.paused && !lensActive) {
             updateAudioMonitorBadge('MONITOR: LOCAL VIDEO [ACTIVE]', true);
         } else if (activeAudioElement && !activeAudioElement.paused) {
-            updateAudioMonitorBadge('MONITOR: POLE · R [ACTIVE]', true);
+            updateAudioMonitorBadge('MONITOR: RAUM · X-R [ACTIVE]', true);
         } else if (currentMediaKind === 'youtube' || (lensActive && currentMediaKind === 'capture')) {
             // High-octane dynamic YouTube audio frequency & waveform synthesizer
             const t = performance.now() * 0.001;
@@ -1562,6 +1562,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         stopSyntheticAudio();
         if (activeAudioElement && typeof activeAudioElement.pause === 'function') activeAudioElement.pause();
+        document.querySelectorAll('#poleR-grid .poleR-play-btn').forEach(b => { b.textContent = 'PLAY ▶'; });
         if (localAudio && typeof localAudio.pause === 'function') localAudio.pause();
         if (localVideo && typeof localVideo.pause === 'function') localVideo.pause();
         const transport = document.getElementById('mediaTransportBar');
@@ -2435,7 +2436,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         poleRDrawerBtn.addEventListener('click', () => {
             const isOpen = poleRDrawer.classList.toggle('open');
             poleRDrawerBtn.classList.toggle('active', isOpen);
-            if (isOpen) showHudNotification('POLE · R SHOWCASE DRAWER OPEN');
+            if (isOpen) showHudNotification('RAUM · X-R SHOWCASE DRAWER OPEN');
         });
     }
     if (poleRCloseBtn && poleRDrawer) {
@@ -2445,16 +2446,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
     const poleTracks = (configData && configData.tracks) || [
-        { n: 1, t: 'raum 1 variation', s: 'R1·VAR', d: 308, r: 1, c: 'written & produced by stefan betke · feat. daniel meteo (guitar)' },
-        { n: 2, t: 'raum 2 variation', s: 'R2·VAR', d: 363, r: 2, c: 'written & produced by stefan betke · feat. daniel meteo (guitar)' },
-        { n: 3, t: 'raum 3', s: 'R3', d: 286, r: 3, c: 'written & produced by stefan betke · feat. daniel meteo (guitar)' },
-        { n: 4, t: 'raum 4', s: 'R4', d: 311, r: 4, c: 'written & produced by stefan betke · feat. daniel meteo (guitar)' },
-        { n: 5, t: 'raum 1 variation (burnt friedman)', s: 'R1·BF', d: 355, r: 1, c: 'reworked by burnt friedman' },
-        { n: 6, t: 'raum 2 variation (burnt friedman)', s: 'R2·BF', d: 317, r: 2, c: 'reworked by burnt friedman' },
-        { n: 7, t: 'raum 1 original', s: 'R1·ORG', d: 452, r: 1, c: 'originally released on DIN records, 1998' },
-        { n: 8, t: 'raum 2 original', s: 'R2·ORG', d: 375, r: 2, c: 'originally released on DIN records, 1998' },
-        { n: 9, t: 'raum 1 variation (Kit clayton)', s: 'R1·KC', d: 359, r: 1, c: 'reworked by kit clayton' },
-        { n: 10, t: 'raum 2 variation (Kit clayton)', s: 'R2·KC', d: 375, r: 2, c: 'reworked by kit clayton' }
+        { n: 1, t: 'pole - Я - raum 1 - variant X-R', s: 'R1·XR', d: 435, r: 1, c: 'original synthesized work by GitHub Copilot, prompted by River Lyle Reuveni · dedicated to Stefan Betke (Pole)', file: 'audio/pole - Я - raum 1 - variant X-R.mp3' },
+        { n: 2, t: 'pole - Я - raum 2 - variant X-R', s: 'R2·XR', d: 485, r: 2, c: 'original synthesized work by GitHub Copilot, prompted by River Lyle Reuveni · dedicated to Stefan Betke (Pole)', file: 'audio/pole - Я - raum 2 - variant X-R.mp3' },
+        { n: 3, t: 'pole - Я - raum 3 - variant X-R', s: 'R3·XR', d: 543, r: 3, c: 'original ambient synthesized work by GitHub Copilot, prompted by River Lyle Reuveni · dedicated to Stefan Betke (Pole)', file: 'audio/pole - Я - raum 3 - variant X-R.mp3' },
+        { n: 4, t: 'pole - Я - raum 4 - variant X-R', s: 'R4·XR', d: 543, r: 4, c: 'original ambient synthesized work by GitHub Copilot, prompted by River Lyle Reuveni · dedicated to Stefan Betke (Pole)', file: 'audio/pole - Я - raum 4 - variant X-R.mp3' }
     ];
 
     const poleGrid = document.getElementById('poleR-grid');
@@ -2464,6 +2459,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             item.className = 'poleR-item';
             const numStr = ('0' + t.n).slice(-2);
             item.innerHTML = `
+                <img class="poleR-cover" src="audio/cover-raum-${t.n}.jpg" alt="Cover art: ${t.t}" loading="lazy">
                 <header>
                     <span class="poleR-num">${numStr}</span>
                     <h3>${t.t} <small>(${Math.floor(t.d / 60)}:${('0' + (t.d % 60)).slice(-2)})</small></h3>
@@ -2472,7 +2468,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <p class="poleR-credit">${t.c}</p>
                 <div class="poleR-controls">
                     <button class="poleR-play-btn" data-track="${t.n}">PLAY ▶</button>
-                    <audio preload="none" src="https://www.imortalimp.nl/bin/pole%20-%20R/pole%20-%20R%20-%20${numStr}%20${encodeURIComponent(t.t)}.mp3"></audio>
+                    <audio preload="none" src="${encodeURI(t.file)}"></audio>
                 </div>
             `;
             poleGrid.appendChild(item);

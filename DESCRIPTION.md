@@ -3,7 +3,7 @@
 **AI WARP ENGINE (R3 Canvas Edition v6.4)** is a public-domain visual synthesizer, audio-reactive media playground and live Canvas glitch suite, shipped as a standalone Windows app.
 
 - **Author:** River Lyle Reuveni (Imortalimp), [imortalimp.nl](https://imortalimp.nl)
-- **Version:** 6.4 (installer release v6.4.19) — **Complete · Ready**
+- **Version:** 6.4 (installer release v6.4.20) — **Complete · Ready**
 - **Platform:** Windows 10/11 x64 (WebView2 host, .NET bundled)
 - **Install location:** `Desktop\AI WARP ENGINE` (per-user, no admin)
 - **Licence:** CC0 1.0 / The Unlicense (software); CC BY 4.0 (imortalimp.nl site content)
@@ -24,6 +24,13 @@ Takes a live source and runs it through a real-time Canvas effects pipeline, dri
 
 **Control:** 80 machine presets plus saved user presets with smooth cross-fades, a live mixer, and keyboard hotkeys (`W` warp, `G` ghost, `V` V-Sync, `A` auto, `R` randomise, `T` timed, `C` crescendo, `D` Milkdrop, `Z` zero, `S` freeze, `E` ear, `H` hide UI, `1`–`9` voices, `?` help).
 
+## RAUM · X-R
+
+The **RAUM · X-R (4)** drawer replaces the former Pole · R showcase. These tracks are original, fully synthesized works bundled with the app, so they play offline and drive the audio-reactive analyser.
+
+- **Credits:** created by GitHub Copilot (AI), prompted and directed by River Lyle Reuveni. Dedicated to Stefan Betke (Pole) and the artists of the 1998 album *R* (Daniel Meteo, Burnt Friedman, Kit Clayton). Not affiliated with them; no recordings by them are used.
+- **Support the original:** <https://pole-stefanbetke.bandcamp.com/album/r>
+
 ## Mode-aware effects
 
 The 29 AI Warp modes each have a deterministic blend profile that tunes Ghost Protocol / V-Sync color, split, scan, warp and automation pacing. The profiles also blend R3 factory effects, Canvas warp strength, Hard Light, Soft-Eye and audio-ear response without changing master levels or overriding protected voice intent.
@@ -34,6 +41,7 @@ Enable the DROP THE MILK? toolbar button or press `D`. The effect composites a s
 
 ## Release history
 
+- **v6.4.20** — Replaced the Pole · R showcase with four original synthesized Raum X-R tracks (two jungle/breakcore, two ambient), bundled for offline, audio-reactive playback with cover art, back cover and full credits.
 - **v6.4.19** — Added subtle Milkdrop blends; routed playlist-only suggestions through the audio-aware YT LENS and stopped lens playback when another source starts.
 - **v6.4.18** — Added DROP THE MILK? Milkdrop-inspired audio-reactive Canvas feedback, 80 shuffled presets, mode/voice blending and persistent opacity lock.
 - **v6.4.17** — Mode-aware FX blending for all 29 AI Warp modes, deterministic automation and coordinated Ghost / V-Sync / R3 / Canvas effects.

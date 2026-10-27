@@ -1,9 +1,9 @@
 # AI WARP ENGINE — User Manual
 
-**Applies to:** AI WARP ENGINE standalone Windows app, release 6.4.19  
+**Applies to:** AI WARP ENGINE standalone Windows app, release 6.4.20  
 **Platform:** Windows 10/11 x64
 
-AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media source, then layer AI Warp modes, glitch voices, Ghost Protocol, V-Sync and audio-reactive automation over it. The 6.4.19 release also includes the subtle-blend DROP THE MILK? feedback effect and audio-aware YouTube playlist playback in the standalone YT LENS.
+AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media source, then layer AI Warp modes, glitch voices, Ghost Protocol, V-Sync and audio-reactive automation over it. The 6.4.20 release adds the bundled RAUM · X-R showcase of four original tracks. The 6.4.19 release added the subtle-blend DROP THE MILK? feedback effect and audio-aware YouTube playlist playback in the standalone YT LENS.
 
 ## Contents
 
@@ -20,7 +20,7 @@ AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media sourc
 
 ## Install and launch
 
-1. Download `AI-WARP-ENGINE-6.4.19-x64-setup.exe` from the [latest GitHub release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
+1. Download `AI-WARP-ENGINE-6.4.20-x64-setup.exe` from the [latest GitHub release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
 2. Run the installer and accept the licence terms. It installs for the current user and does not require administrator access.
 3. Launch **AI WARP ENGINE** from the desktop shortcut or Start Menu.
 
@@ -50,6 +50,22 @@ The app can run its built-in generative Canvas visuals without opening a media f
 Use the app’s media/file controls to load local images, video or audio. Video is rendered into the visual pipeline; audio is monitored by the analyser and can accompany artwork. Playback controls include play/pause and transport where applicable. Selecting another source stops the current media first.
 
 Common formats include image files and media containers supported by the installed WebView2 codecs. Video codec support depends on the file’s encoding as well as its extension.
+
+### RAUM · X-R showcase (bundled tracks)
+
+Click **RAUM · X-R (4)** in the toolbar to open the showcase drawer. It lists four original, fully synthesized tracks, each with cover art, a length and a **PLAY** button, followed by the back cover and the thanks and dedication panel.
+
+| # | Title | Length |
+|---|---|---|
+| 1 | pole - Я - raum 1 - variant X-R | 7:15 |
+| 2 | pole - Я - raum 2 - variant X-R | 8:05 |
+| 3 | pole - Я - raum 3 - variant X-R | 9:03 |
+| 4 | pole - Я - raum 4 - variant X-R | 9:03 |
+
+- Tracks 1 and 2 are jungle/breakcore with tempo drops, beat silences and crescendos. Tracks 3 and 4 are ambient, with harmonic beats and glitches under glass-bell drones.
+- The files ship inside the app, so no internet connection is needed. The audio feeds the analyser, so the visual effects react to it.
+- Starting one track pauses the others; starting any other source (YouTube, local media, synth, capture) stops the showcase, and the reverse is also true.
+- **Credits:** created by GitHub Copilot (AI), prompted and directed by River Lyle Reuveni. Dedicated to Stefan Betke (Pole) and the artists of the 1998 album *R* on DIN: Daniel Meteo, Burnt Friedman and Kit Clayton. The tracks contain no samples or recordings by them and are not affiliated with them. Support the original: <https://pole-stefanbetke.bandcamp.com/album/r>
 
 ### Microphone and screen capture
 
@@ -222,8 +238,8 @@ Press `Z` to clear/reset effect levels, then re-enable only the modes and voices
 
 ## Release and project files
 
-- Current standalone release: [AI WARP ENGINE 6.4.19](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.19)
+- Current standalone release: [AI WARP ENGINE 6.4.20](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.20)
 - [README and project overview](README.md)
 - [Short project description](DESCRIPTION.md)
-- [6.4.19 release notes and installer checksum](RELEASE_NOTES_6.4.19.md)
+- [6.4.20 release notes and installer checksum](RELEASE_NOTES_6.4.20.md)
 - The app’s HTML, CSS and JavaScript sources are in `ai_warp_engine/`; the Windows WebView2 host and installer sources are in `shell/`.
