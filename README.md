@@ -1,16 +1,16 @@
-# ⚡ AI WARP ENGINE — Windows App (R3 Canvas Edition v6.4)
+# ⚡ AI WARP ENGINE — Windows App (R3 Canvas Edition v6.4.25)
 
 <p align="center">
-  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.24" width="720">
+  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.25" width="720">
 </p>
 
 A public-domain glitch visual synthesizer and audio-reactive media playground, packaged as a standalone Windows app with a one-click installer.
 
-**Prepared build: v6.4.24** — the local installer is in `shell/`; v6.4.23 remains the latest published release on the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases).
+**Current release: v6.4.25** — download the Windows installer from the [GitHub release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.25) or use the app-matched browser edition in `ai_warp_engine/`.
 
 ## Install
 
-1. Run `shell/AI-WARP-ENGINE-6.4.24-x64-setup.exe` for the prepared build. The v6.4.24 release has not been published yet.
+1. Download and run `AI-WARP-ENGINE-6.4.25-x64-setup.exe` from the [v6.4.25 release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.25).
 2. Run it, accept the licence terms, and finish the wizard. No admin rights are needed.
 3. The app installs to `Desktop\AI WARP ENGINE`, with a launcher shortcut, a Start Menu entry and an uninstaller.
 
@@ -25,6 +25,12 @@ AI WARP ENGINE takes a live source and runs it through a real-time Canvas effect
 - **Audio reactivity:** a bass / mid / treble / drive analyser (from the mic, the playing audio or the canvas itself) drives the warps, voices and overlays.
 - **Automation:** Auto Glitch, Continual Random, Automated Masters, Timed Automation, Wired mode, Soft-Eye and Crescendo.
 - **Presets:** 80 machine presets and your own saved user presets, with smooth cross-fades between them.
+
+### Full-canvas inversion (v6.4.25)
+
+The B&W control now converts the final composition to grayscale and inverts it after all source and effect layers have rendered. This includes the captured YT LENS feed, initialization artwork, Raum X-R showcase slides and easter eggs. Hue/Color Cycle similarly rotates the full composed image. Previous LENS tuning and automatic playlist extraction remain included.
+
+See the [v6.4.25 release notes](RELEASE_NOTES_6.4.25.md) for details and the installer checksum.
 
 ## Features
 
@@ -172,6 +178,7 @@ The web app is plain HTML / JS / CSS, so you can also run it in any Chromium bro
 
 | Version | Highlights |
 |---------|------------|
+| v6.4.25 | Full-canvas grayscale inversion and Hue rotation cover the captured LENS picture, initialization art, Raum showcase and visual easter eggs |
 | v6.4.24 | LENS-aware B&W/Hue sliders activate paired voices with live previews; playlist playback and imports start automatic background extraction |
 | v6.4.23 | Protected built-in playlist entry, visible playable playlist cards, robust XML feed parsing, duplicate-request coalescing, and direct playback fallback |
 | v6.4.22 | Bottom-dock B&W/Hue tuning sliders and locks; randomized FX settings and a variable Auto Glitch roll on randomize / preset auto-cycles |

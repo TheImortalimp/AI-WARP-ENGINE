@@ -2,6 +2,10 @@
 
 Standalone Windows app releases. Full notes per release are in the `RELEASE_NOTES_*.md` files.
 
+## 6.4.25 — Full-canvas LENS inversion
+- B&W now applies grayscale and inversion to the complete composed canvas, including the YT LENS feed, initialization artwork, Raum X-R showcase, and visual easter eggs.
+- Hue/Color Cycle now rotates the full composed canvas instead of tinting only a translucent overlay; the browser YouTube Warp Bus uses full-strength monochrome inversion too.
+
 ## 6.4.24 — LENS FX controls and automatic playlist extraction
 - B&W strength and Hue spectrum adjustments now activate both core and GC#(3) voices, so the controls visibly affect the LENS Canvas; added monochrome and hue-spectrum previews.
 - Playlist-card playback and imported playlist records now automatically start background extraction while keeping direct playlist playback available.

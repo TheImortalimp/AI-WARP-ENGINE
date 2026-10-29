@@ -3794,6 +3794,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function downloadCanvas(canvas) {
+        const filter = window.getComputedStyle(canvas).filter;
+        if (filter && filter !== 'none') {
+            const filteredCanvas = document.createElement('canvas');
+            filteredCanvas.width = canvas.width;
+            filteredCanvas.height = canvas.height;
+            const context = filteredCanvas.getContext('2d');
+            if (!context) throw new Error('Could not create a canvas context for the filtered screenshot.');
+            context.filter = filter;
+            context.drawImage(canvas, 0, 0);
+            canvas = filteredCanvas;
+        }
         const link = document.createElement('a');
         link.download = `ai-warp-freeze-frame-${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');

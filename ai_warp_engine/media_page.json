@@ -1,7 +1,7 @@
 {
   "engine": {
     "name": "AI Warp Engine — R3 Canvas Edition",
-    "version": "6.4.24-lens-fx-tuning",
+    "version": "6.4.25-full-lens-inversion",
     "author": "IMORTALIMP.NL & Arena AI",
     "ghostKey": "Gh0sTs 1n Th3 Sh3lLs - D1giTaL R3BiRtHs - f34Rd0t.C0mM4",
     "ghostKeyStanzas": [
@@ -15,7 +15,7 @@
       0.75,
       1.0
     ],
-    "releaseNotes": "34 voices; 29 mode-aware AI Warp profiles; R3 Ghost Protocol and V-Sync v11; YouTube Warp Bus and browser display capture. v6.4.18 adds DROP THE MILK?, an original Milkdrop-inspired audio-reactive Canvas feedback effect with 80 shuffled presets and a persistent manual opacity lock. v6.4.19 adds subtle Milkdrop blends and routes suggested playlists through the audio-aware YT LENS, stopping lens playback when another source starts. v6.4.20 replaces the Pole - R showcase with four original synthesized Raum X-R tracks, bundled for offline playback with cover art and full credits. v6.4.21 adds an artwork slideshow and exclusive glitch sequences on the main canvas while the Raum tracks play. v6.4.22 adds locked B&W/Hue fine-tuning, randomized FX rolls, and variable Auto Glitch rolls for board randomization and preset auto-cycling. v6.4.23 pins the featured playlist in the YouTube vault, shows saved playlists as playable cards, parses RSS feeds by XML namespace, and coalesces duplicate extraction requests. v6.4.24 makes bottom-dock B&W/Hue adjustments activate both corresponding voices and adds live visual previews; playlist playback and imported playlist records automatically start background extraction."
+    "releaseNotes": "34 voices; 29 mode-aware AI Warp profiles; R3 Ghost Protocol and V-Sync v11; YouTube Warp Bus and browser display capture. v6.4.18 adds DROP THE MILK?, an original Milkdrop-inspired audio-reactive Canvas feedback effect with 80 shuffled presets and a persistent manual opacity lock. v6.4.19 adds subtle Milkdrop blends and routes suggested playlists through the audio-aware YT LENS, stopping lens playback when another source starts. v6.4.20 replaces the Pole - R showcase with four original synthesized Raum X-R tracks, bundled for offline playback with cover art and full credits. v6.4.21 adds an artwork slideshow and exclusive glitch sequences on the main canvas while the Raum tracks play. v6.4.22 adds locked B&W/Hue fine-tuning, randomized FX rolls, and variable Auto Glitch rolls for board randomization and preset auto-cycling. v6.4.23 pins the featured playlist in the YouTube vault, shows saved playlists as playable cards, parses RSS feeds by XML namespace, and coalesces duplicate extraction requests. v6.4.24 makes bottom-dock B&W/Hue adjustments activate both corresponding voices and adds live visual previews; playlist playback and imported playlist records automatically start background extraction. v6.4.25 applies grayscale inversion and hue rotation after full-canvas composition, including LENS frames, initialization artwork, Raum X-R showcase art, and its visual easter eggs."
   },
   "tracks": [
     {

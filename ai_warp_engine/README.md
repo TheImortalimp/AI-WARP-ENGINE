@@ -1,4 +1,4 @@
-# ⚡ AI WARP ENGINE — R3 Canvas Edition (v6.4 · Display Capture + YouTube Warp Bus + SVG Lens)
+# ⚡ AI WARP ENGINE — R3 Canvas Edition (v6.4.25 · Full-canvas LENS inversion)
 
 > **Public-domain visual synthesizer, audio-reactive media playground, and live Canvas glitch suite.**  
 > Created through collaborative work between [imortalimp.nl](https://imortalimp.nl) (River Lyle Reuveni), [Arena.ai](https://arena.ai), and artificial intelligence.
@@ -27,6 +27,10 @@
 In v6.4.22, board randomization and each preset auto-cycle reroll unlocked B&W/Hue settings and independently roll Auto Glitch ON/OFF at 50/50 odds. The **ROLL FX** button rerolls only the two FX settings.
 
 In v6.4.23, the featured YouTube playlist is pinned in the knowledgebase as a protected built-in entry. Saved playlists display as playable cards even if feed extraction fails; extraction parses Atom/XML by namespace and coalesces duplicate requests. Public feed access may expose only a recent subset, so **PLAY** opens the playlist directly for full browsing.
+
+In v6.4.24, the bottom-dock B&W and Hue controls activate their paired core and GC#(3) voices so tuning changes are visible on the Canvas, with live monochrome/spectrum previews. Playing a saved playlist or importing playlist records starts background feed extraction automatically.
+
+In v6.4.25, the B&W control applies grayscale plus true inversion to the complete rendered canvas, and Hue/Color Cycle rotates the full image spectrum. Because these treatments run after source and effect composition, they include captured LENS frames, initialization artwork, Raum X-R showcase slides, the reversed-Я easter egg, and captions. The browser YouTube Warp Bus also uses full monochrome inversion. The `ai_warp_engine/` folder is the browser edition and shares its HTML, JavaScript, CSS, JSON, and audio assets with the standalone app; the desktop-only YT LENS window requires the Windows app.
 
 ---
 

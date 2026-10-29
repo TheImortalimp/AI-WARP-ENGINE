@@ -2433,39 +2433,10 @@
         };
     }
 
-    /* Revision 3 keeps these two panel rails in its master/filter path rather than
-       timed canvas factories. The bridge renders their equivalent directly on the
-       Canvas, keeping the GC#(3) rails independent and fully SVG-free. */
-    function makeBwRunner(engine) {
-        const name = 'B&W Invert' + GC3_SUFFIX;
-        return function renderGC3Bw(context, now) {
-            bindR3Context(engine, context, now || performance.now());
-            const s = engine.liveAlpha(name), depth = engine.depthFor(name);
-            if (s <= 0.001 || depth <= 0.001) return;
-            const map = bwInvertMap(s);
-            context.save();
-            context.globalCompositeOperation = 'difference';
-            const invertControl = engine.voiceFxSettings ? engine.voiceFxSettings.bwInvert : 1;
-            context.fillStyle = 'rgba(255,255,255,' + clamp01(Math.max(map.invert || 0, s * 0.24) * depth * invertControl * 0.94) + ')';
-            context.fillRect(0, 0, engine.canvas.width, engine.canvas.height);
-            context.restore();
-        };
-    }
-    function makeHueRunner(engine) {
-        const name = 'Hue/Color Cycle' + GC3_SUFFIX;
-        return function renderGC3Hue(context, now) {
-            bindR3Context(engine, context, now || performance.now());
-            const s = engine.liveAlpha(name), depth = engine.depthFor(name);
-            if (s <= 0.001 || depth <= 0.001) return;
-            context.save();
-            context.globalCompositeOperation = 'hue';
-            const hueOffset = engine.voiceFxSettings ? engine.voiceFxSettings.hueOffset * 1.04 : 0;
-            context.fillStyle = 'hsla(' + ((now * 0.045 + videoPalette.hue + hueOffset) % 360).toFixed(1) + ',100%,50%,' +
-                clamp01(s * depth * 0.62).toFixed(3) + ')';
-            context.fillRect(0, 0, engine.canvas.width, engine.canvas.height);
-            context.restore();
-        };
-    }
+    /* These rails are applied after the complete canvas has been composed by the
+       engine, so they transform source artwork and overlays together. */
+    function makeBwRunner() { return function renderGC3Bw() {}; }
+    function makeHueRunner() { return function renderGC3Hue() {}; }
 
     root.GC3FactoryBank = {
         source: 'Glitch Revision 3',

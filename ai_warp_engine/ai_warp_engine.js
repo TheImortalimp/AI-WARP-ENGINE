@@ -1,6 +1,6 @@
 ;/* ===== ai_warp_engine.js ===== */
 /**
- * AI WARP ENGINE — HYPER-INTEGRATED SYNTHESIS (v6.4.0-TAB-CAPTURE)
+ * AI WARP ENGINE — HYPER-INTEGRATED SYNTHESIS (v6.4.25-FULL-CANVAS-LENS-FX)
  *
  * 100% Fully Responsive, Robust & Animated:
  * - 📡 Tab Capture (getDisplayMedia): real pixels AND real audio from any shared tab
@@ -22,8 +22,8 @@
  * - V-Sync R3/v11 Canvas engine: OFF, SCANPHASING, VERTICAL COLOR HARMONY, FULL
  * - R3 Soft-Eye, audio-ear burst gates, tracked V-Sync rails, and automation confluence
  * - 29 AI Warp Modes (12 core algorithmic + 17 NewBlue-inspired deformations)
- * - Canvas/WebGL displacement core + standard CSS color treatment; the only SVG usage is the
- *   compositor-level Warp Lens displacement on the YouTube shell (no JS pixel readback)
+ * - Canvas/WebGL displacement core + final full-canvas B&W/Hue treatment; the only SVG usage
+ *   is the compositor-level Warp Lens displacement on the YouTube shell (no JS pixel readback)
  */
 
 (function (root) {
@@ -2269,38 +2269,9 @@
                     };
                 },
 
-                // 15. B&W Invert (Landmarks 0, 50, 75, 100 & Contrast)
-                bwInvert: (getStrength) => {
-                    return (gctx) => {
-                        const s = getStrength();
-                        if (s <= 0.01) return;
-                        const dp = self.depthFor('B&W Invert');
-                        const w = self.canvas.width, h = self.canvas.height;
-                        gctx.save();
-                        gctx.globalCompositeOperation = 'difference';
-                        const level = s < 0.25 ? s * 2 : (s < 0.65 ? 0.5 : (s < 0.88 ? 0.75 : 1.0));
-                        gctx.fillStyle = `rgba(255, 255, 255, ${clamp01(level * dp * self.masterOpacity * self.voiceFxSettings.bwInvert)})`;
-                        gctx.fillRect(0, 0, w, h);
-                        gctx.restore();
-                    };
-                },
-
-                // 16. Hue/Color Cycle (Continuous Harmonic Rotation)
-                hueColorCycle: (getStrength) => {
-                    return (gctx) => {
-                        const s = getStrength();
-                        if (s <= 0.01) return;
-                        const sz = self.sizeFor('Hue/Color Cycle');
-                        const dp = self.depthFor('Hue/Color Cycle');
-                        const w = self.canvas.width, h = self.canvas.height;
-                        const t = performance.now() * 0.05 * sz + self.voiceFxSettings.hueOffset;
-                        gctx.save();
-                        gctx.globalCompositeOperation = 'hue';
-                        gctx.fillStyle = `hsla(${t % 360}, 100%, 50%, ${clamp01(0.75 * s * dp * self.masterOpacity)})`;
-                        gctx.fillRect(0, 0, w, h);
-                        gctx.restore();
-                    };
-                },
+                // 15. The final canvas compositor applies full-image B&W and Hue filters.
+                bwInvert: () => () => {},
+                hueColorCycle: () => () => {},
 
                 // 17. Tech Artist (Three.js WebGL Raymarcher with 2D Fallback)
                 techArtist: (getStrength) => {
@@ -3142,7 +3113,7 @@
             }
             if (vInvert > 0.005) {
                 contrast += vInvert * 0.15;
-                grayscale += vInvert * 0.35;
+                grayscale = vInvert;
             }
             if (vFlash > 0.005) {
                 const cycle = 900 / Math.max(0.4, voiceSize('Flash'));
@@ -3497,6 +3468,32 @@
             ytShell.style.clipPath = clipCss || 'none';
             ytShell.style.setProperty('-webkit-clip-path', clipCss || 'none');
         }
+        updateCanvasVoiceFilter(now) {
+            const pairStrength = (name) => clamp01(
+                this.liveAlpha(name) * Math.min(1, this.depthFor(name) / 0.62) +
+                this.liveAlpha(name + ' GC#(3)') * Math.min(1, this.depthFor(name + ' GC#(3)') / 0.62)
+            );
+            const bwStrength = pairStrength('B&W Invert') * this.voiceFxSettings.bwInvert;
+            const hueStrength = pairStrength('Hue/Color Cycle');
+            const hueCore = this.liveAlpha('Hue/Color Cycle');
+            const hueGc3 = this.liveAlpha('Hue/Color Cycle GC#(3)');
+            const hueTotal = hueCore + hueGc3;
+            const hueSize = hueTotal > 0
+                ? (this.sizeFor('Hue/Color Cycle') * hueCore + this.sizeFor('Hue/Color Cycle GC#(3)') * hueGc3) / hueTotal
+                : 1;
+            const filters = [];
+            if (this.hardLightActive) filters.push('contrast(1.25) saturate(1.35) brightness(1.08)');
+            if (bwStrength > 0.001) {
+                filters.push(`grayscale(${bwStrength.toFixed(3)}) invert(${bwStrength.toFixed(3)})`);
+            }
+            if (hueStrength > 0.001) {
+                const hue = (now * 0.05 * hueSize + this.voiceFxSettings.hueOffset) % 360;
+                filters.push(`hue-rotate(${(hue * hueStrength).toFixed(1)}deg)`);
+            }
+            const filter = filters.length ? filters.join(' ') : 'none';
+            if (this.canvas.style.filter !== filter) this.canvas.style.filter = filter;
+        }
+
         /* ── MASTER RENDER LOOP ────────────────────────────────────────────────── */
         mainRenderLoop(now) {
             const dt = (now - this.lastFrameTime) * 0.001;
@@ -3575,6 +3572,8 @@
             // 7. Transient Button Effects Overlay
             this.renderTransientEffects(now);
 
+            // Apply the image-wide FX after every source and overlay has been rendered.
+            this.updateCanvasVoiceFilter(now);
 
             this.animFrameId = requestAnimationFrame((n) => this.mainRenderLoop(n));
         }
