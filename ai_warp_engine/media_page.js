@@ -1001,11 +1001,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ytKbResetBtn = document.getElementById('ytKbResetBtn');
     const ytKbClearBtn = document.getElementById('ytKbClearBtn');
 
+    const BUILT_IN_YOUTUBE_PLAYLISTS = Object.freeze([
+        Object.freeze({
+            id: 'PLGQdK_CU4B7w',
+            title: 'Featured YouTube Playlist',
+            source: 'built-in',
+            protected: true
+        })
+    ]);
+
+    function escapeHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[char]);
+    }
+
+    function parseYouTubePlaylistFeed(xmlText) {
+        if (typeof DOMParser === 'undefined') throw new Error('XML parser is unavailable in this browser.');
+        const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+        if (doc.querySelector('parsererror')) throw new Error('Playlist feed returned invalid XML.');
+
+        const elements = Array.from(doc.getElementsByTagName('*'));
+        const feedTitleNode = elements.find(node => node.localName === 'feedTitle');
+        const titleNodes = elements.filter(node => node.localName === 'title');
+        const videos = [];
+        elements.filter(node => node.localName === 'entry').forEach(entry => {
+            const entryElements = Array.from(entry.getElementsByTagName('*'));
+            const idNode = entryElements.find(node => node.localName === 'videoId');
+            const titleNode = entryElements.find(node => node.localName === 'title');
+            const id = idNode ? idNode.textContent.trim() : '';
+            if (/^[A-Za-z0-9_-]{11}$/.test(id)) {
+                videos.push({ id, title: titleNode ? titleNode.textContent.trim() : '' });
+            }
+        });
+        const feedTitle = feedTitleNode ? feedTitleNode.textContent.trim()
+            : (titleNodes.length ? titleNodes[0].textContent.trim() : '');
+        return { title: feedTitle, videos };
+    }
+
     class YouTubeKnowledgebase {
         constructor(initialCurated = []) {
             this.STORAGE_KEY = 'ai_warp_youtube_kb_v2';
             this.items = [];
             this.playlists = [];
+            this.pendingPlaylistExtractions = new Map();
             this.defaultCurated = (initialCurated && initialCurated.length > 0) ? initialCurated : [
                 { id: 'u4TPBkN0vIc', title: '4K 60FPS Fractal Journey & Cosmic Geometry', source: 'curated' },
                 { id: 'gopYmb38DgM', title: 'Cyberpunk Neon Metropolis Synthwave Drift', source: 'curated' },
@@ -1054,7 +1093,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     dateAdded: Date.now(),
                     playCount: 0
                 }));
-                this.playlists = [];
+                this.playlists = BUILT_IN_YOUTUBE_PLAYLISTS.map(playlist => Object.assign({}, playlist));
                 this.save();
             } else {
                 // Ensure all default curated links are preserved in knowledgebase
@@ -1070,6 +1109,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         });
                     }
                 });
+                BUILT_IN_YOUTUBE_PLAYLISTS.forEach(playlist => {
+                    if (!this.playlists.some(item => item.id === playlist.id)) {
+                        this.playlists.push(Object.assign({}, playlist));
+                    }
+                });
                 this.save();
             }
 
@@ -1077,6 +1121,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         save() {
+            BUILT_IN_YOUTUBE_PLAYLISTS.forEach(playlist => {
+                const existing = this.playlists.find(item => item.id === playlist.id);
+                if (!existing) this.playlists.push(Object.assign({}, playlist));
+                else Object.assign(existing, playlist, {
+                    title: existing.title && existing.title !== playlist.title ? existing.title : playlist.title,
+                    videoCount: existing.videoCount || 0,
+                    dateExtracted: existing.dateExtracted || null
+                });
+            });
             try {
                 if (typeof localStorage !== 'undefined') {
                     localStorage.setItem(this.STORAGE_KEY, JSON.stringify({
@@ -1111,31 +1164,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         parseInput(inputStr) {
             if (!inputStr) return { videoIds: [], playlistIds: [] };
-            inputStr = String(inputStr).trim();
-
-            const playlistIds = [];
-            const videoIds = [];
-
-            // 1. Extract playlist IDs
-            const plRegex = /(?:list=|\/playlist\?list=|^)([a-zA-Z0-9_-]{12,42})/g;
-            let pm;
-            while ((pm = plRegex.exec(inputStr)) !== null) {
-                const pid = pm[1];
-                if (pid.startsWith('PL') || pid.startsWith('UU') || pid.startsWith('FL') || pid.startsWith('RD') || pid.startsWith('OLAK5uy_') || pid.length >= 18) {
-                    if (!playlistIds.includes(pid)) playlistIds.push(pid);
+            const raw = String(inputStr).trim();
+            const playlistIds = [], videoIds = [];
+            const addPlaylist = id => {
+                if (/^[A-Za-z0-9_-]{12,100}$/.test(id) && !playlistIds.includes(id)) playlistIds.push(id);
+            };
+            const addVideo = id => {
+                if (/^[A-Za-z0-9_-]{11}$/.test(id) && !videoIds.includes(id)) videoIds.push(id);
+            };
+            const urls = raw.match(/(?:https?:\/\/)?(?:www\.|m\.|music\.)?(?:youtube\.com|youtu\.be|youtube-nocookie\.com)\/[^\s<>"']+/gi) || [];
+            urls.forEach(rawUrl => {
+                try {
+                    const cleanedUrl = rawUrl.replace(/[),.;]+$/, '');
+                    const url = new URL(/^https?:\/\//i.test(cleanedUrl) ? cleanedUrl : `https://${cleanedUrl}`);
+                    const host = url.hostname.toLowerCase().replace(/^www\./, '');
+                    if (!['youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtube-nocookie.com', 'youtu.be'].includes(host)) return;
+                    const playlistId = url.searchParams.get('list');
+                    if (playlistId) addPlaylist(playlistId);
+                    let videoId = url.searchParams.get('v');
+                    if (!videoId && host === 'youtu.be') videoId = url.pathname.split('/').filter(Boolean)[0];
+                    if (!videoId && /^\/(?:embed|shorts|live|v)\//.test(url.pathname)) {
+                        videoId = url.pathname.split('/').filter(Boolean)[1];
+                    }
+                    if (videoId) addVideo(videoId);
+                } catch (error) {
+                    console.warn('Could not parse a YouTube URL from input:', error);
                 }
-            }
-
-            // 2. Extract 11-char video IDs
-            const vidRegex = /(?:watch\?v=|youtu\.be\/|embed\/|\/v\/|^)([a-zA-Z0-9_-]{11})(?:[?&/#\s]|$)/g;
-            let vm;
-            while ((vm = vidRegex.exec(inputStr)) !== null) {
-                const vid = vm[1];
-                if (!videoIds.includes(vid) && !vid.startsWith('PL') && !playlistIds.includes(vid)) {
-                    videoIds.push(vid);
-                }
-            }
-
+            });
+            raw.split(/[\s,;]+/).forEach(token => {
+                const value = token.trim();
+                if (/^[A-Za-z0-9_-]{11}$/.test(value)) addVideo(value);
+                else if (/^[A-Za-z0-9_-]{12,100}$/.test(value)) addPlaylist(value);
+            });
             return { videoIds, playlistIds };
         }
 
@@ -1210,61 +1270,87 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         async extractPlaylist(playlistId, optionalTitle = null) {
-            if (!playlistId) return null;
+            if (!/^[A-Za-z0-9_-]{12,100}$/.test(String(playlistId || ''))) {
+                throw new Error('Invalid YouTube playlist ID.');
+            }
+            if (this.pendingPlaylistExtractions.has(playlistId)) {
+                return this.pendingPlaylistExtractions.get(playlistId);
+            }
+            const extraction = this.extractPlaylistFeed(playlistId, optionalTitle)
+                .finally(() => this.pendingPlaylistExtractions.delete(playlistId));
+            this.pendingPlaylistExtractions.set(playlistId, extraction);
+            return extraction;
+        }
+
+        async extractPlaylistFeed(playlistId, optionalTitle = null) {
+            const existing = this.playlists.find(playlist => playlist.id === playlistId);
+            const plTitle = optionalTitle || (existing && existing.title) || `Playlist ${playlistId}`;
+            const playlist = existing || { id: playlistId, title: plTitle, source: 'user', protected: false };
+            playlist.title = plTitle;
+            playlist.status = 'loading';
+            this.playlists = [playlist, ...this.playlists.filter(item => item.id !== playlistId)];
+            this.save();
+            this.renderList();
             showHudNotification(`🔍 EXTRACTING PLAYLIST: ${playlistId}...`);
 
-            const rssUrl = `https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistId}`;
-            const proxies = [
+            const rssUrl = `https://www.youtube.com/feeds/videos.xml?playlist_id=${encodeURIComponent(playlistId)}`;
+            const endpoints = [
+                rssUrl,
                 `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`,
                 `https://corsproxy.io/?url=${encodeURIComponent(rssUrl)}`,
                 `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(rssUrl)}`
             ];
+            let feed = null;
+            const failures = [];
 
-            let extracted = [];
-            let plTitle = optionalTitle || `Playlist ${playlistId}`;
-
-            // 1. Try public RSS proxies
-            if (typeof fetch !== 'undefined') {
-                for (const url of proxies) {
-                    try {
-                        const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
-                        if (res.ok) {
-                            const text = await res.text();
-                            const vids = [...text.matchAll(/<yt:videoId>([a-zA-Z0-9_-]{11})<\/yt:videoId>/g)].map(m => m[1]);
-                            const titles = [...text.matchAll(/<title>(.*?)<\/title>/g)].map(m => m[1]);
-                            if (vids.length > 0) {
-                                if (titles[0] && !optionalTitle) plTitle = titles[0];
-                                vids.forEach((vid, idx) => {
-                                    const vTitle = titles[idx + 1] || `Track #${idx + 1}`;
-                                    const it = this.addVideo(vid, vTitle, 'playlist', playlistId);
-                                    if (it) extracted.push(it);
-                                });
-                                break;
-                            }
-                        }
-                    } catch (e) {}
+            for (const endpoint of endpoints) {
+                const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+                const timeout = controller ? setTimeout(() => controller.abort(), 5000) : null;
+                try {
+                    if (typeof fetch !== 'function') throw new Error('Fetch is unavailable.');
+                    const response = await fetch(endpoint, controller ? { signal: controller.signal } : {});
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const parsed = parseYouTubePlaylistFeed(await response.text());
+                    if (!parsed.videos.length) throw new Error('Feed contained no video entries.');
+                    feed = parsed;
+                    break;
+                } catch (error) {
+                    failures.push(error.message || String(error));
+                    console.warn(`Playlist feed request failed for ${new URL(endpoint).hostname}:`, error);
+                } finally {
+                    if (timeout) clearTimeout(timeout);
                 }
             }
 
-            // 2. Save playlist record into Knowledgebase
-            const plEntry = {
-                id: playlistId,
-                title: plTitle,
-                videoCount: extracted.length || 0,
-                dateExtracted: Date.now()
-            };
-            this.playlists = this.playlists.filter(p => p.id !== playlistId);
-            this.playlists.unshift(plEntry);
+            let added = 0;
+            if (feed) {
+                if (!optionalTitle && feed.title && !playlist.protected) playlist.title = feed.title;
+                feed.videos.forEach(video => {
+                    if (this.addVideo(video.id, video.title || `YouTube · ${video.id}`, 'playlist', playlistId)) added++;
+                });
+                playlist.status = 'ready';
+                playlist.lastExtractError = null;
+            } else {
+                playlist.status = 'unavailable';
+                playlist.lastExtractError = failures.join('; ');
+            }
+            playlist.videoCount = this.items.filter(item => item.playlistId === playlistId).length;
+            playlist.dateExtracted = Date.now();
             this.save();
             this.renderList();
 
-            if (extracted.length > 0) {
-                showHudNotification(`✨ EXTRACTED ${extracted.length} VIDEOS FROM PLAYLIST! TOTAL: ${this.items.length} LINKS`);
+            if (feed) {
+                showHudNotification(`✨ EXTRACTED ${added} PLAYLIST VIDEOS · ${playlist.title}`);
             } else {
-                showHudNotification(`PLAYLIST REGISTERED: ${playlistId} (QUEUED FOR EMBED PLAYBACK)`);
+                showHudNotification(`PLAYLIST SAVED · FEED EXTRACTION UNAVAILABLE; USE PLAY TO OPEN IT DIRECTLY`);
             }
-
-            return { playlistId, title: plTitle, items: extracted };
+            return {
+                playlistId,
+                title: playlist.title,
+                items: this.items.filter(item => item.playlistId === playlistId),
+                extracted: !!feed,
+                error: feed ? null : playlist.lastExtractError
+            };
         }
 
         renderList() {
@@ -1282,41 +1368,99 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
                 return true;
             });
+            const filteredPlaylists = this.playlists.filter(playlist => {
+                if (!/^[A-Za-z0-9_-]{12,100}$/.test(playlist.id || '')) return false;
+                if (searchTerm && !(playlist.title || '').toLowerCase().includes(searchTerm) &&
+                    !playlist.id.toLowerCase().includes(searchTerm)) return false;
+                return true;
+            });
 
             this.updateStats();
 
-            if (filtered.length === 0) {
+            if (filtered.length === 0 && filteredPlaylists.length === 0) {
                 ytKbList.innerHTML = `<div style="text-align:center; padding:30px; color:var(--theme-sub); font-size:12px;">No matching YouTube links in Knowledgebase.</div>`;
                 return;
             }
 
             const activeVideoId = (ytHistoryIndex >= 0 && ytHistory[ytHistoryIndex]) ? ytHistory[ytHistoryIndex].id : null;
 
-            ytKbList.innerHTML = filtered.map(item => {
+            const playlistMarkup = filteredPlaylists.length ? `
+                <div class="yt-kb-section-heading">PROTECTED &amp; SAVED PLAYLISTS</div>
+                ${filteredPlaylists.map(playlist => {
+                    const status = playlist.status === 'loading' ? 'EXTRACTING…'
+                        : playlist.status === 'ready' ? `${playlist.videoCount || 0} VIDEOS EXTRACTED`
+                        : playlist.status === 'unavailable' ? `${playlist.videoCount || 0} VIDEOS · FEED UNAVAILABLE`
+                        : `${playlist.videoCount || 0} VIDEOS · READY TO PLAY`;
+                    return `
+                        <div class="yt-kb-playlist-item" data-playlist="${escapeHtml(playlist.id)}">
+                            <div class="yt-kb-playlist-icon" aria-hidden="true">▤</div>
+                            <div class="yt-kb-info">
+                                <div class="yt-kb-title" title="${escapeHtml(playlist.title || playlist.id)}">${escapeHtml(playlist.title || playlist.id)}</div>
+                                <div class="yt-kb-meta">
+                                    <span class="yt-kb-playlist-badge">${playlist.protected ? 'BUILT-IN · PROTECTED' : 'SAVED PLAYLIST'}</span>
+                                    <span>ID: ${escapeHtml(playlist.id)}</span>
+                                    <span>${status}</span>
+                                </div>
+                            </div>
+                            <div class="yt-kb-item-actions">
+                                <button class="wired-button kb-play-playlist-btn" data-id="${escapeHtml(playlist.id)}" title="Play this playlist directly on YouTube">▶ PLAY</button>
+                                <button class="wired-button kb-extract-playlist-btn" data-id="${escapeHtml(playlist.id)}" title="Refresh extracted videos">↻ EXTRACT</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            ` : '';
+
+            const videoMarkup = filtered.map(item => {
                 const isActive = item.id === activeVideoId;
-                const sourceBadge = `<span class="yt-kb-source-badge ${item.source}">${item.source}${item.playlistId ? ' · PL' : ''}</span>`;
+                const itemId = escapeHtml(item.id);
+                const title = escapeHtml(item.title || item.id);
+                const source = ['curated', 'user', 'pasted', 'playlist'].includes(item.source) ? item.source : 'user';
+                const sourceBadge = `<span class="yt-kb-source-badge ${source}">${escapeHtml(source)}${item.playlistId ? ' · PL' : ''}</span>`;
                 const playInfo = item.playCount ? `· Played ${item.playCount}x` : '';
                 return `
-                    <div class="yt-kb-item ${isActive ? 'active-playing' : ''}" data-id="${item.id}">
-                        <img class="yt-kb-thumb" src="https://i.ytimg.com/vi/${item.id}/mqdefault.jpg" alt="${item.id}" loading="lazy" onerror="this.style.opacity='0.2'">
+                    <div class="yt-kb-item ${isActive ? 'active-playing' : ''}" data-id="${itemId}">
+                        <img class="yt-kb-thumb" src="https://i.ytimg.com/vi/${itemId}/mqdefault.jpg" alt="${itemId}" loading="lazy" onerror="this.style.opacity='0.2'">
                         <div class="yt-kb-info">
-                            <div class="yt-kb-title" title="${item.title || item.id}">${item.title || item.id}</div>
+                            <div class="yt-kb-title" title="${title}">${title}</div>
                             <div class="yt-kb-meta">
                                 ${sourceBadge}
-                                <span>ID: ${item.id}</span>
-                                <span>${playInfo}</span>
+                                <span>ID: ${itemId}</span>
+                                <span>${escapeHtml(playInfo)}</span>
                             </div>
                         </div>
                         <div class="yt-kb-item-actions">
-                            <button class="wired-button kb-play-item-btn" data-id="${item.id}" title="Play Video Now">▶ PLAY</button>
-                            <button class="wired-button kb-copy-item-btn" data-id="${item.id}" title="Copy Link">📋</button>
-                            <button class="wired-button danger-btn kb-del-item-btn" data-id="${item.id}" title="Remove from Knowledgebase">✕</button>
+                            <button class="wired-button kb-play-item-btn" data-id="${itemId}" title="Play Video Now">▶ PLAY</button>
+                            <button class="wired-button kb-copy-item-btn" data-id="${itemId}" title="Copy Link">📋</button>
+                            <button class="wired-button danger-btn kb-del-item-btn" data-id="${itemId}" title="Remove from Knowledgebase">✕</button>
                         </div>
                     </div>
                 `;
             }).join('');
+            ytKbList.innerHTML = playlistMarkup + (videoMarkup ? `<div class="yt-kb-section-heading">VIDEO LINKS</div>${videoMarkup}` : '');
 
-            // Attach event listeners for each item
+            ytKbList.querySelectorAll('.kb-play-playlist-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.getAttribute('data-id');
+                    const playlist = this.playlists.find(item => item.id === id);
+                    if (!playlist) return;
+                    ytHistory.push({ playlistId: id, title: playlist.title });
+                    ytHistoryIndex = ytHistory.length - 1;
+                    loadYouTube({ playlistId: id });
+                });
+            });
+
+            ytKbList.querySelectorAll('.kb-extract-playlist-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    try {
+                        await this.extractPlaylist(btn.getAttribute('data-id'));
+                    } catch (error) {
+                        console.error('Playlist extraction failed:', error);
+                        showHudNotification(`PLAYLIST EXTRACTION FAILED: ${error.message}`);
+                    }
+                });
+            });
+
             ytKbList.querySelectorAll('.kb-play-item-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const id = btn.getAttribute('data-id');
@@ -1369,7 +1513,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         clearCustom() {
             if (confirm("Clear all custom user and playlist links? Curated default links will remain.")) {
                 this.items = this.items.filter(x => x.source === 'curated');
-                this.playlists = [];
+                this.playlists = BUILT_IN_YOUTUBE_PLAYLISTS.map(playlist => Object.assign({}, playlist));
                 this.save();
                 this.renderList();
                 showHudNotification("CLEARED CUSTOM LINKS FROM KNOWLEDGEBASE");
@@ -1761,16 +1905,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!ytUrlInput) return;
         const raw = ytUrlInput.value || '';
         const parsed = ytKb.parseInput(raw);
-
-        // If playlist detected, extract and remember it!
-        let extractedPlaylist = null;
-        if (parsed.playlistIds.length > 0) {
-            extractedPlaylist = parsed.playlistIds[0];
-            ytKb.extractPlaylist(extractedPlaylist);
-        }
+        const extractedPlaylist = parsed.playlistIds[0] || null;
 
         // If video ID detected:
         if (parsed.videoIds.length > 0) {
+            parsed.playlistIds.forEach(id => {
+                ytKb.extractPlaylist(id).catch(error => {
+                    console.error(`Playlist extraction failed for ${id}:`, error);
+                    showHudNotification(`PLAYLIST EXTRACTION FAILED: ${error.message}`);
+                });
+            });
             const primaryId = parsed.videoIds[0];
             const stored = ytKb.addVideo(primaryId, null, 'user', extractedPlaylist);
             // Also store any other video IDs from batch paste!
@@ -1782,18 +1926,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadYouTube(stored, { requireLens: !!extractedPlaylist });
             showHudNotification(`SAVED TO KB & PLAYING: https://youtu.be/${primaryId}`);
         } else if (extractedPlaylist) {
-            // Only a playlist link was given
-            showHudNotification(`EXTRACTING PLAYLIST: ${extractedPlaylist}`);
-            const res = await ytKb.extractPlaylist(extractedPlaylist);
-            if (res && res.items && res.items.length > 0) {
-                const picked = res.items[Math.floor(Math.random() * res.items.length)];
-                ytHistory.push(picked);
-                ytHistoryIndex = ytHistory.length - 1;
-                loadYouTube(picked, { requireLens: true });
-                showHudNotification(`🎲 REROLLED FROM EXTRACTED PLAYLIST: ${picked.title || picked.id}`);
-            } else {
-                loadYouTube({ playlistId: extractedPlaylist }, { requireLens: true });
-            }
+            parsed.playlistIds.forEach(id => {
+                ytKb.extractPlaylist(id).catch(error => {
+                    console.error(`Playlist extraction failed for ${id}:`, error);
+                    showHudNotification(`PLAYLIST EXTRACTION FAILED: ${error.message}`);
+                });
+            });
+            ytHistory.push({ playlistId: extractedPlaylist, title: `Playlist ${extractedPlaylist}` });
+            ytHistoryIndex = ytHistory.length - 1;
+            loadYouTube({ playlistId: extractedPlaylist }, { requireLens: true });
+            showHudNotification(`PLAYING PLAYLIST: ${extractedPlaylist} · EXTRACTING VIDEOS IN BACKGROUND`);
         } else {
             alert('Please enter a valid YouTube video URL, playlist link, or 11-character video ID');
         }
@@ -1827,17 +1969,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 parsed = ytKb.parseInput(val);
             }
             if (parsed.playlistIds.length > 0) {
-                const pid = parsed.playlistIds[0];
-                const res = await ytKb.extractPlaylist(pid);
-                if (res && res.items && res.items.length > 0) {
-                    const pick = res.items[Math.floor(Math.random() * res.items.length)];
-                    ytHistory.push(pick);
-                    ytHistoryIndex = ytHistory.length - 1;
-                    loadYouTube(pick, { requireLens: true });
-                    showHudNotification(`🎲 REROLLED FROM EXTRACTED PLAYLIST: ${pick.title || pick.id}`);
+                try {
+                    const results = await Promise.all(parsed.playlistIds.map(id => ytKb.extractPlaylist(id)));
+                    const extractedCount = results.reduce((total, result) => total + (result ? result.items.length : 0), 0);
+                    showHudNotification(`PLAYLIST VAULT UPDATED · ${extractedCount} VIDEOS AVAILABLE`);
+                } catch (error) {
+                    console.error('Playlist extraction failed:', error);
+                    showHudNotification(`PLAYLIST EXTRACTION FAILED: ${error.message}`);
                 }
             } else {
-                alert("No valid YouTube playlist ID found. Expected PL..., UU..., or playlist?list=...");
+                alert("No valid YouTube playlist ID found. Paste a YouTube playlist URL or ID.");
             }
         });
     }
@@ -1870,14 +2011,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (ytKbAddBtn && ytKbInput) {
-        ytKbAddBtn.addEventListener('click', () => {
+        ytKbAddBtn.addEventListener('click', async () => {
             const val = ytKbInput.value.trim();
             if (!val) return;
             const parsed = ytKb.parseInput(val);
             let count = 0;
             if (parsed.playlistIds.length > 0) {
-                ytKb.extractPlaylist(parsed.playlistIds[0]);
-                count++;
+                try {
+                    const results = await Promise.all(parsed.playlistIds.map(id => ytKb.extractPlaylist(id)));
+                    count += results.length;
+                } catch (error) {
+                    console.error('Playlist extraction failed:', error);
+                    showHudNotification(`PLAYLIST EXTRACTION FAILED: ${error.message}`);
+                    return;
+                }
             }
             if (parsed.videoIds.length > 0) {
                 parsed.videoIds.forEach(id => {
@@ -1900,9 +2047,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const val = ytKbInput.value.trim();
             const parsed = ytKb.parseInput(val);
             if (parsed.playlistIds.length > 0) {
-                await ytKb.extractPlaylist(parsed.playlistIds[0]);
-                ytKbInput.value = '';
-                ytKb.renderList();
+                try {
+                    const results = await Promise.all(parsed.playlistIds.map(id => ytKb.extractPlaylist(id)));
+                    ytKbInput.value = '';
+                    ytKb.renderList();
+                    showHudNotification(`PLAYLIST VAULT UPDATED · ${results.reduce((total, result) => total + result.items.length, 0)} VIDEOS AVAILABLE`);
+                } catch (error) {
+                    console.error('Playlist extraction failed:', error);
+                    showHudNotification(`PLAYLIST EXTRACTION FAILED: ${error.message}`);
+                }
             } else {
                 alert("Please enter a YouTube playlist URL or Playlist ID in the box above.");
             }
@@ -2008,7 +2161,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let extractedPlaylist = null;
                 if (parsed.playlistIds.length > 0) {
                     extractedPlaylist = parsed.playlistIds[0];
-                    ytKb.extractPlaylist(extractedPlaylist);
                 }
                 if (parsed.videoIds.length > 0) {
                     const primaryId = parsed.videoIds[0];

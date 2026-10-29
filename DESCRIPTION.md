@@ -3,7 +3,7 @@
 **AI WARP ENGINE (R3 Canvas Edition v6.4)** is a public-domain visual synthesizer, audio-reactive media playground and live Canvas glitch suite, shipped as a standalone Windows app.
 
 - **Author:** River Lyle Reuveni (Imortalimp), [imortalimp.nl](https://imortalimp.nl)
-- **Version:** 6.4 (installer release v6.4.22) — **Complete · Ready**
+- **Version:** 6.4 (installer release v6.4.23) — **Complete · Ready**
 - **Platform:** Windows 10/11 x64 (WebView2 host, .NET bundled)
 - **Install location:** `Desktop\AI WARP ENGINE` (per-user, no admin)
 - **Licence:** CC0 1.0 / The Unlicense (software); CC BY 4.0 (imortalimp.nl site content)
@@ -26,6 +26,8 @@ Takes a live source and runs it through a real-time Canvas effects pipeline, dri
 
 **Voice FX tuning (v6.4.22):** the bottom dock provides independently lockable B&W inversion and Hue/Color Cycle settings. Random board rolls and preset auto-cycles reroll unlocked settings and independently roll Auto Glitch on/off.
 
+**YouTube playlists (v6.4.23):** the featured playlist is pinned as a protected built-in entry. Saved playlists are visible and playable in the knowledgebase even when YouTube feed extraction is unavailable; RSS/Atom extraction has more robust parsing and avoids duplicate requests.
+
 ## RAUM · X-R
 
 The **RAUM · X-R (4)** drawer replaces the former Pole · R showcase. These tracks are original, fully synthesized works bundled with the app, so they play offline and drive the audio-reactive analyser. **Artwork slideshow and exclusive glitch sequences (v6.4.21):** while a RAUM · X-R track plays, the main canvas switches to a slideshow of the four covers and the back cover, replacing the init artwork or any other source, and is warped by original glitch sequences that follow the track clock and its audio: TEAR, GRID, MIRROR (backwards-Я fold), SMEAR (datamosh trail), COLUMNS and RIPPLE (glass-bell halos, ambient tracks), plus a decoding caption, a giant reversed Я that surfaces during beat silence, a reversal flash when the beat re-enters, and a hidden SIGNATURE lattice every 64 seconds of track time. Pausing or starting any other source restores the previous visuals.
@@ -43,6 +45,7 @@ Enable the DROP THE MILK? toolbar button or press `D`. The effect composites a s
 
 ## Release history
 
+- **v6.4.23** — Fixed playlist vault visibility and extraction handling; pinned the featured playlist and added direct playback fallback.
 - **v6.4.22** — Added bottom-dock B&W/Hue fine-tuning with locks, random rolls and variable Auto Glitch selection during board/preset randomization.
 - **v6.4.21** — While a Raum X-R track plays, the main canvas runs the cover artwork as a slideshow with exclusive audio-aware glitch sequences and a hidden signature easter egg.
 - **v6.4.20** — Replaced the Pole · R showcase with four original synthesized Raum X-R tracks (two jungle/breakcore, two ambient), bundled for offline, audio-reactive playback with cover art, back cover and full credits.

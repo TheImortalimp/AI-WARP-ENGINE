@@ -26,6 +26,8 @@
 
 In v6.4.22, board randomization and each preset auto-cycle reroll unlocked B&W/Hue settings and independently roll Auto Glitch ON/OFF at 50/50 odds. The **ROLL FX** button rerolls only the two FX settings.
 
+In v6.4.23, the featured YouTube playlist is pinned in the knowledgebase as a protected built-in entry. Saved playlists display as playable cards even if feed extraction fails; extraction parses Atom/XML by namespace and coalesces duplicate requests. Public feed access may expose only a recent subset, so **PLAY** opens the playlist directly for full browsing.
+
 ---
 
 ## Launch
