@@ -2,6 +2,10 @@
 
 Standalone Windows app releases. Full notes per release are in the `RELEASE_NOTES_*.md` files.
 
+## 6.4.24 — LENS FX controls and automatic playlist extraction
+- B&W strength and Hue spectrum adjustments now activate both core and GC#(3) voices, so the controls visibly affect the LENS Canvas; added monochrome and hue-spectrum previews.
+- Playlist-card playback and imported playlist records now automatically start background extraction while keeping direct playlist playback available.
+
 ## 6.4.23 — YouTube playlist vault
 - Pinned the featured playlist as a protected built-in YouTube entry, preserved across reset and clear-custom actions.
 - Playlist records now render in the knowledgebase with direct playback and extraction controls.

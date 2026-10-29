@@ -724,6 +724,38 @@ body {
     width: clamp(70px, 12vw, 150px);
 }
 
+.voice-fx-bw-preview,
+.voice-fx-hue-preview {
+    display: inline-block;
+    position: relative;
+    flex: 0 0 22px;
+    width: 22px;
+    height: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 2px;
+}
+
+.voice-fx-bw-preview {
+    background: linear-gradient(90deg, #000 0%, #fff 100%);
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.28);
+}
+
+.voice-fx-hue-preview {
+    background: linear-gradient(90deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+}
+
+.voice-fx-hue-preview::after {
+    position: absolute;
+    top: -1px;
+    bottom: -1px;
+    left: var(--hue-position, 0%);
+    width: 3px;
+    content: "";
+    background: #fff;
+    box-shadow: 0 0 3px #000;
+}
+
 .voice-fx-tuning button,
 .voice-fx-tuning input {
     pointer-events: auto !important;

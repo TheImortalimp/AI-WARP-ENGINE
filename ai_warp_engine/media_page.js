@@ -1444,6 +1444,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const id = btn.getAttribute('data-id');
                     const playlist = this.playlists.find(item => item.id === id);
                     if (!playlist) return;
+                    if (playlist.status !== 'ready') {
+                        this.extractPlaylist(id).catch(error => {
+                            console.error(`Playlist extraction failed for ${id}:`, error);
+                            showHudNotification(`PLAYLIST EXTRACTION FAILED: ${error.message}`);
+                        });
+                    }
                     ytHistory.push({ playlistId: id, title: playlist.title });
                     ytHistoryIndex = ytHistory.length - 1;
                     loadYouTube({ playlistId: id });
@@ -1544,16 +1550,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                 try {
                     const data = JSON.parse(e.target.result);
                     let importedCount = 0;
+                    const importedPlaylistIds = new Set();
                     if (data && Array.isArray(data.items)) {
                         data.items.forEach(it => {
                             if (it && it.id && /^[a-zA-Z0-9_-]{11}$/.test(it.id)) {
                                 this.addVideo(it.id, it.title, it.source || 'user', it.playlistId);
                                 importedCount++;
+                                if (/^[A-Za-z0-9_-]{12,100}$/.test(it.playlistId || '')) {
+                                    importedPlaylistIds.add(it.playlistId);
+                                }
                             }
                         });
                         if (Array.isArray(data.playlists)) {
                             data.playlists.forEach(pl => {
-                                if (pl && pl.id && !this.playlists.some(p => p.id === pl.id)) {
+                                if (pl && /^[A-Za-z0-9_-]{12,100}$/.test(pl.id || '')) {
+                                    importedPlaylistIds.add(pl.id);
+                                }
+                                if (pl && /^[A-Za-z0-9_-]{12,100}$/.test(pl.id || '') &&
+                                    !this.playlists.some(p => p.id === pl.id)) {
                                     this.playlists.push(pl);
                                 }
                             });
@@ -1561,6 +1575,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                         this.save();
                         this.renderList();
                         showHudNotification(`IMPORTED ${importedCount} LINKS INTO KNOWLEDGEBASE!`);
+                        importedPlaylistIds.forEach(id => {
+                            this.extractPlaylist(id).catch(error => {
+                                console.error(`Playlist extraction failed for imported playlist ${id}:`, error);
+                                showHudNotification(`PLAYLIST EXTRACTION FAILED: ${error.message}`);
+                            });
+                        });
                     } else {
                         alert("Invalid JSON format. Expected { items: [...] }");
                     }
@@ -2952,18 +2972,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         const bwInvertControlSlider = document.getElementById('bwInvertControlSlider');
         const bwInvertControlBadge = document.getElementById('bwInvertControlBadge');
+        const bwInvertControlPreview = document.getElementById('bwInvertControlPreview');
         const bwInvertControlLock = document.getElementById('bwInvertControlLock');
         const hueCycleControlSlider = document.getElementById('hueCycleControlSlider');
         const hueCycleControlBadge = document.getElementById('hueCycleControlBadge');
+        const hueCycleControlPreview = document.getElementById('hueCycleControlPreview');
         const hueCycleControlLock = document.getElementById('hueCycleControlLock');
         if (bwInvertControlSlider) bwInvertControlSlider.value = aiWarp.voiceFxSettings.bwInvert;
         if (bwInvertControlBadge) bwInvertControlBadge.textContent = `${Math.round(aiWarp.voiceFxSettings.bwInvert * 100)}%`;
+        if (bwInvertControlPreview) bwInvertControlPreview.style.opacity = String(aiWarp.voiceFxSettings.bwInvert);
         if (bwInvertControlLock) {
             bwInvertControlLock.textContent = aiWarp.voiceFxLocks.bwInvert ? '🔒' : '🔓';
             bwInvertControlLock.classList.toggle('locked', aiWarp.voiceFxLocks.bwInvert);
         }
         if (hueCycleControlSlider) hueCycleControlSlider.value = aiWarp.voiceFxSettings.hueOffset;
         if (hueCycleControlBadge) hueCycleControlBadge.textContent = `${Math.round(aiWarp.voiceFxSettings.hueOffset)}°`;
+        if (hueCycleControlPreview) {
+            hueCycleControlPreview.style.setProperty('--hue-position', `${(aiWarp.voiceFxSettings.hueOffset / 360) * 100}%`);
+        }
         if (hueCycleControlLock) {
             hueCycleControlLock.textContent = aiWarp.voiceFxLocks.hueOffset ? '🔒' : '🔓';
             hueCycleControlLock.classList.toggle('locked', aiWarp.voiceFxLocks.hueOffset);
@@ -3336,6 +3362,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const hueCycleControlLock = document.getElementById('hueCycleControlLock');
     const voiceFxRandomizeBtn = document.getElementById('voiceFxRandomizeBtn');
     const nullMilkdropOpacityBtn = document.getElementById('null-milkdrop-opacity-btn');
+    function activateTunedVoicePair(name) {
+        [name, aiWarp.gc3EffectName(name)].forEach(voiceName => {
+            if (!aiWarp.effectEnabled[voiceName]) aiWarp.setEffectEnabled(voiceName, true);
+        });
+    }
     if (vsyncLockBtn) {
         vsyncLockBtn.onclick = () => {
             aiWarp.vsyncLocked = !aiWarp.vsyncLocked;
@@ -3358,6 +3389,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (bwInvertControlSlider) {
         bwInvertControlSlider.oninput = () => {
             aiWarp.setVoiceFxSetting('bwInvert', parseFloat(bwInvertControlSlider.value));
+            activateTunedVoicePair('B&W Invert');
             syncUiFromEngine();
             saveVoiceFxControlState();
         };
@@ -3365,6 +3397,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (hueCycleControlSlider) {
         hueCycleControlSlider.oninput = () => {
             aiWarp.setVoiceFxSetting('hueOffset', parseFloat(hueCycleControlSlider.value));
+            activateTunedVoicePair('Hue/Color Cycle');
             syncUiFromEngine();
             saveVoiceFxControlState();
         };

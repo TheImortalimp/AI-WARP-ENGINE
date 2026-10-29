@@ -1,9 +1,9 @@
 # AI WARP ENGINE — User Manual
 
-**Applies to:** AI WARP ENGINE standalone Windows app, release 6.4.23
+**Applies to:** AI WARP ENGINE standalone Windows app, release 6.4.24
 **Platform:** Windows 10/11 x64
 
-AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media source, then layer AI Warp modes, glitch voices, Ghost Protocol, V-Sync and audio-reactive automation over it. Release 6.4.23 improves YouTube playlist visibility and feed extraction. Release 6.4.22 adds locked B&W/Hue fine-tuning and randomized automation rolls. Release 6.4.21 runs the Raum cover artwork as a slideshow with exclusive glitch sequences while those tracks play. Release 6.4.20 adds the bundled RAUM · X-R showcase of four original tracks. Release 6.4.19 added the subtle-blend DROP THE MILK? feedback effect and audio-aware YouTube playlist playback in the standalone YT LENS.
+AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media source, then layer AI Warp modes, glitch voices, Ghost Protocol, V-Sync and audio-reactive automation over it. Release 6.4.24 makes bottom-dock B&W/Hue tuning activate the paired voices on the LENS Canvas and starts playlist extraction automatically during playback/import. Release 6.4.23 improves YouTube playlist visibility and feed extraction. Release 6.4.22 adds locked B&W/Hue fine-tuning and randomized automation rolls. Release 6.4.21 runs the Raum cover artwork as a slideshow with exclusive glitch sequences while those tracks play. Release 6.4.20 adds the bundled RAUM · X-R showcase of four original tracks. Release 6.4.19 added the subtle-blend DROP THE MILK? feedback effect and audio-aware YouTube playlist playback in the standalone YT LENS.
 
 ## Contents
 
@@ -20,7 +20,7 @@ AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media sourc
 
 ## Install and launch
 
-1. Download `AI-WARP-ENGINE-6.4.23-x64-setup.exe` from the [latest GitHub release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
+1. For the prepared v6.4.24 build, run `shell/AI-WARP-ENGINE-6.4.24-x64-setup.exe`. The latest published installer remains on the [GitHub Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases).
 2. Run the installer and accept the licence terms. It installs for the current user and does not require administrator access.
 3. Launch **AI WARP ENGINE** from the desktop shortcut or Start Menu.
 
@@ -181,11 +181,11 @@ The preset browser provides machine presets and saved user presets. Load a prese
 
 ## B&W and Hue fine-tuning
 
-The bottom control dock has separate **B&W INVERT** strength and **HUE OFFSET** sliders. Lock either setting to protect it from randomization and preset automation. **ROLL FX** randomizes only unlocked settings; board randomization and each preset auto-cycle also reroll unlocked settings and independently choose Auto Glitch ON or OFF with equal probability. Values and lock preferences persist on this device. The core voices and their GC#(3) counterparts remain independent; automation chooses them as complementary pairs with subtle rendering differences.
+The bottom control dock has separate **B&W INVERT** strength and **HUE SPECTRUM** sliders with live previews. Adjusting either slider activates its matching core and GC#(3) voices so changes are immediately visible on the LENS Canvas and other video sources. Lock either setting to protect it from randomization and preset automation. **ROLL FX** randomizes only unlocked settings; board randomization and each preset auto-cycle also reroll unlocked settings and independently choose Auto Glitch ON or OFF with equal probability. Values and lock preferences persist on this device. The core voices and their GC#(3) counterparts remain independently controllable; automation chooses them as complementary pairs with subtle rendering differences.
 
 ## YouTube playlists and extraction
 
-The **Knowledgebase & Playlist Vault** keeps the featured playlist as a protected built-in entry, even after resetting or clearing custom links. Saved playlist records appear above video links with **PLAY** and **EXTRACT** actions. **PLAY** opens the full playlist directly on YouTube. **EXTRACT** saves the videos available from YouTube’s public playlist feed; the feed may expose only a recent subset, and network/CORS restrictions can temporarily prevent extraction. In that case the saved playlist remains visible and playable. Pasting a playlist URL starts playback immediately while feed extraction runs in the background.
+The **Knowledgebase & Playlist Vault** keeps the featured playlist as a protected built-in entry, even after resetting or clearing custom links. Saved playlist records appear above video links with **PLAY** and **EXTRACT** actions. **PLAY** opens the full playlist directly on YouTube and automatically starts video extraction in the background. Importing playlists also starts extraction automatically. **EXTRACT** can be used to retry or refresh manually. YouTube’s public feed may expose only a recent subset, and network/CORS restrictions can temporarily prevent extraction; in that case the saved playlist remains visible and playable. Pasting a playlist URL starts playback immediately while feed extraction runs in the background.
 
 ## Keyboard shortcuts
 
@@ -251,9 +251,10 @@ Press `Z` to clear/reset effect levels, then re-enable only the modes and voices
 
 ## Release and project files
 
-- Current standalone release: [AI WARP ENGINE 6.4.23](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.23)
+- Current standalone release: AI WARP ENGINE 6.4.24 (release notes below; build prepared locally)
 - [README and project overview](README.md)
 - [Short project description](DESCRIPTION.md)
+- [6.4.24 release notes and installer checksum](RELEASE_NOTES_6.4.24.md)
 - [6.4.23 release notes and installer checksum](RELEASE_NOTES_6.4.23.md)
 - [6.4.22 release notes and installer checksum](RELEASE_NOTES_6.4.22.md)
 - [6.4.21 release notes and installer checksum](RELEASE_NOTES_6.4.21.md)
