@@ -1,9 +1,9 @@
 # AI WARP ENGINE — User Manual
 
-**Applies to:** AI WARP ENGINE standalone Windows app, release 6.4.21  
+**Applies to:** AI WARP ENGINE standalone Windows app, release 6.4.22
 **Platform:** Windows 10/11 x64
 
-AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media source, then layer AI Warp modes, glitch voices, Ghost Protocol, V-Sync and audio-reactive automation over it. The 6.4.21 release runs the Raum cover artwork as a slideshow with exclusive glitch sequences while those tracks play. The 6.4.20 release adds the bundled RAUM · X-R showcase of four original tracks. The 6.4.19 release added the subtle-blend DROP THE MILK? feedback effect and audio-aware YouTube playlist playback in the standalone YT LENS.
+AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media source, then layer AI Warp modes, glitch voices, Ghost Protocol, V-Sync and audio-reactive automation over it. Release 6.4.22 adds locked B&W/Hue fine-tuning and randomized automation rolls. Release 6.4.21 runs the Raum cover artwork as a slideshow with exclusive glitch sequences while those tracks play. Release 6.4.20 adds the bundled RAUM · X-R showcase of four original tracks. Release 6.4.19 added the subtle-blend DROP THE MILK? feedback effect and audio-aware YouTube playlist playback in the standalone YT LENS.
 
 ## Contents
 
@@ -20,7 +20,7 @@ AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media sourc
 
 ## Install and launch
 
-1. Download `AI-WARP-ENGINE-6.4.21-x64-setup.exe` from the [latest GitHub release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
+1. Download `AI-WARP-ENGINE-6.4.22-x64-setup.exe` from the [latest GitHub release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
 2. Run the installer and accept the licence terms. It installs for the current user and does not require administrator access.
 3. Launch **AI WARP ENGINE** from the desktop shortcut or Start Menu.
 
@@ -173,10 +173,15 @@ Automation can change effects over time. Try one system at a time at first; use 
 - **Continual Random** changes tracked effect combinations over time.
 - **Timed Automation** (`T`) cycles timed effect/cadence behavior.
 - **Auto Masters** retargets eligible master rails.
+- **Randomize** rolls B&W/Hue settings unless locked; Auto Glitch also receives a fresh 50/50 on/off roll. The preset auto-cycler rerolls the same FX settings and Auto Glitch state for each preset.
 - **Soft-Eye** shapes intensity and pacing; it has its own control and is separate from the Audio Reactive Ear (`E`).
 - **Crescendo** (`C`) creates a short, stronger burst.
 
 The preset browser provides machine presets and saved user presets. Load a preset to restore a coordinated mix; save a user preset after dialing in a look you want to reuse. Preset and automation behavior may update unlocked controls, while the app’s protected/manual controls retain user intent. The Milkdrop opacity lock is separate and persists with its own saved preference.
+
+## B&W and Hue fine-tuning
+
+The bottom control dock has separate **B&W INVERT** strength and **HUE OFFSET** sliders. Lock either setting to protect it from randomization and preset automation. **ROLL FX** randomizes only unlocked settings; board randomization and each preset auto-cycle also reroll unlocked settings and independently choose Auto Glitch ON or OFF with equal probability. Values and lock preferences persist on this device. The core voices and their GC#(3) counterparts remain independent; automation chooses them as complementary pairs with subtle rendering differences.
 
 ## Keyboard shortcuts
 
@@ -242,9 +247,10 @@ Press `Z` to clear/reset effect levels, then re-enable only the modes and voices
 
 ## Release and project files
 
-- Current standalone release: [AI WARP ENGINE 6.4.21](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.21)
+- Current standalone release: [AI WARP ENGINE 6.4.22](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.22)
 - [README and project overview](README.md)
 - [Short project description](DESCRIPTION.md)
+- [6.4.22 release notes and installer checksum](RELEASE_NOTES_6.4.22.md)
 - [6.4.21 release notes and installer checksum](RELEASE_NOTES_6.4.21.md)
 - [6.4.20 release notes](RELEASE_NOTES_6.4.20.md)
 - The app’s HTML, CSS and JavaScript sources are in `ai_warp_engine/`; the Windows WebView2 host and installer sources are in `shell/`.

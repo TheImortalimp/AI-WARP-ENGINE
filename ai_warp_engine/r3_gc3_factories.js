@@ -2445,7 +2445,8 @@
             const map = bwInvertMap(s);
             context.save();
             context.globalCompositeOperation = 'difference';
-            context.fillStyle = 'rgba(255,255,255,' + clamp01(Math.max(map.invert || 0, s * 0.24) * depth) + ')';
+            const invertControl = engine.voiceFxSettings ? engine.voiceFxSettings.bwInvert : 1;
+            context.fillStyle = 'rgba(255,255,255,' + clamp01(Math.max(map.invert || 0, s * 0.24) * depth * invertControl * 0.94) + ')';
             context.fillRect(0, 0, engine.canvas.width, engine.canvas.height);
             context.restore();
         };
@@ -2458,7 +2459,8 @@
             if (s <= 0.001 || depth <= 0.001) return;
             context.save();
             context.globalCompositeOperation = 'hue';
-            context.fillStyle = 'hsla(' + ((now * 0.045 + videoPalette.hue) % 360).toFixed(1) + ',100%,50%,' +
+            const hueOffset = engine.voiceFxSettings ? engine.voiceFxSettings.hueOffset * 1.04 : 0;
+            context.fillStyle = 'hsla(' + ((now * 0.045 + videoPalette.hue + hueOffset) % 360).toFixed(1) + ',100%,50%,' +
                 clamp01(s * depth * 0.62).toFixed(3) + ')';
             context.fillRect(0, 0, engine.canvas.width, engine.canvas.height);
             context.restore();

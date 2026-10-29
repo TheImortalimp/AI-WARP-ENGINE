@@ -2,6 +2,11 @@
 
 Standalone Windows app releases. Full notes per release are in the `RELEASE_NOTES_*.md` files.
 
+## 6.4.22 — Voice FX tuning and automation
+- Added bottom-dock B&W inversion and Hue/Color Cycle fine-tune sliders with independent persistent locks and a reroll control.
+- Random board rolls and preset auto-cycles randomize unlocked FX settings and independently roll Auto Glitch on/off at 50/50 odds.
+- Preserved independent core and GC#(3) voices, complementary pairing, and subtle renderer differences.
+
 ## 6.4.21 — RAUM · X-R artwork show
 - While a RAUM · X-R track plays, the main canvas runs the cover and back-cover artwork as a cross-fading slideshow, replacing the init artwork and any other source.
 - Six exclusive audio-aware glitch sequences: TEAR, GRID, MIRROR, SMEAR, COLUMNS and RIPPLE.

@@ -703,6 +703,34 @@ body {
     accent-color: var(--theme-accent);
 }
 
+.voice-fx-tuning {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    flex: 1 1 100%;
+    padding-top: 5px;
+    border-top: 1px solid rgba(0, 255, 170, 0.18);
+}
+
+.voice-fx-tuning-title {
+    color: var(--theme-accent);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+}
+
+.voice-fx-tuning .slider-group input[type="range"] {
+    width: clamp(70px, 12vw, 150px);
+}
+
+.voice-fx-tuning button,
+.voice-fx-tuning input {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 502 !important;
+}
+
 /* ── POLE - R SHOWCASE MODAL / DRAWER ────────────────────────────────── */
 #pole-r-drawer {
     position: fixed;

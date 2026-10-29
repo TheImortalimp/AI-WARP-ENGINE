@@ -1,16 +1,16 @@
 # ⚡ AI WARP ENGINE — Windows App (R3 Canvas Edition v6.4)
 
 <p align="center">
-  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.21" width="720">
+  <img src="assets/logo.png" alt="AI WARP ENGINE 6.4.22" width="720">
 </p>
 
 A public-domain glitch visual synthesizer and audio-reactive media playground, packaged as a standalone Windows app with a one-click installer.
 
-**Status: Complete · Ready** (v6.4.21) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
+**Status: Complete · Ready** (v6.4.22) — download the latest installer from the [Releases page](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest).
 
 ## Install
 
-1. Download `AI-WARP-ENGINE-6.4.21-x64-setup.exe` from the latest release.
+1. Download `AI-WARP-ENGINE-6.4.22-x64-setup.exe` from the latest release.
 2. Run it, accept the licence terms, and finish the wizard. No admin rights are needed.
 3. The app installs to `Desktop\AI WARP ENGINE`, with a launcher shortcut, a Start Menu entry and an uninstaller.
 
@@ -82,6 +82,12 @@ Open them from the **RAUM · X-R (4)** button. The drawer shows each track's cov
 
 See the [v6.4.21 release notes](RELEASE_NOTES_6.4.21.md) for details and the installer checksum.
 
+### FX automation and color tuning (v6.4.22)
+
+The bottom dock now provides fine-tune sliders and separate locks for B&W inversion strength and Hue/Color Cycle offset. **ROLL FX**, board randomization, and each preset auto-cycle roll randomized values only for unlocked controls. Auto Glitch receives an independent 50/50 on/off roll with board randomization and each preset auto-cycle. Core and GC#(3) voices remain independently controllable and retain subtle rendering differences while automation continues to select complementary pairs.
+
+See the [v6.4.22 release notes](RELEASE_NOTES_6.4.22.md) for details and the installer checksum.
+
 ### Capture and audio
 
 - **Display capture** (`N`) shares a tab, window or screen as the source.
@@ -152,6 +158,7 @@ The web app is plain HTML / JS / CSS, so you can also run it in any Chromium bro
 
 | Version | Highlights |
 |---------|------------|
+| v6.4.22 | Bottom-dock B&W/Hue tuning sliders and locks; randomized FX settings and a variable Auto Glitch roll on randomize / preset auto-cycles |
 | v6.4.21 | Raum tracks now run the cover artwork as a main-canvas slideshow with exclusive audio-aware glitch sequences and a hidden signature easter egg |
 | v6.4.20 | Pole · R showcase replaced by four original synthesized Raum X-R tracks (bundled, offline) with cover art, back cover and full credits |
 | v6.4.19 | Softer Milkdrop subtle blends; suggested playlists stay in the audio-aware LENS and stop when another source starts |

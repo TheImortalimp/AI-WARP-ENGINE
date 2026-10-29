@@ -117,6 +117,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (savedMilkdrop && Number.isFinite(+savedMilkdrop.opacity)) aiWarp.setMilkdropOpacity(savedMilkdrop.opacity);
             if (savedMilkdrop) aiWarp.milkdropOpacityLocked = !!savedMilkdrop.locked;
         } catch (e) {}
+        try {
+            const savedVoiceFx = JSON.parse(localStorage.getItem('ai_warp_voice_fx_controls') || 'null');
+            if (savedVoiceFx) {
+                if (Number.isFinite(+savedVoiceFx.bwInvert)) aiWarp.setVoiceFxSetting('bwInvert', savedVoiceFx.bwInvert);
+                if (Number.isFinite(+savedVoiceFx.hueOffset)) aiWarp.setVoiceFxSetting('hueOffset', savedVoiceFx.hueOffset);
+                if (savedVoiceFx.locks) {
+                    aiWarp.voiceFxLocks.bwInvert = !!savedVoiceFx.locks.bwInvert;
+                    aiWarp.voiceFxLocks.hueOffset = !!savedVoiceFx.locks.hueOffset;
+                }
+            }
+        } catch (e) {
+            console.warn('Could not load saved Voice FX controls:', e);
+        }
         aiWarp.onAutomationChange = () => {
             const now = performance.now();
             if (now - lastAutomationSync > 50) { // ~20fps UI throttling
@@ -138,6 +151,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 locked: !!aiWarp.milkdropOpacityLocked
             }));
         } catch (e) {}
+    }
+
+    function saveVoiceFxControlState() {
+        if (!aiWarp) return;
+        try {
+            localStorage.setItem('ai_warp_voice_fx_controls', JSON.stringify({
+                bwInvert: aiWarp.voiceFxSettings.bwInvert,
+                hueOffset: aiWarp.voiceFxSettings.hueOffset,
+                locks: aiWarp.voiceFxLocks
+            }));
+        } catch (e) {
+            console.warn('Could not save Voice FX controls:', e);
+        }
     }
 
     function generateFallbackPresets(customSeed) {
@@ -2772,6 +2798,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             milkdropOpacityLockBtn.classList.toggle('locked', !!aiWarp.milkdropOpacityLocked);
             milkdropOpacityLockBtn.title = aiWarp.milkdropOpacityLocked ? 'Milkdrop opacity locked; preset automation will leave this level unchanged.' : 'Lock Milkdrop opacity against preset automation.';
         }
+        const bwInvertControlSlider = document.getElementById('bwInvertControlSlider');
+        const bwInvertControlBadge = document.getElementById('bwInvertControlBadge');
+        const bwInvertControlLock = document.getElementById('bwInvertControlLock');
+        const hueCycleControlSlider = document.getElementById('hueCycleControlSlider');
+        const hueCycleControlBadge = document.getElementById('hueCycleControlBadge');
+        const hueCycleControlLock = document.getElementById('hueCycleControlLock');
+        if (bwInvertControlSlider) bwInvertControlSlider.value = aiWarp.voiceFxSettings.bwInvert;
+        if (bwInvertControlBadge) bwInvertControlBadge.textContent = `${Math.round(aiWarp.voiceFxSettings.bwInvert * 100)}%`;
+        if (bwInvertControlLock) {
+            bwInvertControlLock.textContent = aiWarp.voiceFxLocks.bwInvert ? '🔒' : '🔓';
+            bwInvertControlLock.classList.toggle('locked', aiWarp.voiceFxLocks.bwInvert);
+        }
+        if (hueCycleControlSlider) hueCycleControlSlider.value = aiWarp.voiceFxSettings.hueOffset;
+        if (hueCycleControlBadge) hueCycleControlBadge.textContent = `${Math.round(aiWarp.voiceFxSettings.hueOffset)}°`;
+        if (hueCycleControlLock) {
+            hueCycleControlLock.textContent = aiWarp.voiceFxLocks.hueOffset ? '🔒' : '🔓';
+            hueCycleControlLock.classList.toggle('locked', aiWarp.voiceFxLocks.hueOffset);
+        }
 
         const earBtn = document.getElementById('earBtn');
         if (earBtn) {
@@ -2933,6 +2977,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             aiWarp.randomizeBoard();
             if (warpModeSelect) warpModeSelect.value = aiWarp.aiWarpMode;
             syncUiFromEngine();
+            saveVoiceFxControlState();
             showHudNotification('🎲 EFFECTS BOARD RANDOMIZED');
         };
     }
@@ -3133,6 +3178,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const milkdropOpacitySlider = document.getElementById('milkdropOpacitySlider');
     const milkdropOpacityValBadge = document.getElementById('milkdropOpacityValBadge');
     const milkdropOpacityLockBtn = document.getElementById('milkdropOpacityLockBtn');
+    const bwInvertControlSlider = document.getElementById('bwInvertControlSlider');
+    const bwInvertControlLock = document.getElementById('bwInvertControlLock');
+    const hueCycleControlSlider = document.getElementById('hueCycleControlSlider');
+    const hueCycleControlLock = document.getElementById('hueCycleControlLock');
+    const voiceFxRandomizeBtn = document.getElementById('voiceFxRandomizeBtn');
     const nullMilkdropOpacityBtn = document.getElementById('null-milkdrop-opacity-btn');
     if (vsyncLockBtn) {
         vsyncLockBtn.onclick = () => {
@@ -3151,6 +3201,42 @@ document.addEventListener('DOMContentLoaded', async () => {
             syncUiFromEngine();
             saveMilkdropControlState();
             showHudNotification(`DROP THE MILK OPACITY ${aiWarp.milkdropOpacityLocked ? 'LOCKED' : 'UNLOCKED'}`);
+        };
+    }
+    if (bwInvertControlSlider) {
+        bwInvertControlSlider.oninput = () => {
+            aiWarp.setVoiceFxSetting('bwInvert', parseFloat(bwInvertControlSlider.value));
+            syncUiFromEngine();
+            saveVoiceFxControlState();
+        };
+    }
+    if (hueCycleControlSlider) {
+        hueCycleControlSlider.oninput = () => {
+            aiWarp.setVoiceFxSetting('hueOffset', parseFloat(hueCycleControlSlider.value));
+            syncUiFromEngine();
+            saveVoiceFxControlState();
+        };
+    }
+    if (bwInvertControlLock) {
+        bwInvertControlLock.onclick = () => {
+            aiWarp.voiceFxLocks.bwInvert = !aiWarp.voiceFxLocks.bwInvert;
+            syncUiFromEngine();
+            saveVoiceFxControlState();
+        };
+    }
+    if (hueCycleControlLock) {
+        hueCycleControlLock.onclick = () => {
+            aiWarp.voiceFxLocks.hueOffset = !aiWarp.voiceFxLocks.hueOffset;
+            syncUiFromEngine();
+            saveVoiceFxControlState();
+        };
+    }
+    if (voiceFxRandomizeBtn) {
+        voiceFxRandomizeBtn.onclick = () => {
+            aiWarp.randomizeVoiceFxSettings();
+            syncUiFromEngine();
+            saveVoiceFxControlState();
+            showHudNotification('UNLOCKED B&W / HUE SETTINGS RANDOMIZED');
         };
     }
     if (nullMilkdropOpacityBtn) {
@@ -3325,6 +3411,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (store[key]) {
             aiWarp.applyPreset(store[key], smooth, 1400);
             syncUiFromEngine();
+            saveVoiceFxControlState();
         }
     }
 
@@ -3380,6 +3467,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 tag: 'USER PRESET',
                 alphas: Object.assign({}, aiWarp.effectAlphas),
                 locks: Object.assign({}, aiWarp.effectLocks),
+                voiceFxSettings: Object.assign({}, aiWarp.voiceFxSettings),
                 toggles: {
                     autoGlitch: !!aiWarp.isAutoGlitch,
                     continualRandomize: !!aiWarp.isContinualRandom,
@@ -3471,7 +3559,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const p = store[randomKey];
                         if (p && aiWarp) {
                             // Smooth interpolated progression over 1.6s
-                            aiWarp.applyPreset(p, true, 1600);
+                            const autoPreset = Object.assign({}, p, {
+                                toggles: Object.assign({}, p.toggles || {})
+                            });
+                            delete autoPreset.voiceFxSettings;
+                            delete autoPreset.toggles.autoGlitch;
+                            aiWarp.applyPreset(autoPreset, true, 1600);
+                            aiWarp.randomizeVoiceFxSettings();
+                            aiWarp.rollAutoGlitch();
+                            syncUiFromEngine();
+                            saveVoiceFxControlState();
                             showHudNotification(`⚡ AUTO-PRESET [${chosenPool.toUpperCase()}]: ${randomKey}${p.tag ? ' · ' + p.tag : ''} (SMOOTH TRANSITION)`);
                         }
                     }

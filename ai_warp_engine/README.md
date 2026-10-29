@@ -21,7 +21,10 @@
 7. **Media studio** — local image/video/audio support, YouTube controls and knowledgebase, microphone monitoring, and procedural synthetic audio.
 8. **Performance controls** — held Ghost/V-Sync rails, direct null controls, locks, 80 randomized machine presets, user presets, live mixer levels, and keyboard shortcuts.
 9. **Protected voice intent** — user-disabled or locked voices are respected by background automation.
-10. **Public domain release** — distributed under CC0 1.0 / The Unlicense.
+10. **B&W/Hue confluence tuning** — bottom-dock sliders fine-tune inversion strength and hue offset, each with a persistent lock and randomized roll; core/GC#(3) voices remain distinct and are selected as complementary pairs.
+11. **Public domain release** — distributed under CC0 1.0 / The Unlicense.
+
+In v6.4.22, board randomization and each preset auto-cycle reroll unlocked B&W/Hue settings and independently roll Auto Glitch ON/OFF at 50/50 odds. The **ROLL FX** button rerolls only the two FX settings.
 
 ---
 

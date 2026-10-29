@@ -245,6 +245,8 @@
             this.effectTargets = {};
             this.effectRetargetAt = {};
             this.effectLocks = {};
+            this.voiceFxSettings = { bwInvert: 1, hueOffset: 0 };
+            this.voiceFxLocks = { bwInvert: false, hueOffset: false };
             // Automation-owned selections form core/R3 confluence pairs. They are
             // tracked separately so manual unlocked voices are never retired merely
             // because Continual Randomization chose a fresh factory pair.
@@ -805,6 +807,29 @@
             }
         }
 
+        setVoiceFxSetting(name, value) {
+            if (name === 'bwInvert') this.voiceFxSettings.bwInvert = clamp01(value);
+            else if (name === 'hueOffset' && Number.isFinite(Number(value))) {
+                this.voiceFxSettings.hueOffset = ((Number(value) % 360) + 360) % 360;
+            }
+        }
+
+        randomizeVoiceFxSettings() {
+            if (!this.voiceFxLocks.bwInvert) {
+                this.voiceFxSettings.bwInvert = +(0.12 + Math.random() * 0.88).toFixed(2);
+            }
+            if (!this.voiceFxLocks.hueOffset) {
+                this.voiceFxSettings.hueOffset = Math.floor(Math.random() * 360);
+            }
+            return this.voiceFxSettings;
+        }
+
+        rollAutoGlitch() {
+            this.isAutoGlitch = Math.random() < 0.5;
+            if (this.isAutoGlitch) this.triggerButtonEffect('auto_glitch_pulse');
+            return this.isAutoGlitch;
+        }
+
         setEffect(name, enabled, alpha = null) {
             if (!this.effectNames.includes(name)) return;
             this.effectEnabled[name] = !!enabled;
@@ -945,6 +970,14 @@
                 });
             }
             const toggles = preset.toggles || {};
+            if (preset.voiceFxSettings) {
+                if (!this.voiceFxLocks.bwInvert && Number.isFinite(Number(preset.voiceFxSettings.bwInvert))) {
+                    this.setVoiceFxSetting('bwInvert', preset.voiceFxSettings.bwInvert);
+                }
+                if (!this.voiceFxLocks.hueOffset && Number.isFinite(Number(preset.voiceFxSettings.hueOffset))) {
+                    this.setVoiceFxSetting('hueOffset', preset.voiceFxSettings.hueOffset);
+                }
+            }
             if (typeof toggles.autoGlitch === 'boolean') this.isAutoGlitch = toggles.autoGlitch;
             if (typeof toggles.continualRandomize === 'boolean') this.isContinualRandom = toggles.continualRandomize;
             if (typeof toggles.timedAutomation === 'boolean') this.isTimedAuto = toggles.timedAutomation;
@@ -1404,6 +1437,8 @@
 
         randomizeBoard() {
             this.triggerButtonEffect('continual_rand_pulse');
+            this.randomizeVoiceFxSettings();
+            this.rollAutoGlitch();
             // Clean board: choose a core/R3 confluence pair, plus at most one accent rail.
             const count = 2 + Math.floor(Math.random() * 2); // 2 or 3 voices MAX
             const selected = this.pickConfluenceVoices(null, count, false);
@@ -2244,7 +2279,7 @@
                         gctx.save();
                         gctx.globalCompositeOperation = 'difference';
                         const level = s < 0.25 ? s * 2 : (s < 0.65 ? 0.5 : (s < 0.88 ? 0.75 : 1.0));
-                        gctx.fillStyle = `rgba(255, 255, 255, ${clamp01(level * dp * self.masterOpacity)})`;
+                        gctx.fillStyle = `rgba(255, 255, 255, ${clamp01(level * dp * self.masterOpacity * self.voiceFxSettings.bwInvert)})`;
                         gctx.fillRect(0, 0, w, h);
                         gctx.restore();
                     };
@@ -2258,7 +2293,7 @@
                         const sz = self.sizeFor('Hue/Color Cycle');
                         const dp = self.depthFor('Hue/Color Cycle');
                         const w = self.canvas.width, h = self.canvas.height;
-                        const t = performance.now() * 0.05 * sz;
+                        const t = performance.now() * 0.05 * sz + self.voiceFxSettings.hueOffset;
                         gctx.save();
                         gctx.globalCompositeOperation = 'hue';
                         gctx.fillStyle = `hsla(${t % 360}, 100%, 50%, ${clamp01(0.75 * s * dp * self.masterOpacity)})`;
@@ -3066,7 +3101,7 @@
             const gateHash = (slot, salt) => fract(Math.sin(slot * 12.9898 + salt * 78.233) * 43758.5453);
 
             // ── 1. VOICE BUS → cumulative filter/transform contributions ─────────
-            const vInvert  = la('B&W Invert');
+            const vInvert  = la('B&W Invert') * this.voiceFxSettings.bwInvert;
             const vRainbow = la('HSL Rainbow');
             const vHueCyc  = la('Hue/Color Cycle');
             const vFlash   = la('Flash');
@@ -3102,7 +3137,7 @@
                 contrast += vRainbow * 0.10;
             }
             if (vHueCyc > 0.005) {
-                hue += vHueCyc * ((now * 0.06) % 360);
+                hue += vHueCyc * ((now * 0.06 + this.voiceFxSettings.hueOffset) % 360);
                 saturate += vHueCyc * 0.15;
             }
             if (vInvert > 0.005) {
