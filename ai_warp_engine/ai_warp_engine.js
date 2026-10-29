@@ -1,6 +1,6 @@
 ;/* ===== ai_warp_engine.js ===== */
 /**
- * AI WARP ENGINE — HYPER-INTEGRATED SYNTHESIS (v6.4.25-FULL-CANVAS-LENS-FX)
+ * AI WARP ENGINE — HYPER-INTEGRATED SYNTHESIS (v6.4.26-FULL-APP-FRAME-LENS-FX)
  *
  * 100% Fully Responsive, Robust & Animated:
  * - 📡 Tab Capture (getDisplayMedia): real pixels AND real audio from any shared tab
@@ -3481,17 +3481,21 @@
             const hueSize = hueTotal > 0
                 ? (this.sizeFor('Hue/Color Cycle') * hueCore + this.sizeFor('Hue/Color Cycle GC#(3)') * hueGc3) / hueTotal
                 : 1;
-            const filters = [];
-            if (this.hardLightActive) filters.push('contrast(1.25) saturate(1.35) brightness(1.08)');
+            const canvasFilters = [];
+            if (this.hardLightActive) canvasFilters.push('contrast(1.25) saturate(1.35) brightness(1.08)');
+            const pageFilters = [];
             if (bwStrength > 0.001) {
-                filters.push(`grayscale(${bwStrength.toFixed(3)}) invert(${bwStrength.toFixed(3)})`);
+                pageFilters.push(`grayscale(${bwStrength.toFixed(3)}) invert(${bwStrength.toFixed(3)})`);
             }
             if (hueStrength > 0.001) {
                 const hue = (now * 0.05 * hueSize + this.voiceFxSettings.hueOffset) % 360;
-                filters.push(`hue-rotate(${(hue * hueStrength).toFixed(1)}deg)`);
+                pageFilters.push(`hue-rotate(${(hue * hueStrength).toFixed(1)}deg)`);
             }
-            const filter = filters.length ? filters.join(' ') : 'none';
-            if (this.canvas.style.filter !== filter) this.canvas.style.filter = filter;
+            const canvasFilter = canvasFilters.length ? canvasFilters.join(' ') : 'none';
+            const pageFilter = pageFilters.length ? pageFilters.join(' ') : 'none';
+            const root = document.documentElement;
+            if (this.canvas.style.filter !== canvasFilter) this.canvas.style.filter = canvasFilter;
+            if (root.style.filter !== pageFilter) root.style.filter = pageFilter;
         }
 
         /* ── MASTER RENDER LOOP ────────────────────────────────────────────────── */

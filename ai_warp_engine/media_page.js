@@ -3781,20 +3781,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         freezeFrameBtn.onclick = () => {
             const mainCanvas = document.getElementById('glitchCanvas');
             if (window.html2canvas) {
-                html2canvas(document.body, { backgroundColor: null, useCORS: true }).then(canvas => {
-                    downloadCanvas(canvas);
-                }).catch(() => {
-                    if (mainCanvas) downloadCanvas(mainCanvas);
-                });
-            } else if (mainCanvas) {
-                downloadCanvas(mainCanvas);
-            }
+                    const pageFilter = window.getComputedStyle(document.documentElement).filter;
+                    html2canvas(document.body, {
+                        backgroundColor: null,
+                        useCORS: true,
+                        onclone: clonedDocument => {
+                            clonedDocument.documentElement.style.filter = 'none';
+                        }
+                    }).then(canvas => {
+                        downloadCanvas(canvas, pageFilter);
+                    }).catch(() => {
+                        if (mainCanvas) downloadCanvas(mainCanvas, pageFilter);
+                    });
+                } else if (mainCanvas) {
+                    downloadCanvas(mainCanvas, window.getComputedStyle(document.documentElement).filter);
+                }
             showHudNotification('FREEZE FRAME 📷 // SCREENSHOT CAPTURED');
         };
     }
 
-    function downloadCanvas(canvas) {
-        const filter = window.getComputedStyle(canvas).filter;
+    function downloadCanvas(canvas, pageFilter = 'none') {
+        const canvasFilter = window.getComputedStyle(canvas).filter;
+        const filter = [canvasFilter, pageFilter].filter(value => value && value !== 'none').join(' ');
         if (filter && filter !== 'none') {
             const filteredCanvas = document.createElement('canvas');
             filteredCanvas.width = canvas.width;

@@ -2,6 +2,10 @@
 
 Standalone Windows app releases. Full notes per release are in the `RELEASE_NOTES_*.md` files.
 
+## 6.4.26 — Full app-frame B&W and Hue FX
+- Extended adjustable grayscale/inversion and Hue rotation to the entire app viewport, including the HUD and controls, in the browser edition and Windows WebView2 host.
+- Kept Hard Light limited to the effects canvas and updated freeze-frame capture to preserve the viewport color treatment.
+
 ## 6.4.25 — Full-canvas LENS inversion
 - B&W now applies grayscale and inversion to the complete composed canvas, including the YT LENS feed, initialization artwork, Raum X-R showcase, and visual easter eggs.
 - Hue/Color Cycle now rotates the full composed canvas instead of tinting only a translucent overlay; the browser YouTube Warp Bus uses full-strength monochrome inversion too.
