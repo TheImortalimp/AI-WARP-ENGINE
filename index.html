@@ -1413,7 +1413,8 @@
       h1, h2, h3 { font-size: 1.2em; margin-bottom: 10px; }
     }
 
-    @media (max-width: 768px) {
+  
+  @media (max-width: 768px) {
       body { padding: 0 8px; }
       h1 { font-size: 1.4em; }
       .main-container { gap: 24px; }
@@ -2374,6 +2375,70 @@
   ------------------------
   -------------------------
 
+<!-- ===== IMORTALIMP — "# pole - Я" BANDCAMP SHOWCASE (very top of the page) =====
+     Original synthesized album "pole - Я - raum - variant X-R" by River Lyle Reuveni & GitHub Copilot.
+     Dedicated to Stefan Betke (Pole). Scoped under #pole-ya-showcase. -->
+<style>
+  #pole-ya-showcase {
+    position: relative; width: 90vw; max-width: 1100px; margin: 22px auto 30px auto; padding: 0;
+    background: repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 4px), linear-gradient(180deg, #0c0c0e 0%, #050506 100%);
+    border: 1px solid #3a3a40; border-top: 3px solid #f2f2f2; border-radius: 6px; overflow: hidden;
+    box-shadow: 0 18px 48px rgba(0,0,0,.8), 0 0 36px rgba(255,255,255,.08);
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #e8e8ea;
+  }
+  #pole-ya-showcase .pya-ghost {
+    position: absolute; right: -2%; top: -18%; font: 900 clamp(240px, 42vw, 520px)/1 "Arial Black", Impact, sans-serif;
+    color: rgba(255,255,255,.05); pointer-events: none; user-select: none; animation: pyaDrift 9s ease-in-out infinite;
+  }
+  #pole-ya-showcase .pya-inner { position: relative; display: flex; flex-wrap: wrap; gap: 22px; padding: 22px; align-items: center; }
+  #pole-ya-showcase .pya-cover { flex: 0 0 min(300px, 100%); position: relative; display: block; line-height: 0; }
+  #pole-ya-showcase .pya-cover img { width: 100%; height: auto; display: block; border: 1px solid #555; animation: pyaGlitch 6s steps(1) infinite; }
+  #pole-ya-showcase .pya-copy { flex: 1 1 320px; min-width: 0; }
+  #pole-ya-showcase .pya-kicker { font-size: 11px; letter-spacing: .32em; color: #9a9aa2; text-transform: uppercase; }
+  #pole-ya-showcase h2 { text-align: left; margin: 6px 0 4px; font: 900 clamp(26px, 5vw, 46px)/1.05 "Arial Black", Impact, sans-serif; letter-spacing: .02em; color: #fff; text-shadow: 2px 0 #ff2d6f, -2px 0 #2bd9ff; }
+  #pole-ya-showcase h2 .pya-r { display: inline-block; }
+  #pole-ya-showcase .pya-sub { font-size: 13px; color: #c9c9cf; margin: 0 0 12px; }
+  #pole-ya-showcase .pya-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+  #pole-ya-showcase .pya-tags span { font-size: 10.5px; letter-spacing: .14em; border: 1px solid #55555c; padding: 3px 8px; color: #d8d8dc; text-transform: uppercase; }
+  #pole-ya-showcase .pya-btn { display: inline-block; background: #f2f2f2; color: #050506; font-weight: 800; letter-spacing: .12em; font-size: 12px; text-decoration: none; padding: 11px 18px; border: 2px solid #f2f2f2; margin: 0 8px 8px 0; transition: background .15s, color .15s; }
+  #pole-ya-showcase .pya-btn:hover { background: transparent; color: #f2f2f2; }
+  #pole-ya-showcase .pya-btn.alt { background: transparent; color: #f2f2f2; border-color: #66666c; }
+  #pole-ya-showcase .pya-btn.alt:hover { background: #f2f2f2; color: #050506; }
+  #pole-ya-showcase .pya-credit { font-size: 11px; line-height: 1.6; color: #8f8f97; margin: 6px 0 0; }
+  #pole-ya-showcase .pya-player { position: relative; padding: 0 22px 22px; }
+  #pole-ya-showcase .pya-player iframe { width: 100%; max-width: 700px; height: 472px; border: 0; background: #000; display: block; margin: 0 auto; }
+  @keyframes pyaDrift { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-14px, 10px); } }
+  @keyframes pyaGlitch {
+    0%, 93%, 100% { transform: none; filter: none; }
+    94% { transform: translate(-4px, 0); filter: hue-rotate(90deg) contrast(1.4); }
+    96% { transform: translate(5px, 1px); clip-path: inset(30% 0 40% 0); }
+    98% { transform: translate(-2px, 0); filter: invert(1); }
+  }
+  @media (prefers-reduced-motion: reduce) { #pole-ya-showcase .pya-ghost, #pole-ya-showcase .pya-cover img { animation: none; } }
+</style>
+<section id="pole-ya-showcase" aria-labelledby="pole-ya-title">
+  <div class="pya-ghost" aria-hidden="true">Я</div>
+  <div class="pya-inner">
+    <a class="pya-cover" href="https://riverlyler-velojun-imortalimp-nl.bandcamp.com/album/pole-raum-variant-x-r" target="_blank" rel="noopener">
+      <img src="https://f4.bcbits.com/img/a3086263364_5.jpg" alt="Cover art of # pole - Я - raum - variant X-R: boxed whites and greys with a huge backwards Я" width="300" height="300">
+    </a>
+    <div class="pya-copy">
+      <div class="pya-kicker">// NEW ON BANDCAMP &middot; 4 TRACKS &middot; LOSSLESS</div>
+      <h2 id="pole-ya-title">|# pole - <span class="pya-r">Я</span>|</h2>
+      <p class="pya-sub">raum &middot; variant X-R &mdash; two jungle / breakcore ripple-flow pieces that slow down, fall silent and crash back in, then two tranquil glass-bell ambient pieces.</p>
+      <div class="pya-tags"><span>ambient</span><span>jungle</span><span>breakcore</span><span>glass bells</span><span>100% synthesized</span></div>
+      <a class="pya-btn" href="https://riverlyler-velojun-imortalimp-nl.bandcamp.com/album/pole-raum-variant-x-r" target="_blank" rel="noopener">&#9654; LISTEN ON BANDCAMP</a>
+      <a class="pya-btn alt" href="https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/latest" target="_blank" rel="noopener">HEAR IT IN AI WARP ENGINE</a>
+      <p class="pya-credit">Original synthesized work (no samples) by GitHub Copilot, prompted and directed by River Lyle Reuveni. Dedicated to Stefan Betke (Pole) and the artists of the album <em>R</em>; not affiliated with them. Support the original: <a href="https://pole-stefanbetke.bandcamp.com/album/r" target="_blank" rel="noopener" style="color:#c9c9cf">pole-stefanbetke.bandcamp.com/album/r</a></p>
+    </div>
+  </div>
+  <div class="pya-player">
+    <iframe loading="lazy" title="# pole - Я - raum - variant X-R on Bandcamp" src="https://bandcamp.com/EmbeddedPlayer/album=4063475502/size=large/bgcol=050506/linkcol=f2f2f2/tracklist=true/artwork=small/transparent=true/" seamless>
+      <a href="https://riverlyler-velojun-imortalimp-nl.bandcamp.com/album/pole-raum-variant-x-r">|# pole - Я| by River Lyle Reuveni on Bandcamp</a>
+    </iframe>
+  </div>
+</section>
+
 <!-- ===== IMORTALIMP — FLAMABLE AI CAMPING GAS SID (v2.3) Info & Navigation Panel =====
      Placed directly beneath the initial ------- dashes at the top of <body>.
      Displays the complete unpacked zip folder structure (flamable-ai-camping-gas-sid-v2.0-cc-by-4.0/),
@@ -3017,70 +3082,6 @@
     color: #cbd5e1;
   }
 
-  @media (max-width: 768px) {
-    #ai-warp-engine-showcase {
-      width: 96vw;
-      max-width: 96%;
-      margin: 20px auto 24px auto;
-    }
-  }
-</style>
-
-<section id="ai-warp-engine-showcase" aria-label="AI WARP ENGINE — Spotlight Showcase &amp; Documentation Panel">
-  <div class="ai-warp-top-bar">
-    <div class="ai-warp-path-group">
-      <div class="ai-warp-folder-line">
-        <span class="ai-warp-folder-pill" id="ai-warp-folder-badge" title="Unpacked Subfolder on imortalimp.nl">
-          📁 ai_warp_engine/
-        </span>
-        <span style="color: #64748b; font-weight: 900;">▸</span>
-        <span class="ai-warp-app-pill" title="Browser app matched to standalone v6.4.25">
-          ⚡ ai_warp_engine.html
-        </span>
-        <span class="ai-warp-license-pill" title="Dedicated 100% to the Public Domain (CC0 / Unlicense)">
-          ⚖️ Public Domain (CC0 / Free &amp; Open Source)
-        </span>
-      </div>
-      <div class="ai-warp-sub-credit">
-        <strong>"AI WARP ENGINE" (v6.4.25 · APP-MATCHED WEB EDITION)</strong> — 📡 full-canvas B&amp;W inversion and Hue rotation across LENS video, initialization art, Raum showcase and easter eggs; automated playlist extraction; 29 Warp Modes; 34 independent glitch voices; Canvas-only R3 Ghost Protocol/V-Sync v11; media studio, knowledgebase and Web Audio synth ·
-        <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="license noopener">Public Domain / CC0</a>:
-        Created through synergy between
-        <a href="https://imortalimp.nl" target="_blank" rel="author noopener">River Lyle Reuveni (imortalimp.nl)</a>,
-        <a href="https://arena.ai" target="_blank" rel="author noopener">Arena.ai Agent</a> &amp;
-        <span style="color:#00e5ff; font-weight:700;">Artificial Intelligence</span>
-      </div>
-    </div>
-
-    <div class="ai-warp-actions">
-      <a id="ai-warp-open-full" class="ai-warp-btn ai-warp-btn-full" href="https://www.imortalimp.nl/ai_warp_engine/index.html" target="_blank" rel="noopener" title="Open the app-matched v6.4.25 browser edition in ai_warp_engine/">
-        ⚡🚀 Launch AI Warp Engine
-      </a>
-      <a id="ai-warp-download-installer" class="ai-warp-btn ai-warp-btn-zip" href="https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/download/v6.4.25/AI-WARP-ENGINE-6.4.25-x64-setup.exe" title="Download the standalone Windows x64 installer for v6.4.25.">
-        🪟 Download Windows App 6.4.25
-      </a>
-      <button id="ai-warp-toggle-readme-btn" class="ai-warp-btn ai-warp-btn-readme" type="button" title="Open/Close interactive README.md documentation dropdown pane">
-        📖 Read README.md (Drop-down Pane) ▾
-      </button>
-    </div>
-  </div>
-
-  <!-- Dedicated 11-Line Description of the AI WARP ENGINE -->
-  <div class="ai-warp-desc-box">
-    <div class="ai-warp-desc-title">⚡ RELEASE SPECIFICATION — AI WARP ENGINE (v6.4.25 · APP-MATCHED WEB EDITION):</div>
-    <ol class="ai-warp-desc-list">
-      <li><strong>29 AI Warp modes on the enabled voice canvas:</strong> original Canvas effects act on graphics painted by active voice rails; browser Tab Capture (`N`) routes real shared frames and optional tab audio through the same pipeline. YouTube's cross-origin iframe itself is not read back into JS.</li>
-      <li><strong>34 independent FX voices:</strong> 17 original rails plus 17 isolated `GC#(3)` R3 companions, with level, size, depth and lock-aware automation.</li>
-      <li><strong>Ghost Protocol R3/v11 + V-Sync R3/v11:</strong> DIA, Spectrum, CRT, Plasma, LED; Scanphasing, Color Harmony and Sharp, with retained/manual rails, locks, mode-aware deterministic profiles and only a 5% initial one-shot sweep.</li>
-      <li><strong>Deterministic blends (v6.4.29–30):</strong> all 29 Warp modes have repeatable Ghost/V-Sync profiles; Hard-Light, Soft-Eye, audio-ear, canvas-response and automation blending is tailored per active mode.</li>
-      <li><strong>DROP THE MILK? (v6.4.31–35):</strong> original Milkdrop/projectM-inspired Canvas feedback, polar waves and liquid blooms; 80 shuffled presets re-shuffle on activation and cross-blend with every Warp profile and active FX voices.</li>
-      <li><strong>Milkdrop control:</strong> opacity fader and lock after V-Sync, persisted preference, preset automation when unlocked; v6.4.35 uses a 30% default, restrained soft-light feedback and capped preset opacity to reduce white-out.</li>
-      <li><strong>Earlier foundations:</strong> 34 voices, 29 modes, R3 Ghost/V-Sync, YouTube Warp Bus + SVG compositor Warp Lens, browser display capture with optional tab audio, media studio, playlist knowledgebase, mic monitor, presets and frame export.</li>
-      <li><strong>Release parity:</strong> the browser app in <code>ai_warp_engine/</code> uses the same v6.4.25 HTML, JavaScript, CSS, JSON and bundled audio as the standalone app. Full-canvas B&amp;W inversion and Hue rotation transform the captured feed and all artwork. The desktop-only YT LENS window requires the Windows installer; browser playback remains within the in-page YouTube player.</li>
-      <li><strong>License:</strong> Public Domain under CC0 1.0 / The Unlicense. The v6.4.25 Windows installer and user manual are available from the GitHub release.</li>
-    </ol>
-  </div>
-
-  <!-- Unpacked Folder Structure & All File Chips Strip with ai_warp_engine/ subfolder redirect -->
   /* Separate Windows installer + mirror feature panel */
   #ai-warp-engine-showcase .aiw-legacy-panel {
     display: grid;
@@ -3147,16 +3148,16 @@
   }
 
 
-  <div class="ai-warp-tree-strip" aria-label="v6.4.25 app-matched browser files in ai_warp_engine/">
-    <span class="ai-warp-tree-label">📂 R3 Canvas Files:</span>
-    <a id="ai-warp-chip-app" class="ai-warp-file-chip active-app" href="ai_warp_engine/index.html" target="_blank" rel="noopener" title="Launch the app-matched v6.4.25 browser edition">⚡ index.html · v6.4.25</a>
-    <a id="ai-warp-chip-index" class="ai-warp-file-chip" href="ai_warp_engine/index.html" target="_blank" rel="noopener" title="Open the index.html application alias">🏠 index.html</a>
-    <a id="ai-warp-chip-media" class="ai-warp-file-chip" href="ai_warp_engine/media_page.html" target="_blank" rel="noopener" title="Open the media studio alias">🎛 media_page.html</a>
-    <a id="ai-warp-chip-engine-js" class="ai-warp-file-chip" href="ai_warp_engine/ai_warp_engine.js" target="_blank" rel="noopener" title="View the main rendering engine — incl. the YouTube Warp Bus">📄 ai_warp_engine.js</a>
-    <a id="ai-warp-chip-gc3-js" class="ai-warp-file-chip" href="ai_warp_engine/r3_gc3_factories.js" target="_blank" rel="noopener" title="View the isolated GC#(3) factory bank">📄 r3_gc3_factories.js</a>
-    <a id="ai-warp-chip-r3-system" class="ai-warp-file-chip" href="ai_warp_engine/r3_ghost_vsync.js" target="_blank" rel="noopener" title="View the Canvas-only R3 Ghost/V-Sync system">📄 r3_ghost_vsync.js</a>
-    <a id="ai-warp-chip-glitch-js" class="ai-warp-file-chip" href="ai_warp_engine/glitch_engine.js" target="_blank" rel="noopener" title="View shared R3 and automation utilities">📄 glitch_engine.js</a>
-    <a id="ai-warp-chip-media-js" class="ai-warp-file-chip" href="ai_warp_engine/media_page.js" target="_blank" rel="noopener" title="View media and UI controller — incl. playback body-class syncing">📄 media_page.js</a>
+  @media (max-width: 768px) {
+    #ai-warp-engine-showcase {
+      width: 96vw;
+      max-width: 96%;
+      margin: 20px auto 24px auto;
+    }
+  }
+</style>
+
+<section id="ai-warp-engine-showcase" aria-label="AI WARP ENGINE — Spotlight Showcase &amp; Documentation Panel">
   <aside class="aiw-legacy-panel" aria-labelledby="aiw-legacy-title">
     <div class="aiw-glitch-art" role="img" aria-label="Animated cyan and magenta glitch-art release graphic">
       <svg viewBox="0 0 240 130" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -3183,6 +3184,70 @@
       </div>
     </div>
   </aside>
+  <div class="ai-warp-top-bar">
+    <div class="ai-warp-path-group">
+      <div class="ai-warp-folder-line">
+        <span class="ai-warp-folder-pill" id="ai-warp-folder-badge" title="Unpacked Subfolder on imortalimp.nl">
+          📁 ai_warp_engine/
+        </span>
+        <span style="color: #64748b; font-weight: 900;">▸</span>
+        <span class="ai-warp-app-pill" title="Browser app matched to standalone v6.4.25">
+          ⚡ ai_warp_engine.html
+        </span>
+        <span class="ai-warp-license-pill" title="Dedicated 100% to the Public Domain (CC0 / Unlicense)">
+          ⚖️ Public Domain (CC0 / Free &amp; Open Source)
+        </span>
+      </div>
+      <div class="ai-warp-sub-credit">
+        <strong>"AI WARP ENGINE" (v6.4.25 · APP-MATCHED WEB EDITION)</strong> — 📡 full-canvas B&amp;W inversion and Hue rotation across LENS video, initialization art, Raum showcase and easter eggs; automated playlist extraction; 29 Warp Modes; 34 independent glitch voices; Canvas-only R3 Ghost Protocol/V-Sync v11; media studio, knowledgebase and Web Audio synth ·
+        <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="license noopener">Public Domain / CC0</a>:
+        Created through synergy between
+        <a href="https://imortalimp.nl" target="_blank" rel="author noopener">River Lyle Reuveni (imortalimp.nl)</a>,
+        <a href="https://arena.ai" target="_blank" rel="author noopener">Arena.ai Agent</a> &amp;
+        <span style="color:#00e5ff; font-weight:700;">Artificial Intelligence</span>
+      </div>
+    </div>
+
+    <div class="ai-warp-actions">
+      <a id="ai-warp-open-full" class="ai-warp-btn ai-warp-btn-full" href="https://www.imortalimp.nl/ai_warp_engine/index.html" target="_blank" rel="noopener" title="Open the app-matched v6.4.25 browser edition in ai_warp_engine/">
+        ⚡🚀 Launch AI Warp Engine
+      </a>
+      <a id="ai-warp-download-installer" class="ai-warp-btn ai-warp-btn-zip" href="https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/download/v6.4.25/AI-WARP-ENGINE-6.4.25-x64-setup.exe" title="Download the standalone Windows x64 installer for v6.4.25.">
+        🪟 Download Windows App 6.4.25
+      </a>
+      <button id="ai-warp-toggle-readme-btn" class="ai-warp-btn ai-warp-btn-readme" type="button" title="Open/Close interactive README.md documentation dropdown pane">
+        📖 Read README.md (Drop-down Pane) ▾
+      </button>
+    </div>
+  </div>
+
+  <!-- Dedicated 11-Line Description of the AI WARP ENGINE -->
+  <div class="ai-warp-desc-box">
+    <div class="ai-warp-desc-title">⚡ RELEASE SPECIFICATION — AI WARP ENGINE (v6.4.25 · APP-MATCHED WEB EDITION):</div>
+    <ol class="ai-warp-desc-list">
+      <li><strong>29 AI Warp modes on the enabled voice canvas:</strong> original Canvas effects act on graphics painted by active voice rails; browser Tab Capture (`N`) routes real shared frames and optional tab audio through the same pipeline. YouTube's cross-origin iframe itself is not read back into JS.</li>
+      <li><strong>34 independent FX voices:</strong> 17 original rails plus 17 isolated `GC#(3)` R3 companions, with level, size, depth and lock-aware automation.</li>
+      <li><strong>Ghost Protocol R3/v11 + V-Sync R3/v11:</strong> DIA, Spectrum, CRT, Plasma, LED; Scanphasing, Color Harmony and Sharp, with retained/manual rails, locks, mode-aware deterministic profiles and only a 5% initial one-shot sweep.</li>
+      <li><strong>Deterministic blends (v6.4.29–30):</strong> all 29 Warp modes have repeatable Ghost/V-Sync profiles; Hard-Light, Soft-Eye, audio-ear, canvas-response and automation blending is tailored per active mode.</li>
+      <li><strong>DROP THE MILK? (v6.4.31–35):</strong> original Milkdrop/projectM-inspired Canvas feedback, polar waves and liquid blooms; 80 shuffled presets re-shuffle on activation and cross-blend with every Warp profile and active FX voices.</li>
+      <li><strong>Milkdrop control:</strong> opacity fader and lock after V-Sync, persisted preference, preset automation when unlocked; v6.4.35 uses a 30% default, restrained soft-light feedback and capped preset opacity to reduce white-out.</li>
+      <li><strong>Earlier foundations:</strong> 34 voices, 29 modes, R3 Ghost/V-Sync, YouTube Warp Bus + SVG compositor Warp Lens, browser display capture with optional tab audio, media studio, playlist knowledgebase, mic monitor, presets and frame export.</li>
+      <li><strong>Release parity:</strong> the browser app in <code>ai_warp_engine/</code> uses the same v6.4.25 HTML, JavaScript, CSS, JSON and bundled audio as the standalone app. Full-canvas B&amp;W inversion and Hue rotation transform the captured feed and all artwork. The desktop-only YT LENS window requires the Windows installer; browser playback remains within the in-page YouTube player.</li>
+      <li><strong>License:</strong> Public Domain under CC0 1.0 / The Unlicense. The v6.4.25 Windows installer and user manual are available from the GitHub release.</li>
+    </ol>
+  </div>
+
+  <!-- Unpacked Folder Structure & All File Chips Strip with ai_warp_engine/ subfolder redirect -->
+  <div class="ai-warp-tree-strip" aria-label="v6.4.25 app-matched browser files in ai_warp_engine/">
+    <span class="ai-warp-tree-label">📂 R3 Canvas Files:</span>
+    <a id="ai-warp-chip-app" class="ai-warp-file-chip active-app" href="ai_warp_engine/index.html" target="_blank" rel="noopener" title="Launch the app-matched v6.4.25 browser edition">⚡ index.html · v6.4.25</a>
+    <a id="ai-warp-chip-index" class="ai-warp-file-chip" href="ai_warp_engine/index.html" target="_blank" rel="noopener" title="Open the index.html application alias">🏠 index.html</a>
+    <a id="ai-warp-chip-media" class="ai-warp-file-chip" href="ai_warp_engine/media_page.html" target="_blank" rel="noopener" title="Open the media studio alias">🎛 media_page.html</a>
+    <a id="ai-warp-chip-engine-js" class="ai-warp-file-chip" href="ai_warp_engine/ai_warp_engine.js" target="_blank" rel="noopener" title="View the main rendering engine — incl. the YouTube Warp Bus">📄 ai_warp_engine.js</a>
+    <a id="ai-warp-chip-gc3-js" class="ai-warp-file-chip" href="ai_warp_engine/r3_gc3_factories.js" target="_blank" rel="noopener" title="View the isolated GC#(3) factory bank">📄 r3_gc3_factories.js</a>
+    <a id="ai-warp-chip-r3-system" class="ai-warp-file-chip" href="ai_warp_engine/r3_ghost_vsync.js" target="_blank" rel="noopener" title="View the Canvas-only R3 Ghost/V-Sync system">📄 r3_ghost_vsync.js</a>
+    <a id="ai-warp-chip-glitch-js" class="ai-warp-file-chip" href="ai_warp_engine/glitch_engine.js" target="_blank" rel="noopener" title="View shared R3 and automation utilities">📄 glitch_engine.js</a>
+    <a id="ai-warp-chip-media-js" class="ai-warp-file-chip" href="ai_warp_engine/media_page.js" target="_blank" rel="noopener" title="View media and UI controller — incl. playback body-class syncing">📄 media_page.js</a>
     <a id="ai-warp-chip-json" class="ai-warp-file-chip" href="ai_warp_engine/media_page.json" target="_blank" rel="noopener" title="View profiles and machine data">📋 media_page.json</a>
     <a id="ai-warp-chip-showcase" class="ai-warp-file-chip" href="ai_warp_engine/ai_warp_showcase_section.html" target="_blank" rel="noopener" title="View the homepage showcase section fragment">🧩 ai_warp_showcase_section.html</a>
     <a id="ai-warp-chip-readme" class="ai-warp-file-chip" href="ai_warp_engine/README.md" target="_blank" rel="noopener" title="Read the v6.4.25 browser/app documentation">📖 README.md</a>
@@ -3255,6 +3320,7 @@
   var chipJson = document.getElementById("ai-warp-chip-json");
   var chipShowcase = document.getElementById("ai-warp-chip-showcase");
   var chipReadme = document.getElementById("ai-warp-chip-readme");
+  var chipDescription = document.getElementById("ai-warp-chip-description");
   var chipNotes = document.getElementById("ai-warp-chip-notes");
   var chipInstaller = document.getElementById("ai-warp-chip-installer");
 
@@ -3275,6 +3341,7 @@
     if (chipJson) chipJson.href = base + "media_page.json";
     if (chipShowcase) chipShowcase.href = base + "ai_warp_showcase_section.html";
     if (chipReadme) chipReadme.href = base + "README.md";
+    if (chipDescription) chipDescription.href = "../DESCRIPTION.md";
     if (chipNotes) chipNotes.href = base + "REVISION_NOTES.md";
     if (chipInstaller) chipInstaller.href = "https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/download/v6.4.25/AI-WARP-ENGINE-6.4.25-x64-setup.exe";
   }
@@ -3318,7 +3385,6 @@
     dropdown.addEventListener("toggle", function() {
       toggleBtn.textContent = dropdown.open 
         ? "📖 Close README.md Pane ▴" 
-  var chipDescription = document.getElementById("ai-warp-chip-description");
         : "📖 Read README.md (Drop-down Pane) ▾";
     });
   }
@@ -3341,7 +3407,6 @@
     max-width: 1000px;
     margin: 0 auto;
   }
-    if (chipDescription) chipDescription.href = "../DESCRIPTION.md";
   #reciprocity-manifesto h1 {
     margin: 0 0 24px;
     color: #2bff6d;
@@ -5209,6 +5274,7 @@
 
 <div class="main-container">
   <div class="link-list">
+    <a href="https://riverlyler-velojun-imortalimp-nl.bandcamp.com/album/pole-raum-variant-x-r" target="_blank" rel="noopener" class="link-button magenta-cyan-title">|# pole - Я| — raum · variant X-R on Bandcamp</a>
     <div class="main-container">
 
       <div class="link-button magenta-cyan-title centered-showcase-container">
@@ -7041,6 +7107,7 @@ height: auto;
       <span class="text-[#cdeed8]">IMP<span class="text-[#5d8a6e]">://</span>imortalimp<span class="text-[#2bff6d]">.nl</span></span>
     </a>
     <nav id="imp-nav-links" class="order-3 md:order-2 basis-full md:basis-auto min-w-0 md:flex items-center gap-8 text-[#5d8a6e]">
+      <a href="https://riverlyler-velojun-imortalimp-nl.bandcamp.com/album/pole-raum-variant-x-r" target="_blank" rel="noopener" class="text-[#cdeed8] hover:text-[#2bff6d] transition-colors" data-hover>|# pole - Я|</a>
       <a href="#kmr-download" class="hover:text-[#2bff6d] transition-colors" data-hover>/k-meleon-r</a>
       <a href="#manifest" class="hover:text-[#2bff6d] transition-colors" data-hover>/manifest</a>
       <a href="#licences-claims" class="hover:text-[#2bff6d] transition-colors" data-hover>/licences&amp;claims</a>
@@ -8149,6 +8216,6 @@ document.getElementById('fsCopyPaneBtn').addEventListener('click', copyFsSnippet
 })();
 
 </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4dc4c3aaeb10bc0',t:'MTc5MjU0NDEzNw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4f800601a71a94a',t:'MTc5MjgzNDYzMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4dc4c3aaeb10bc0',t:'MTc5MjU0NDEzNw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4f800601a71a94a',t:'MTc5MjgzNDYzMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a50cfd9c1b9b11ed',t:'MTc5MzA1NDcxOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 
 </html>
