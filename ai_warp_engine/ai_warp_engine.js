@@ -2467,198 +2467,80 @@
         }
 
         /* ── CANVAS AI WARP SLICER (12 ALGORITHMIC MODES) ────────────────────── */
-        /* VORTEX: differential-rotation whirlpool, an event-horizon black hole with a lensed accretion
-           disk, and a heavy starfield spiralling into it. Replaces the old twirl-like ring rotation. */
-        _vortexSpawn(star, anywhere) {
-            star.r = anywhere ? 0.18 + Math.pow(Math.random(), 0.7) * 1.95 : 1.55 + Math.random() * 0.55;
-            star.a = Math.random() * Math.PI * 2;
-            star.z = Math.random();
-            star.c = Math.random() < 0.62 ? 0 : (Math.random() < 0.7 ? 1 : 2);
-            star.al = 0;
-            return star;
+        /* VORTEX overlay: a subtle black hole and starfield drawn over the classic ring vortex. */
+        _vortexSpawn(q, anywhere) {
+            q.r = anywhere ? 0.12 + Math.random() * 1.1 : 1.0 + Math.random() * 0.25;
+            q.a = Math.random() * Math.PI * 2;
+            q.z = Math.random();
+            q.c = Math.random() < 0.7 ? 0 : 1;
+            return q;
         }
 
-        renderVortexBlackHole(now, w, h, s, t, bass, treble) {
+        renderVortexOverlay(now, w, h, s, t, bass, treble) {
             const g = this.gctx;
             const TAU = Math.PI * 2;
             const cx = w * 0.5, cy = h * 0.5;
             const u = Math.min(w, h) * 0.5;
             let st = this._vortexState;
             if (!st) {
-                st = this._vortexState = { last: now, phase: 0, stars: [], far: [] };
-                for (let i = 0; i < 1400; i++) st.stars.push(this._vortexSpawn({ px: 0, py: 0, qx: 0, qy: 0, al: 0, wd: 1, bk: 0 }, true));
-                for (let i = 0; i < 560; i++) st.far.push({ x: Math.random(), y: Math.random(), z: Math.random(), p: Math.random() * TAU });
+                st = this._vortexState = { last: now, stars: [] };
+                for (let i = 0; i < 420; i++) st.stars.push(this._vortexSpawn({ x: 0, y: 0, x0: 0, y0: 0, al: 0 }, true));
             }
             const dt = Math.min(0.05, Math.max(0.001, (now - st.last) * 0.001)) * Math.max(0.25, this.glitchSpeed || 1);
             st.last = now;
-            const pull = 0.55 + s * 0.9 + bass * 0.6;
-            st.phase += dt * pull;
-            const ov = Math.min(1, 0.45 + s * 0.8);
-            const rh = 0.16 + s * 0.03 + bass * 0.02;
-            const rhPx = rh * u, reachPx = u * 1.25;
+            const k = Math.min(1, 0.35 + s * 0.65);
+            const rh = (0.075 + s * 0.02 + bass * 0.01) * u;
+            const pull = 0.5 + s * 0.6 + bass * 0.4;
 
             g.save();
             try {
-                // 1. Old VORTEX core: nested clipped rings counter-rotating toward the centre, now also compressed inward.
+                // soft darkening around the hole
                 g.globalCompositeOperation = 'source-over';
                 g.globalAlpha = 1;
-                g.drawImage(this.workCanvas, 0, 0);
-                const rings = 20 + Math.floor(s * 16);
-                const maxR = Math.min(w, h) * 0.55;
-                const ringW = maxR / rings;
-                for (let i = rings - 1; i >= 1; i--) {
-                    const r = i * ringW;
-                    const k = r / maxR;
-                    const spinAngle = (1.0 - k) * (1.2 + s * 2.2 + bass) * Math.sin(t * 2.5) + Math.pow(1 - k, 3) * st.phase * 1.5;
-                    const sc = 1 - 0.35 * Math.pow(1 - k, 2);
-                    g.save();
-                    g.beginPath();
-                    g.arc(cx, cy, r, 0, TAU);
-                    g.clip();
-                    g.translate(cx, cy);
-                    g.rotate(spinAngle);
-                    g.scale(sc, sc);
-                    g.drawImage(this.workCanvas, -cx, -cy);
-                    g.restore();
-                }
-
-                // 2. Gravitational darkening toward the hole
-                const dark = g.createRadialGradient(cx, cy, rhPx * 0.9, cx, cy, reachPx);
-                dark.addColorStop(0, 'rgba(0,0,0,0.94)');
-                dark.addColorStop(0.35, 'rgba(0,0,0,' + (0.5 * ov).toFixed(3) + ')');
+                const dark = g.createRadialGradient(cx, cy, rh * 0.6, cx, cy, rh * 4.5);
+                dark.addColorStop(0, 'rgba(0,0,0,' + (0.85 * k).toFixed(3) + ')');
                 dark.addColorStop(1, 'rgba(0,0,0,0)');
                 g.fillStyle = dark;
-                g.fillRect(0, 0, w, h);
-
-                // 3. Init-screen highway grid wrapped into a funnel: the 48 perspective spokes become
-                //    spiral arms, the horizontal lines (same pow 2.2 spacing) become concentric rings.
-                g.save();
-                g.globalCompositeOperation = 'lighter';
-                g.strokeStyle = 'rgba(0,255,170,' + ((0.20 + bass * 0.30) * ov).toFixed(3) + ')';
-                g.lineWidth = 1;
-                const spokes = 48, rOut = reachPx * 0.92, rIn = rhPx * 1.15;
                 g.beginPath();
-                for (let c = 0; c < spokes; c++) {
-                    const a0 = (c / spokes) * TAU + st.phase * 0.35;
-                    for (let j = 0; j <= 28; j++) {
-                        const f = j / 28;
-                        const rr = rOut + (rIn - rOut) * f;
-                        const a = a0 + Math.pow(f, 1.6) * (2.4 + s * 2.0);
-                        const x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr * 0.92;
-                        if (j === 0) g.moveTo(x, y); else g.lineTo(x, y);
-                    }
-                }
-                g.stroke();
-                g.beginPath();
-                const numRings = 14;
-                for (let i = 1; i <= numRings; i++) {
-                    const yn = Math.pow(((i + st.phase * 0.18) % numRings) / numRings, 2.2);
-                    const rr = rIn + yn * (rOut - rIn);
-                    g.moveTo(cx + rr, cy);
-                    g.arc(cx, cy, rr, 0, TAU);
-                }
-                g.stroke();
-                // magenta neon horizon glow from the init screen, now a ring around the hole
-                const glow = g.createRadialGradient(cx, cy, rhPx, cx, cy, rhPx * 2.6);
-                glow.addColorStop(0, 'rgba(255,0,128,' + (0.55 * ov + bass * 0.25).toFixed(3) + ')');
-                glow.addColorStop(1, 'rgba(255,0,128,0)');
-                g.fillStyle = glow;
-                g.beginPath();
-                g.arc(cx, cy, rhPx * 2.6, 0, TAU);
+                g.arc(cx, cy, rh * 4.5, 0, TAU);
                 g.fill();
 
-                // 4. Init-screen vector ovals: 8 revolving cyan ellipses orbiting the hole
-                const ovR = rhPx * 2.4 * (1 + bass * 0.25);
-                g.lineWidth = 1.5;
-                g.strokeStyle = 'rgba(0,229,255,' + ((0.55 + treble * 0.4) * ov).toFixed(3) + ')';
-                g.shadowColor = 'rgba(0,229,255,0.8)';
-                g.shadowBlur = 8;
-                for (let r = 0; r < 8; r++) {
-                    const ang = t * 0.8 + (r * Math.PI) / 8;
-                    g.beginPath();
-                    g.ellipse(cx, cy, Math.abs(ovR * Math.cos(ang)) + 2, ovR * 0.45, ang * 0.3 + st.phase * 0.1, 0, TAU);
-                    g.stroke();
-                }
-                g.shadowBlur = 0;
-                if (bass > 0.25) {
-                    g.strokeStyle = 'rgba(255,183,3,' + ((bass - 0.2) * 0.6).toFixed(3) + ')';
-                    g.lineWidth = 2;
-                    g.beginPath();
-                    g.arc(cx, cy, ovR * (1.2 + bass * 1.5), 0, TAU);
-                    g.stroke();
-                }
-                g.restore();
-
-                // 5. Photon ring and black horizon
-                g.save();
+                // faint lensing ring and the horizon
                 g.globalCompositeOperation = 'lighter';
-                g.shadowColor = 'rgba(255,170,80,0.9)';
-                g.shadowBlur = rhPx * 0.35;
-                g.lineWidth = Math.max(1.5, rhPx * 0.045);
-                g.strokeStyle = 'rgba(255,235,200,' + (0.9 * ov).toFixed(3) + ')';
+                g.lineWidth = Math.max(1, rh * 0.06);
+                g.strokeStyle = 'rgba(255,225,190,' + (0.32 * k).toFixed(3) + ')';
                 g.beginPath();
-                g.arc(cx, cy, rhPx * 1.08, 0, TAU);
+                g.arc(cx, cy, rh * 1.12, 0, TAU);
                 g.stroke();
-                g.restore();
                 g.globalCompositeOperation = 'source-over';
-                g.globalAlpha = 1;
-                const hole = g.createRadialGradient(cx, cy, 0, cx, cy, rhPx);
-                hole.addColorStop(0, 'rgba(0,0,0,1)');
-                hole.addColorStop(0.96, 'rgba(0,0,0,1)');
-                hole.addColorStop(1, 'rgba(0,0,0,0)');
-                g.fillStyle = hole;
+                g.fillStyle = '#000';
                 g.beginPath();
-                g.arc(cx, cy, rhPx, 0, TAU);
+                g.arc(cx, cy, rh, 0, TAU);
                 g.fill();
 
-                // 6. Heavy starfield over everything: twinkling far field + infalling streaks
+                // starfield: stars drift inward in a gentle spiral and fade into the hole
                 g.globalCompositeOperation = 'lighter';
-                g.fillStyle = '#dfe8ff';
-                const rot = st.phase * 0.02, cr = Math.cos(rot), sr = Math.sin(rot);
-                for (let i = 0; i < st.far.length; i++) {
-                    const f = st.far[i];
-                    const dx = (f.x - 0.5) * w * 1.3, dy = (f.y - 0.5) * h * 1.3;
-                    const x = cx + dx * cr - dy * sr, y = cy + dx * sr + dy * cr;
-                    if (x < 0 || x > w || y < 0 || y > h) continue;
-                    g.globalAlpha = (0.25 + 0.75 * f.z) * (0.55 + 0.45 * Math.sin(t * (1.5 + f.z * 3) + f.p + treble * 3)) * ov;
-                    const sz = f.z > 0.85 ? 2.2 : 1.2;
-                    g.fillRect(x, y, sz, sz);
-                }
-
                 g.lineCap = 'round';
-                const active = Math.floor(st.stars.length * (0.55 + 0.45 * Math.min(1, s * 1.4)));
-                const trail = 6 + pull * 4;
-                for (let i = 0; i < active; i++) {
-                    const q = st.stars[i];
-                    const inv = 1 / (q.r * 3 + 0.35);
-                    const da = dt * (0.08 + 0.75 * inv * pull) * (0.6 + 0.8 * q.z);
-                    const dr = dt * (0.03 + 0.12 * pull * (0.25 + q.z)) * (0.35 + 1 / (q.r * 2 + 0.5));
-                    q.a += da;
-                    q.r -= dr;
-                    if (q.r < rh * 1.04) { this._vortexSpawn(q, false); continue; }
-                    const rp = q.r * u;
-                    q.px = cx + Math.cos(q.a) * rp;
-                    q.py = cy + Math.sin(q.a) * rp;
-                    if (q.px < -30 || q.px > w + 30 || q.py < -30 || q.py > h + 30) { q.al = 0; continue; }
-                    const pa = q.a - da * trail, pr = (q.r + dr * trail) * u;
-                    q.qx = cx + Math.cos(pa) * pr;
-                    q.qy = cy + Math.sin(pa) * pr;
-                    const edge = Math.min(1, (q.r - rh * 1.04) / (rh * 0.9));
-                    q.al = edge * (0.35 + 0.65 * q.z) * (0.75 + 0.25 * Math.sin(t * 6 + i) * (0.5 + treble)) * ov;
-                    q.wd = 0.6 + q.z * 1.7;
-                    q.bk = q.r < rh * 2.6 ? 3 : q.c;
-                }
-                const colors = ['rgb(190,215,255)', 'rgb(255,226,160)', 'rgb(255,255,255)', 'rgb(255,120,60)'];
-                for (let b = 0; b < 4; b++) {
+                const colors = ['rgb(200,220,255)', 'rgb(255,225,170)'];
+                for (let b = 0; b < 2; b++) {
                     g.strokeStyle = colors[b];
-                    for (let i = 0; i < active; i++) {
+                    for (let i = 0; i < st.stars.length; i++) {
                         const q = st.stars[i];
-                        if (q.bk !== b || q.al <= 0.01) continue;
-                        g.globalAlpha = q.al;
-                        g.lineWidth = q.wd;
+                        if (q.c !== b) continue;
+                        const da = dt * (0.05 + 0.35 * pull / (q.r * 2 + 0.4)) * (0.5 + q.z);
+                        const dr = dt * 0.04 * pull * (0.4 + q.z);
+                        const pa = q.a;
+                        q.a += da;
+                        q.r -= dr;
+                        if (q.r * u < rh * 1.15) { this._vortexSpawn(q, false); continue; }
+                        const x = cx + Math.cos(q.a) * q.r * u, y = cy + Math.sin(q.a) * q.r * u;
+                        const px = cx + Math.cos(pa - da * 4) * (q.r + dr * 4) * u, py = cy + Math.sin(pa - da * 4) * (q.r + dr * 4) * u;
+                        const fade = Math.min(1, (q.r * u - rh * 1.15) / (rh * 1.5));
+                        g.globalAlpha = fade * (0.25 + 0.5 * q.z) * (0.8 + 0.2 * Math.sin(t * 4 + i)) * k;
+                        g.lineWidth = 0.6 + q.z * 1.1;
                         g.beginPath();
-                        g.moveTo(q.qx, q.qy);
-                        g.lineTo(q.px, q.py);
+                        g.moveTo(px, py);
+                        g.lineTo(x, y);
                         g.stroke();
                     }
                 }
@@ -2682,6 +2564,7 @@
         renderAiWarp(now) {
             if (!this.aiWarpActive || this.aiWarpStrength <= 0.01) return;
             if (this.aiWarpMode === 'ai_zero') return;
+            let vortexOverlay = false;
             const w = this.canvas.width, h = this.canvas.height;
             if (!w || !h) return;
 
@@ -2796,11 +2679,27 @@
                 gctx.fillStyle = auroraGrad;
                 gctx.fillRect(0, 0, w, h);
             }
-            // 6. VORTEX: whirlpool + black hole + heavy starfield (skips the universal chroma/tint passes so the hole stays black)
+            // 6. VORTEX: Centrifugal spiral black hole warp
             else if (mode === 'vortex') {
-                this.renderVortexBlackHole(now, w, h, s, t, bass, treble);
-                gctx.restore();
-                return;
+                const rings = 20 + Math.floor(s * 16);
+                const maxR = Math.min(w, h) * 0.55;
+                const ringW = maxR / rings;
+                const cx = w / 2, cy = h / 2;
+                gctx.drawImage(this.workCanvas, 0, 0);
+
+                for (let i = rings - 1; i >= 1; i--) {
+                    const r = i * ringW;
+                    const spinAngle = (1.0 - (r / maxR)) * (1.2 + s * 2.2) * Math.sin(t * 2.5);
+                    gctx.save();
+                    gctx.beginPath();
+                    gctx.arc(cx, cy, r, 0, Math.PI * 2);
+                    gctx.clip();
+                    gctx.translate(cx, cy);
+                    gctx.rotate(spinAngle);
+                    gctx.drawImage(this.workCanvas, -cx, -cy);
+                    gctx.restore();
+                }
+                vortexOverlay = true;
             }
             // 7. CYBERGRID: Digital matrix quantized isometric block shear
             else if (mode === 'cybergrid') {
@@ -3312,6 +3211,12 @@
             this.aiWarpHue = (this.videoPalette.hue * 0.4 + (now * 0.04) % 360 + (treble) * 160) % 360;
             gctx.fillStyle = `hsla(${this.aiWarpHue}, 85%, 55%, 1)`;
             gctx.fillRect(0, 0, w, h);
+
+            if (vortexOverlay) {
+                gctx.globalCompositeOperation = 'source-over';
+                gctx.globalAlpha = 1;
+                this.renderVortexOverlay(now, w, h, s, t, bass, treble);
+            }
 
             gctx.restore();
         }
