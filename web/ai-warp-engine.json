@@ -18,7 +18,7 @@
       0.75,
       1.0
     ],
-    "releaseNotes": "Legacy bundle: 34 voices; R3 Ghost Protocol and V-Sync v11; YouTube Warp Bus routes the live YouTube feed through all 29 warp modes and 34 voices; v6.3.1 adds the SVG Warp Lens (feTurbulence→feDisplacementMap) for per-pixel YouTube displacement; playback body classes now toggled; v6.4 adds getDisplayMedia Tab Capture — real pixels + real tab audio through the full Canvas engine. This separate legacy bundle does not include v6.4.27 full-app-frame B&W/Hue FX; use the current browser app at ../ai_warp_engine/index.html."
+    "releaseNotes": "Legacy bundle: 34 voices; R3 Ghost Protocol and V-Sync v11; YouTube Warp Bus routes the live YouTube feed through all 29 warp modes and 34 voices; v6.3.1 adds the SVG Warp Lens (feTurbulence→feDisplacementMap) for per-pixel YouTube displacement; playback body classes now toggled; v6.4 adds getDisplayMedia Tab Capture — real pixels + real tab audio through the full Canvas engine. This separate legacy bundle does not include v6.4.26/v6.4.27 full-app-frame B&W/Hue FX; use the current browser app at ../ai_warp_engine/index.html."
   },
   "tracks": [
     {

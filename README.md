@@ -26,7 +26,11 @@ AI WARP ENGINE takes a live source and runs it through a real-time Canvas effect
 - **Automation:** Auto Glitch, Continual Random, Automated Masters, Timed Automation, Wired mode, Soft-Eye and Crescendo.
 - **Presets:** 80 machine presets and your own saved user presets, with smooth cross-fades between them.
 
-### Full app-frame inversion (v6.4.27)
+### Hard locks and true LENS screenshots (v6.4.27)
+
+Release 6.4.27 makes locks hard and the screenshot true: voice locks and new Speed, Opacity, Ghost and V-Sync locks in the bottom controls are enforced every frame against Automated Masters, Continual Randomization, Timed Auto and presets; Freeze Frame (S) saves the full LENS canvas as an opaque PNG without the HUD or app frame, and the canvas no longer shrinks when zooming out (YouTube iframe pixels cannot be read by browsers - use local media, YT LENS or tab capture); Neon Gradient (core and GC#(3)) is a much stronger rotating ribbon with bloom and wash; GC#(3) ASCII streams a continual luminance-mapped character sheet; Twirl is slower and smoother.
+
+### Full app-frame inversion (v6.4.26)
 
 The B&W control now converts the final composition to grayscale and inverts it after all source and effect layers have rendered. Hue/Color Cycle similarly rotates the complete rendered spectrum. The compositor now covers the entire app viewport, including the captured YT LENS feed, initialization artwork, Raum X-R showcase, easter eggs, HUD, controls, dialogs and overlays. Both the browser app and the Windows WebView2 host share this implementation; native Windows title bars and frame chrome remain outside the web viewport. Hard Light stays limited to the effects canvas, and freeze-frame screenshots preserve the page-level color filter. Previous LENS tuning and automatic playlist extraction remain included.
 
@@ -178,7 +182,8 @@ The web app is plain HTML / JS / CSS, so you can also run it in any Chromium bro
 
 | Version | Highlights |
 |---------|------------|
-| v6.4.27 | B&W inversion and Hue rotation now cover the full app viewport, including its HUD and controls; freeze frames preserve the page filter |
+| v6.4.27 | Hard locks (voices + Speed/Opacity/Ghost/V-Sync) vs. all automation; true full-LENS PNG Freeze Frame without HUD; stronger Neon Gradient and continual GC#(3) ASCII; smoother Twirl |
+| v6.4.26 | B&W inversion and Hue rotation now cover the full app viewport, including its HUD and controls; freeze frames preserve the page filter |
 | v6.4.25 | Full-canvas grayscale inversion and Hue rotation cover the captured LENS picture, initialization art, Raum showcase and visual easter eggs |
 | v6.4.24 | LENS-aware B&W/Hue sliders activate paired voices with live previews; playlist playback and imports start automatic background extraction |
 | v6.4.23 | Protected built-in playlist entry, visible playable playlist cards, robust XML feed parsing, duplicate-request coalescing, and direct playback fallback |

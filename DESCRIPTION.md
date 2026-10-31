@@ -32,7 +32,9 @@ Takes a live source and runs it through a real-time Canvas effects pipeline, dri
 
 **Full-canvas LENS inversion (v6.4.25):** B&W applies grayscale and true inversion to the complete final composition, while Hue/Color Cycle rotates the full spectrum. Captured YT LENS frames, initialization art, Raum X-R artwork, captions and visual easter eggs receive the same image-wide transformation.
 
-**Full app-frame B&W/Hue FX (v6.4.27):** the same adjustable inversion and Hue rotation now run over the entire page/app viewport, including the LENS picture, HUD, controls, dialogs and overlays in the app-matched browser edition and Windows WebView2 host. Hard Light remains canvas-only; freeze-frame exports preserve the viewport filter. Native Windows title bars and frame chrome remain outside the web viewport.
+**Hard locks & true LENS screenshots (v6.4.27):** Release 6.4.27 makes locks hard and the screenshot true: voice locks and new Speed, Opacity, Ghost and V-Sync locks in the bottom controls are enforced every frame against Automated Masters, Continual Randomization, Timed Auto and presets; Freeze Frame (S) saves the full LENS canvas as an opaque PNG without the HUD or app frame, and the canvas no longer shrinks when zooming out (YouTube iframe pixels cannot be read by browsers - use local media, YT LENS or tab capture); Neon Gradient (core and GC#(3)) is a much stronger rotating ribbon with bloom and wash; GC#(3) ASCII streams a continual luminance-mapped character sheet; Twirl is slower and smoother.
+
+**Full app-frame B&W/Hue FX (v6.4.26):** the same adjustable inversion and Hue rotation now run over the entire page/app viewport, including the LENS picture, HUD, controls, dialogs and overlays in the app-matched browser edition and Windows WebView2 host. Hard Light remains canvas-only; freeze-frame exports preserve the viewport filter. Native Windows title bars and frame chrome remain outside the web viewport.
 
 ## RAUM · X-R
 
@@ -54,7 +56,8 @@ Enable the DROP THE MILK? toolbar button or press `D`. The effect composites a s
 - **v6.4.23** — Fixed playlist vault visibility and extraction handling; pinned the featured playlist and added direct playback fallback.
 - **v6.4.24** — Made B&W/Hue tuning visibly affect the LENS Canvas and automated playlist extraction on playback/import.
 - **v6.4.25** — Applied full-canvas grayscale inversion and Hue rotation to the complete LENS composition and artwork.
-- **v6.4.27** — Extended adjustable B&W inversion and Hue rotation to the complete browser/app viewport, including UI; preserved the effect in freeze-frame screenshots.
+- **v6.4.27** — Hard locks for voices and Speed/Opacity/Ghost/V-Sync, true HUD-free full-LENS PNG freeze frames, stronger Neon Gradient and continual ASCII GC#(3), smoother Twirl.
+- **v6.4.26** — Extended adjustable B&W inversion and Hue rotation to the complete browser/app viewport, including UI; preserved the effect in freeze-frame screenshots.
 - **v6.4.22** — Added bottom-dock B&W/Hue fine-tuning with locks, random rolls and variable Auto Glitch selection during board/preset randomization.
 - **v6.4.21** — While a Raum X-R track plays, the main canvas runs the cover artwork as a slideshow with exclusive audio-aware glitch sequences and a hidden signature easter egg.
 - **v6.4.20** — Replaced the Pole · R showcase with four original synthesized Raum X-R tracks (two jungle/breakcore, two ambient), bundled for offline, audio-reactive playback with cover art, back cover and full credits.
