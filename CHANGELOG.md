@@ -2,6 +2,13 @@
 
 Standalone Windows app releases. Full notes per release are in the `RELEASE_NOTES_*.md` files.
 
+## 6.4.27 — Hard locks, true LENS screenshots, stronger Neon/ASCII
+- Freeze Frame now saves the full LENS canvas as an opaque PNG without HUD; canvas sizing no longer shrinks when zoomed out (DPR clamped, ResizeObserver).
+- Voice, Speed, Opacity, Ghost and V-Sync locks are enforced every frame against Automated Masters, Continual Randomization, Timed Auto and presets.
+- New Speed, Opacity and Ghost lock buttons in the bottom controls.
+- Neon Gradient is a rotating multi-stop ribbon with bloom and full-frame wash; GC#(3) ASCII now streams a continual luminance-mapped character sheet.
+- Twirl warp is slower, eased and smoother.
+
 ## 6.4.26 — Full app-frame B&W and Hue FX
 - Extended adjustable grayscale/inversion and Hue rotation to the entire app viewport, including the HUD and controls, in the browser edition and Windows WebView2 host.
 - Kept Hard Light limited to the effects canvas and updated freeze-frame capture to preserve the viewport color treatment.

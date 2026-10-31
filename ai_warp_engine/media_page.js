@@ -2805,6 +2805,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 lockBtn.onclick = () => {
                     aiWarp.effectLocks[name] = !aiWarp.effectLocks[name];
                     const isLocked = !!aiWarp.effectLocks[name];
+                    if (isLocked) aiWarp.snapshotVoiceLock(name);
                     lockBtn.textContent = isLocked ? '🔒' : '🔓';
                     lockBtn.classList.toggle('locked', isLocked);
                     showHudNotification(`VOICE [${name}] ${isLocked ? 'LOCKED (IMMUNE TO AUTO)' : 'UNLOCKED'}`);
@@ -3035,6 +3036,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             vsyncSlider.value = aiWarp.vsyncLevel;
             if (vsyncValBadge) vsyncValBadge.textContent = `${Math.round(aiWarp.vsyncLevel * 100)}%`;
         }
+        [['speedLockBtn', aiWarp.masterLocks.speed], ['opacityLockBtn', aiWarp.masterLocks.opacity], ['ghostLockBtn', aiWarp.masterLocks.ghost], ['vsyncLockBtn', aiWarp.vsyncLocked]].forEach(([id, on]) => {
+            const b = document.getElementById(id);
+            if (b) { b.textContent = on ? '🔒' : '🔓'; b.classList.toggle('locked', !!on); }
+        });
     }
 
     /* ── 9. MASTER DOCK BUTTONS & CONTROLS WIRING ───────────────────────── */
@@ -3318,6 +3323,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (nullSpeedBtn) {
         nullSpeedBtn.onclick = () => {
             aiWarp.glitchSpeed = 0.1;
+            aiWarp.snapshotMasterLocks(['speed']);
             syncUiFromEngine();
             showHudNotification('SPEED: 0.1x (ZEROED)');
         };
@@ -3327,6 +3333,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (nullOpacityBtn) {
         nullOpacityBtn.onclick = () => {
             aiWarp.masterOpacity = 0.0;
+            aiWarp.snapshotMasterLocks(['opacity']);
             syncUiFromEngine();
             showHudNotification('OPACITY: 0% (ZEROED)');
         };
@@ -3337,6 +3344,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         nullGhostBtn.onclick = () => {
             aiWarp.setGhostLevel(0.0);
             aiWarp.ghostModeIndex = 0;
+            aiWarp.snapshotMasterLocks(['ghost']);
             syncUiFromEngine();
             showHudNotification('GHOST LEVEL: 0% (ZEROED)');
         };
@@ -3369,12 +3377,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (vsyncLockBtn) {
         vsyncLockBtn.onclick = () => {
-            aiWarp.vsyncLocked = !aiWarp.vsyncLocked;
+            aiWarp.setMasterLock('vsync', !aiWarp.vsyncLocked);
             vsyncLockBtn.textContent = aiWarp.vsyncLocked ? '🔒' : '🔓';
             vsyncLockBtn.classList.toggle('locked', aiWarp.vsyncLocked);
             showHudNotification(`V-SYNC ${aiWarp.vsyncLocked ? 'LOCKED' : 'UNLOCKED'}`);
         };
     }
+    [['speed', 'speedLockBtn', 'SPEED'], ['opacity', 'opacityLockBtn', 'OPACITY'], ['ghost', 'ghostLockBtn', 'GHOST']].forEach(([key, id, label]) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.onclick = () => {
+            aiWarp.setMasterLock(key, !aiWarp.masterLocks[key]);
+            const on = !!aiWarp.masterLocks[key];
+            btn.textContent = on ? '🔒' : '🔓';
+            btn.classList.toggle('locked', on);
+            showHudNotification(`${label} ${on ? 'LOCKED (IMMUNE TO AUTO)' : 'UNLOCKED'}`);
+        };
+    });
     if (milkdropOpacityLockBtn) {
         milkdropOpacityLockBtn.onclick = () => {
             aiWarp.milkdropOpacityLocked = !aiWarp.milkdropOpacityLocked;
@@ -3483,6 +3502,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (speedSlider) {
         speedSlider.oninput = () => {
             aiWarp.glitchSpeed = parseFloat(speedSlider.value);
+            aiWarp.snapshotMasterLocks(['speed']);
             if (speedValBadge) speedValBadge.textContent = `${aiWarp.glitchSpeed.toFixed(1)}x`;
         };
     }
@@ -3490,6 +3510,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (opacitySlider) {
         opacitySlider.oninput = () => {
             aiWarp.masterOpacity = parseFloat(opacitySlider.value);
+            aiWarp.snapshotMasterLocks(['opacity']);
             if (opacityValBadge) opacityValBadge.textContent = `${Math.round(aiWarp.masterOpacity * 100)}%`;
         };
     }
@@ -3504,6 +3525,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else if (val <= 0.02) {
                 aiWarp.setGhostMode('OFF');
             }
+            aiWarp.snapshotMasterLocks(['ghost']);
             syncUiFromEngine();
         };
     }
@@ -3518,6 +3540,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else if (val <= 0.02) {
                 aiWarp.setVsyncMode('OFF');
             }
+            aiWarp.snapshotMasterLocks(['vsync']);
             syncUiFromEngine();
         };
     }
@@ -3780,39 +3803,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (freezeFrameBtn) {
         freezeFrameBtn.onclick = () => {
             const mainCanvas = document.getElementById('glitchCanvas');
-            if (window.html2canvas) {
-                    const pageFilter = window.getComputedStyle(document.documentElement).filter;
-                    html2canvas(document.body, {
-                        backgroundColor: null,
-                        useCORS: true,
-                        onclone: clonedDocument => {
-                            clonedDocument.documentElement.style.filter = 'none';
-                        }
-                    }).then(canvas => {
-                        downloadCanvas(canvas, pageFilter);
-                    }).catch(() => {
-                        if (mainCanvas) downloadCanvas(mainCanvas, pageFilter);
-                    });
-                } else if (mainCanvas) {
+            if (mainCanvas) {
+                try {
                     downloadCanvas(mainCanvas, window.getComputedStyle(document.documentElement).filter);
+                    showHudNotification('FREEZE FRAME 📷 // FULL LENS PNG CAPTURED (NO HUD)');
+                } catch (err) {
+                    showHudNotification('FREEZE FRAME FAILED: ' + (err && err.message ? err.message : err));
                 }
-            showHudNotification('FREEZE FRAME 📷 // SCREENSHOT CAPTURED');
+            }
         };
     }
 
     function downloadCanvas(canvas, pageFilter = 'none') {
         const canvasFilter = window.getComputedStyle(canvas).filter;
         const filter = [canvasFilter, pageFilter].filter(value => value && value !== 'none').join(' ');
-        if (filter && filter !== 'none') {
-            const filteredCanvas = document.createElement('canvas');
-            filteredCanvas.width = canvas.width;
-            filteredCanvas.height = canvas.height;
-            const context = filteredCanvas.getContext('2d');
-            if (!context) throw new Error('Could not create a canvas context for the filtered screenshot.');
-            context.filter = filter;
-            context.drawImage(canvas, 0, 0);
-            canvas = filteredCanvas;
-        }
+        const out = document.createElement('canvas');
+        out.width = canvas.width;
+        out.height = canvas.height;
+        const context = out.getContext('2d');
+        if (!context) throw new Error('Could not create a canvas context for the screenshot.');
+        context.fillStyle = '#020307';
+        context.fillRect(0, 0, out.width, out.height);
+        if (filter) context.filter = filter;
+        context.drawImage(canvas, 0, 0);
+        canvas = out;
         const link = document.createElement('a');
         link.download = `ai-warp-freeze-frame-${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');

@@ -1,9 +1,9 @@
 # AI WARP ENGINE — User Manual
 
-**Applies to:** AI WARP ENGINE standalone Windows app, release 6.4.26
+**Applies to:** AI WARP ENGINE standalone Windows app, release 6.4.27
 **Platform:** Windows 10/11 x64
 
-AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media source, then layer AI Warp modes, glitch voices, Ghost Protocol, V-Sync and audio-reactive automation over it. Release 6.4.26 extends adjustable B&W inversion and Hue rotation across the complete app viewport, including the HUD, controls, dialogs and overlays, and preserves those treatments in freeze-frame screenshots. Release 6.4.25 applies them to the complete LENS composition, including captured frames, initialization art, the Raum X-R showcase and visual easter eggs. Release 6.4.24 makes bottom-dock B&W/Hue tuning activate the paired voices on the LENS Canvas and starts playlist extraction automatically during playback/import. Release 6.4.23 improves YouTube playlist visibility and feed extraction. Release 6.4.22 adds locked B&W/Hue fine-tuning and randomized automation rolls. Release 6.4.21 runs the Raum cover artwork as a slideshow with exclusive glitch sequences while those tracks play. Release 6.4.20 adds the bundled RAUM · X-R showcase of four original tracks. Release 6.4.19 added the subtle-blend DROP THE MILK? feedback effect and audio-aware YouTube playlist playback in the standalone YT LENS.
+AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media source, then layer AI Warp modes, glitch voices, Ghost Protocol, V-Sync and audio-reactive automation over it. Release 6.4.27 extends adjustable B&W inversion and Hue rotation across the complete app viewport, including the HUD, controls, dialogs and overlays, and preserves those treatments in freeze-frame screenshots. Release 6.4.25 applies them to the complete LENS composition, including captured frames, initialization art, the Raum X-R showcase and visual easter eggs. Release 6.4.24 makes bottom-dock B&W/Hue tuning activate the paired voices on the LENS Canvas and starts playlist extraction automatically during playback/import. Release 6.4.23 improves YouTube playlist visibility and feed extraction. Release 6.4.22 adds locked B&W/Hue fine-tuning and randomized automation rolls. Release 6.4.21 runs the Raum cover artwork as a slideshow with exclusive glitch sequences while those tracks play. Release 6.4.20 adds the bundled RAUM · X-R showcase of four original tracks. Release 6.4.19 added the subtle-blend DROP THE MILK? feedback effect and audio-aware YouTube playlist playback in the standalone YT LENS.
 
 ## Contents
 
@@ -20,7 +20,7 @@ AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media sourc
 
 ## Install and launch
 
-1. Download and run `AI-WARP-ENGINE-6.4.26-x64-setup.exe` from the [v6.4.26 GitHub release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.26).
+1. Download and run `AI-WARP-ENGINE-6.4.27-x64-setup.exe` from the [v6.4.27 GitHub release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.27).
 2. Run the installer and accept the licence terms. It installs for the current user and does not require administrator access.
 3. Launch **AI WARP ENGINE** from the desktop shortcut or Start Menu.
 
@@ -181,7 +181,7 @@ The preset browser provides machine presets and saved user presets. Load a prese
 
 ## B&W and Hue fine-tuning
 
-The bottom control dock has separate **B&W INVERT** strength and **HUE SPECTRUM** sliders with live previews. Adjusting either slider activates its matching core and GC#(3) voices. In v6.4.26 the final adjustable grayscale/inversion and Hue rotation are applied to the entire app viewport after composition, so the picture, HUD, controls, dialogs and overlays are all included. Hard Light remains limited to the effects canvas; freeze-frame screenshots retain the full-page B&W/Hue treatment. The final pass includes captured LENS frames, initialization artwork, Raum X-R slideshow artwork, captions and the reversed-Я easter egg. Lock either setting to protect it from randomization and preset automation. **ROLL FX** randomizes only unlocked settings; board randomization and each preset auto-cycle also reroll unlocked settings and independently choose Auto Glitch ON or OFF with equal probability. Values and lock preferences persist on this device. The core voices and their GC#(3) counterparts remain independently controllable; automation chooses them as complementary pairs with subtle rendering differences.
+The bottom control dock has separate **B&W INVERT** strength and **HUE SPECTRUM** sliders with live previews. Adjusting either slider activates its matching core and GC#(3) voices. In v6.4.27 the final adjustable grayscale/inversion and Hue rotation are applied to the entire app viewport after composition, so the picture, HUD, controls, dialogs and overlays are all included. Hard Light remains limited to the effects canvas; freeze-frame screenshots retain the full-page B&W/Hue treatment. The final pass includes captured LENS frames, initialization artwork, Raum X-R slideshow artwork, captions and the reversed-Я easter egg. Lock either setting to protect it from randomization and preset automation. **ROLL FX** randomizes only unlocked settings; board randomization and each preset auto-cycle also reroll unlocked settings and independently choose Auto Glitch ON or OFF with equal probability. Values and lock preferences persist on this device. The core voices and their GC#(3) counterparts remain independently controllable; automation chooses them as complementary pairs with subtle rendering differences.
 
 ## YouTube playlists and extraction
 
@@ -251,10 +251,10 @@ Press `Z` to clear/reset effect levels, then re-enable only the modes and voices
 
 ## Release and project files
 
-- Current standalone release: AI WARP ENGINE 6.4.26
+- Current standalone release: AI WARP ENGINE 6.4.27
 - [README and project overview](README.md)
 - [Short project description](DESCRIPTION.md)
-- [6.4.26 release notes](RELEASE_NOTES_6.4.26.md)
+- [6.4.27 release notes](RELEASE_NOTES_6.4.27.md)
 - [6.4.24 release notes and installer checksum](RELEASE_NOTES_6.4.24.md)
 - [6.4.23 release notes and installer checksum](RELEASE_NOTES_6.4.23.md)
 - [6.4.22 release notes and installer checksum](RELEASE_NOTES_6.4.22.md)

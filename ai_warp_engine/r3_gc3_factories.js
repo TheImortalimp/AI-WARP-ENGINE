@@ -522,9 +522,9 @@
                 const paintBloom = (x, y, r, hue, a) => {
                     if (a <= 0.004 || r < 2) return;
                     const g = gctx.createRadialGradient(x, y, 0, x, y, r);
-                    g.addColorStop(0.00, fxHsla(hue, 62, 78, Math.min(0.55, a * 0.50)));
-                    g.addColorStop(0.22, fxHsla(hue, 58, 66, a * 0.26));
-                    g.addColorStop(0.55, fxHsla(hue, 52, 56, a * 0.12));
+                    g.addColorStop(0.00, fxHsla(hue, 62, 78,                     Math.min(0.85, a * 0.85)));
+                                        g.addColorStop(0.22, fxHsla(hue, 62, 66, a * 0.46));
+                                        g.addColorStop(0.55, fxHsla(hue, 56, 56, a * 0.22));
                     g.addColorStop(1.00, fxHsla(hue, 50, 50, 0));
                     gctx.fillStyle = g;
                     gctx.fillRect(x - r, y - r, r * 2, r * 2);
@@ -583,7 +583,7 @@
                         const gx1 = cx + Math.cos(ang) * L, gy1 = cy + Math.sin(ang) * L;
                         const rib = gctx.createLinearGradient(gx0, gy0, gx1, gy1);
                         const n = au.ribbons;
-                        const ribA = Math.min(0.34, a * 0.62) * (0.7 + 0.3 * FX_ENS.breath);
+                        const ribA = Math.min(0.62, a * 1.0) * (0.78 + 0.22 * FX_ENS.breath);
                         const stops = 24;
                         for (let i = 0; i <= stops; i++) {
                             const u = i / stops;
@@ -615,7 +615,7 @@
                        radial veil whose five stops walk the hue ring from the
                        chord root (root + k*72°) — the old symmetric spectrum,
                        breathing with the ensemble, capped whisper-soft. */
-                    const veilA = Math.min(0.14, a * 0.30) * (0.55 + 0.45 * FX_ENS.breath) *
+                    const veilA = Math.min(0.30, a * 0.55) * (0.65 + 0.35 * FX_ENS.breath) *
                         R16.neonVeil() * (0.75 + 0.45 * (nf.veil || 0.12) / 0.20);
                     if (veilA > 0.004) {
                         const vg = gctx.createRadialGradient(x1, y1, 0, x1, y1, Math.max(w, h) * 0.85);
@@ -631,6 +631,10 @@
                         gctx.fillRect(0, 0, w, h);
                     }
                     gctx.filter = 'none';
+                    /* v6.4.27 colour wash: tints the whole composition so Neon Grad reads clearly */
+                    gctx.globalCompositeOperation = 'overlay';
+                    gctx.fillStyle = fxHsla(h0, 85, 52, Math.min(0.42, a * 0.55));
+                    gctx.fillRect(0, 0, w, h);
                     gctx.restore();
                 };
                 return isPersistent ? renderFn : createTimedEffect(renderFn);
@@ -928,6 +932,81 @@
                 }
             }
 
+            /* v6.4.27 CONTINUAL ASCII SHEET: a full-frame character sheet derived from
+               the live canvas (source + voices) luminance, mapped onto a density ramp
+               and the glyph atlas. When the canvas is transparent (YouTube iframe) or
+               unreadable, a flowing procedural field keeps the stream running. */
+            const ASCII_SHEET = { cv: null, cx: null, cols: 0, rows: 0, lum: null, cov: 0, sampledAt: -1e9, ramp: null };
+            function paintAsciiSheet(w, h, s, master, baseHue, now) {
+                const budget = Math.min(renderBudget.asciiCells, 7000);
+                const sp = Math.max(9, Math.round(Math.sqrt((w * h) / budget)));
+                const cols = Math.max(4, Math.ceil(w / sp)), rows = Math.max(4, Math.ceil(h / sp));
+                const S = ASCII_SHEET;
+                if (!S.cv && root.document && root.document.createElement) {
+                    S.cv = root.document.createElement('canvas');
+                    S.cx = S.cv.getContext('2d', { willReadFrequently: true });
+                }
+                if (!S.ramp) {
+                    const alpha = (atlas.chars || []).filter((c) => /[A-Z0-9@#$%&*+=<>?|]/.test(c));
+                    S.ramp = ['.', ':', '-', '~', '=', '+', '*', 'x', '#', '%', '@'].concat(['░', '▒', '▓', '█']);
+                    S.alpha = alpha.length ? alpha : ['0', '1'];
+                }
+                if (S.cols !== cols || S.rows !== rows || !S.lum) {
+                    S.cols = cols; S.rows = rows;
+                    S.lum = new Float32Array(cols * rows);
+                    S.sampledAt = -1e9;
+                    if (S.cv) { S.cv.width = cols; S.cv.height = rows; }
+                }
+                if (S.cx && now - S.sampledAt > 90) {
+                    S.sampledAt = now;
+                    try {
+                        S.cx.clearRect(0, 0, cols, rows);
+                        S.cx.drawImage(mainCanvas, 0, 0, cols, rows);
+                        const px = S.cx.getImageData(0, 0, cols, rows).data;
+                        let covered = 0;
+                        for (let i = 0, n = cols * rows; i < n; i++) {
+                            const a = px[i * 4 + 3] / 255;
+                            S.lum[i] = a > 0.05 ? (0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]) / 255 : -1;
+                            if (a > 0.05) covered++;
+                        }
+                        S.cov = covered / (cols * rows);
+                    } catch (e) { S.cov = 0; }
+                }
+                const t = now * 0.001;
+                const tick = Math.floor(now / 140);
+                const ramp = S.ramp, rl = ramp.length - 1;
+                const hue = fxLerpHue(videoPalette.hue, baseHue, 0.5);
+                const aBase = Math.min(0.85, master * 0.9) * (0.6 + 0.4 * s);
+                const LEVELS = 6;
+                const buckets = [];
+                for (let k = 0; k < LEVELS; k++) buckets.push([]);
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const i = r * cols + c;
+                        let L = S.cov > 0.25 ? S.lum[i] : -1;
+                        if (L < 0) {
+                            L = 0.5 + 0.28 * Math.sin(c * 0.23 + t * 1.3) + 0.22 * Math.sin(r * 0.31 - t * 0.9 + c * 0.07);
+                        }
+                        L = clamp01(L * (0.8 + 0.4 * beat));
+                        if (L < 0.12) continue;
+                        const seed = ((c * 131 + r * 337 + tick * 53) % 997) / 997;
+                        const ch = seed < 0.1 * (0.4 + L) ? S.alpha[(c * 7 + r * 13 + tick) % S.alpha.length] : ramp[Math.min(rl, (L * rl) | 0)];
+                        buckets[Math.min(LEVELS - 1, (L * LEVELS) | 0)].push(ch, c * sp, r * sp);
+                    }
+                }
+                gctx.save();
+                gctx.textBaseline = 'top';
+                gctx.font = 'bold ' + Math.max(8, sp - 1) + 'px "Courier New", monospace';
+                for (let k = 0; k < LEVELS; k++) {
+                    const list = buckets[k];
+                    if (!list.length) continue;
+                    const lv = (k + 1) / LEVELS;
+                    gctx.fillStyle = fxHsla((hue + k * 7) % 360, 78, 38 + lv * 40, aBase * (0.35 + 0.65 * lv));
+                    for (let j = 0; j < list.length; j += 3) gctx.fillText(list[j], list[j + 1], list[j + 2]);
+                }
+                gctx.restore();
+            }
+
             function glitchASCIIArtOverlayFactory(getStrength, isPersistent) {
                 /* R1.3 STYLE ROTOR (user request): this voice rotates HEAVILY
                    between two souls — the final-006 full-grid rainbow
@@ -986,6 +1065,7 @@
                     const master = effectPaintAlpha('ASCII', s, comboProfile.glowMult || 1);
                     if (master <= 0.004) return;
                     const now = customTime;
+                    try { paintAsciiSheet(w, h, s, master, fxLerpHue(fxTone(0), 120, 0.55), now); } catch (e) {}
                     const dt = (lastT === null) ? 0.016 :
                         Math.max(0.001, Math.min(0.1, (now - lastT) / 1000));
                     lastT = now;

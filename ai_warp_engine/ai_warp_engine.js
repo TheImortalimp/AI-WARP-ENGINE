@@ -1,6 +1,6 @@
 ;/* ===== ai_warp_engine.js ===== */
 /**
- * AI WARP ENGINE — HYPER-INTEGRATED SYNTHESIS (v6.4.26-FULL-APP-FRAME-LENS-FX)
+ * AI WARP ENGINE — HYPER-INTEGRATED SYNTHESIS (v6.4.27-FULL-APP-FRAME-LENS-FX)
  *
  * 100% Fully Responsive, Robust & Animated:
  * - 📡 Tab Capture (getDisplayMedia): real pixels AND real audio from any shared tab
@@ -245,6 +245,9 @@
             this.effectTargets = {};
             this.effectRetargetAt = {};
             this.effectLocks = {};
+            this.voiceLockSnap = {};
+            this.masterLocks = { speed: false, opacity: false, ghost: false };
+            this.masterLockSnap = {};
             this.voiceFxSettings = { bwInvert: 1, hueOffset: 0 };
             this.voiceFxLocks = { bwInvert: false, hueOffset: false };
             // Automation-owned selections form core/R3 confluence pairs. They are
@@ -316,6 +319,8 @@
 
         initInteraction() {
             window.addEventListener('resize', () => this.resize());
+            if (window.visualViewport) window.visualViewport.addEventListener('resize', () => this.resize());
+            if (window.ResizeObserver) new ResizeObserver(() => this.resize()).observe(this.canvas);
             window.addEventListener('mousemove', (e) => {
                 const nx = e.clientX / Math.max(1, window.innerWidth);
                 const ny = 1.0 - (e.clientY / Math.max(1, window.innerHeight));
@@ -327,9 +332,10 @@
         }
 
         resize() {
-            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
             const w = this.canvas.clientWidth || window.innerWidth;
             const h = this.canvas.clientHeight || window.innerHeight;
+            if (w < 2 || h < 2) return;
             if (this.canvas.width !== Math.round(w * dpr) || this.canvas.height !== Math.round(h * dpr)) {
                 this.canvas.width = Math.round(w * dpr);
                 this.canvas.height = Math.round(h * dpr);
@@ -708,7 +714,7 @@
                 case 'newblue_wiggle':      bfX = 0.012;  bfY = 0.012;  amp = 44; break;
                 case 'newblue_zoom_blur':   bfX = 0.004;  bfY = 0.004;  amp = 38; break;
                 case 'newblue_video_tile':  bfX = 0.03;   bfY = 0.03;   amp = 30; type = 'turbulence'; break;
-                case 'newblue_twirl':       bfX = 0.007;  bfY = 0.007;  amp = 50; break;
+                case 'newblue_twirl':       bfX = 0.004;  bfY = 0.004;  amp = 30; break;
                 case 'newblue_light_ring':  bfX = 0.006;  bfY = 0.02;   amp = 42; break;
                 case 'newblue_earthquake':  bfX = 0.04;   bfY = 0.04;   amp = 86; type = 'turbulence'; break;
                 case 'newblue_water_drop':  bfX = 0.01;   bfY = 0.03;   amp = 54; break;
@@ -763,6 +769,7 @@
                 this.effectAlphas[name] = 0;
                 this.effectUserLevel[name] = 0;
             }
+            this.snapshotVoiceLock(name);
         }
 
         toggleEffect(name) {
@@ -784,16 +791,19 @@
             } else {
                 this.effectUserDisabled[name] = false;
             }
+            this.snapshotVoiceLock(name);
         }
 
         setEffectSize(name, value) {
             if (!this.effectNames.includes(name)) return;
             this.effectSizes[name] = clamp(parseFloat(value) || 1.0, 0.2, 3.0);
+            this.snapshotVoiceLock(name);
         }
 
         setEffectDepth(name, value) {
             if (!this.effectNames.includes(name)) return;
             this.effectDepths[name] = clamp01(parseFloat(value) || 0.62);
+            this.snapshotVoiceLock(name);
         }
 
         setEffectParam(name, param, value) {
@@ -856,6 +866,67 @@
         isAutomationEligible(name, respectUserDisabled = true) {
             return this.effectNames.includes(name) && !this.effectLocks[name] &&
                 (!respectUserDisabled || !this.effectUserDisabled[name]);
+        }
+
+        /* ── HARD LOCKS (v6.4.27) ────────────────────────────────────────────
+           A locked voice or master keeps its exact level/size/depth/state no
+           matter which automation (Continual Random, Timed Auto, Automated
+           Masters, Soft-Eye, presets, board rolls) tries to move it. Manual
+           edits update the held value. */
+        snapshotVoiceLock(name) {
+            if (!this.effectLocks[name]) { delete this.voiceLockSnap[name]; return; }
+            this.voiceLockSnap[name] = {
+                alpha: this.effectAlphas[name], level: this.effectUserLevel[name],
+                enabled: this.effectEnabled[name], disabled: this.effectUserDisabled[name],
+                size: this.effectSizes[name], depth: this.effectDepths[name]
+            };
+        }
+
+        snapshotMasterLocks(keys = ['speed', 'opacity', 'ghost', 'vsync']) {
+            keys.forEach(key => {
+                const locked = key === 'vsync' ? this.vsyncLocked : this.masterLocks[key];
+                if (!locked) { delete this.masterLockSnap[key]; return; }
+                if (key === 'speed') this.masterLockSnap.speed = this.glitchSpeed;
+                else if (key === 'opacity') this.masterLockSnap.opacity = this.masterOpacity;
+                else if (key === 'ghost') this.masterLockSnap.ghost = { mode: this.ghostModeIndex, level: this.ghostLevel };
+                else if (key === 'vsync') this.masterLockSnap.vsync = { mode: this.vsyncModeIndex, level: this.vsyncLevel };
+            });
+        }
+
+        setMasterLock(key, locked) {
+            if (key === 'vsync') this.vsyncLocked = !!locked;
+            else if (key in this.masterLocks) this.masterLocks[key] = !!locked;
+            else return;
+            this.snapshotMasterLocks([key]);
+        }
+
+        enforceLocks() {
+            for (let i = 0; i < this.effectNames.length; i++) {
+                const name = this.effectNames[i];
+                if (!this.effectLocks[name]) {
+                    if (this.voiceLockSnap[name]) delete this.voiceLockSnap[name];
+                    continue;
+                }
+                const snap = this.voiceLockSnap[name];
+                if (!snap) { this.snapshotVoiceLock(name); continue; }
+                this.effectAlphas[name] = snap.alpha;
+                this.effectTargets[name] = snap.alpha;
+                this.effectUserLevel[name] = snap.level;
+                this.effectEnabled[name] = snap.enabled;
+                this.effectUserDisabled[name] = snap.disabled;
+                this.effectSizes[name] = snap.size;
+                this.effectDepths[name] = snap.depth;
+            }
+            ['speed', 'opacity', 'ghost', 'vsync'].forEach(key => {
+                const locked = key === 'vsync' ? this.vsyncLocked : this.masterLocks[key];
+                if (!locked) { delete this.masterLockSnap[key]; return; }
+                const snap = this.masterLockSnap[key];
+                if (snap === undefined) { this.snapshotMasterLocks([key]); return; }
+                if (key === 'speed') { this.glitchSpeed = snap; this.targetGlitchSpeed = snap; }
+                else if (key === 'opacity') { this.masterOpacity = snap; this.targetMasterOpacity = snap; }
+                else if (key === 'ghost') { this.ghostModeIndex = snap.mode; this.ghostLevel = snap.level; }
+                else if (key === 'vsync') { this.vsyncModeIndex = snap.mode; this.vsyncLevel = snap.level; }
+            });
         }
 
         /* Select a complementary pair whenever both banks are available. Every
@@ -966,7 +1037,7 @@
             if (preset.locks) {
                 this.effectNames.forEach(name => {
                     const base = this.baseEffectName(name);
-                    this.effectLocks[name] = !!(preset.locks[name] || (this.isGC3Effect(name) && preset.locks[base]));
+                    this.effectLocks[name] = !!this.effectLocks[name] || !!(preset.locks[name] || (this.isGC3Effect(name) && preset.locks[base]));
                 });
             }
             const toggles = preset.toggles || {};
@@ -1044,6 +1115,7 @@
             this.continualSelection = [];
             this.nextContinualSelectionAt = 0;
             this.effectNames.forEach(name => {
+                if (this.effectLocks[name]) return;
                 this.effectAlphas[name] = 0;
                 this.effectEnabled[name] = false;
                 this.effectUserDisabled[name] = true;
@@ -1611,6 +1683,7 @@
 
             // 1. Cross-fade 17 Voice Alphas
             this.effectNames.forEach(fx => {
+                if (this.effectLocks[fx]) return;
                 const a0 = tr.startAlphas[fx] !== undefined ? tr.startAlphas[fx] : 0;
                 const a1 = tr.targetAlphas[fx] !== undefined ? tr.targetAlphas[fx] : 0;
                 const cur = a0 + (a1 - a0) * ease;
@@ -1645,6 +1718,7 @@
                 tr.active = false;
                 // Lock exact target values
                 this.effectNames.forEach(fx => {
+                    if (this.effectLocks[fx]) return;
                     const finalVal = tr.targetAlphas[fx] !== undefined ? tr.targetAlphas[fx] : 0;
                     this.effectAlphas[fx] = finalVal;
                     this.effectEnabled[fx] = finalVal > 0.005;
@@ -1671,6 +1745,7 @@
             if (preset.alphas) {
                 const resolvedAlphas = this.resolvePresetAlphas(preset);
                 this.effectNames.forEach(fx => {
+                    if (this.effectLocks[fx]) return;
                     const val = resolvedAlphas[fx] !== undefined ? resolvedAlphas[fx] : 0;
                     this.effectAlphas[fx] = val;
                     this.effectUserLevel[fx] = 1.0;
@@ -1956,14 +2031,30 @@
                         const dp = self.depthFor('Neon Grad');
                         const w = self.canvas.width, h = self.canvas.height;
                         const t = performance.now() * 0.001 * (0.8 + sz * 0.4);
+                        const a = clamp01(0.78 * s * dp * self.masterOpacity);
                         gctx.save();
                         gctx.globalCompositeOperation = 'screen';
-                        const grad = gctx.createLinearGradient(0, 0, w, h);
+                        const ang = t * 0.35;
+                        const L = Math.max(w, h) * 0.75;
+                        const grad = gctx.createLinearGradient(w / 2 - Math.cos(ang) * L, h / 2 - Math.sin(ang) * L, w / 2 + Math.cos(ang) * L, h / 2 + Math.sin(ang) * L);
                         const h1 = (t * 26) % 360;
-                        const h2 = (h1 + 120 + sz * 30) % 360;
-                        grad.addColorStop(0, `hsla(${h1}, 100%, 50%, ${0.45 * s * dp * self.masterOpacity})`);
-                        grad.addColorStop(1, `hsla(${h2}, 100%, 50%, ${0.45 * s * dp * self.masterOpacity})`);
+                        const stops = 6;
+                        for (let i = 0; i <= stops; i++) {
+                            const crest = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(i * 1.7 - t * 1.4));
+                            grad.addColorStop(i / stops, `hsla(${(h1 + i * (60 + sz * 15)) % 360}, 100%, 55%, ${a * crest})`);
+                        }
                         gctx.fillStyle = grad;
+                        gctx.fillRect(0, 0, w, h);
+                        // Soft orbiting bloom plus an overlay wash so the colour reaches the whole composition
+                        const bx = w * (0.5 + 0.28 * Math.cos(t * 0.6)), by = h * (0.5 + 0.28 * Math.sin(t * 0.8));
+                        const br = Math.max(w, h) * (0.45 + 0.15 * sz);
+                        const bloom = gctx.createRadialGradient(bx, by, 0, bx, by, br);
+                        bloom.addColorStop(0, `hsla(${(h1 + 180) % 360}, 100%, 60%, ${a * 0.65})`);
+                        bloom.addColorStop(1, `hsla(${(h1 + 180) % 360}, 100%, 50%, 0)`);
+                        gctx.fillStyle = bloom;
+                        gctx.fillRect(0, 0, w, h);
+                        gctx.globalCompositeOperation = 'overlay';
+                        gctx.fillStyle = `hsla(${(h1 + 60) % 360}, 100%, 50%, ${a * 0.55})`;
                         gctx.fillRect(0, 0, w, h);
                         gctx.restore();
                     };
@@ -2770,15 +2861,19 @@
             }
             // 19. TWIRL: NewBlue Polar Twirl continuous vortex spiral twisting canvas pixels
             else if (mode === 'newblue_twirl') {
-                const rings = 26;
+                const rings = 34;
                 const maxR = Math.min(w, h) * 0.55;
                 const rw = maxR / rings;
                 const cx = w / 2, cy = h / 2;
                 gctx.drawImage(this.workCanvas, 0, 0);
-                const maxTwist = (1.5 + s * 3.5 + mid * 2.0) * Math.sin(t * 2.0);
+                // Slow, eased breathing twist (about +/-1 rad at full strength) instead of a fast swing.
+                const twistTarget = (0.35 + s * 0.55 + mid * 0.25) * (Math.sin(t * 0.55) * 0.75 + Math.sin(t * 0.23 + 1.3) * 0.25);
+                this._twirlTwist = (this._twirlTwist || 0) + (twistTarget - (this._twirlTwist || 0)) * 0.06;
+                const maxTwist = this._twirlTwist;
                 for (let i = rings - 1; i >= 1; i--) {
                     const r = i * rw;
-                    const twist = (1.0 - (r / maxR)) * maxTwist;
+                    const fall = 1.0 - (r / maxR);
+                    const twist = fall * fall * (3 - 2 * fall) * maxTwist;
                     try {
                         gctx.save();
                         gctx.beginPath();
@@ -3298,7 +3393,7 @@
                         break;
                     }
                     case 'newblue_twirl':
-                        spin = fract(t * (0.35 + 0.75 * s)) * 360;      // 360°≡0° → seamless spin
+                        spin = Math.sin(t * 0.45) * (6 + 12 * s);       // gentle sway instead of a constant spin
                         break;
                     case 'newblue_light_ring':
                         brightness += (0.5 + 0.5 * Math.sin(t * 6)) * 0.28 * s;
@@ -3548,6 +3643,7 @@
             if (this.r3GhostVsync) {
                 this.r3GhostVsync.step(now, dt);
             }
+            this.enforceLocks();
 
             // 3. Render Active Glitch Voices (Persistent closures executed once per frame)
             for (let i = 0; i < this.activeEffects.length; i++) {
