@@ -9780,7 +9780,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 2. Sync Master Toggle Buttons
         const warpBtn = document.getElementById('aiWarpBtn');
         if (warpBtn) {
-            warpBtn.textContent = `AI WARP: [${aiWarp.aiWarpActive ? 'ON' : 'OFF'}] (${aiWarp.aiWarpMode.toUpperCase()})`;
+            warpBtn.textContent = `AI WARP: [${aiWarp.aiWarpActive ? 'ON' : 'OFF'}] (${aiWarp.aiWarpMode.replace(/_/g, ' ').toUpperCase()})`;
             warpBtn.classList.toggle('active', aiWarp.aiWarpActive);
         }
 
@@ -9788,7 +9788,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (warpModeBtn) {
             const idx = aiWarp.aiWarpModeIndex;
             const total = aiWarp.aiWarpModes.length - 1;
-            warpModeBtn.textContent = `MODE: ${aiWarp.aiWarpMode.toUpperCase()} [${idx}/${total}]`;
+            warpModeBtn.textContent = `MODE: ${aiWarp.aiWarpMode.replace(/_/g, ' ').toUpperCase()} [${idx}/${total}]`;
         }
 
         const warpModeSelect = document.getElementById('warpModeSelect');
@@ -9918,7 +9918,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             aiWarp.aiWarpActive = !aiWarp.aiWarpActive;
             if (aiWarp.aiWarpActive) aiWarp.triggerButtonEffect('ai_warp_pulse');
             syncUiFromEngine();
-            showHudNotification(aiWarp.aiWarpActive ? `AI WARP: [ON] (${aiWarp.aiWarpMode.toUpperCase()})` : 'AI WARP: [OFF]');
+            showHudNotification(aiWarp.aiWarpActive ? `AI WARP: [ON] (${aiWarp.aiWarpMode.replace(/_/g, ' ').toUpperCase()})` : 'AI WARP: [OFF]');
         };
     }
 
@@ -9934,7 +9934,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             syncUiFromEngine();
             const idx = aiWarp.aiWarpModeIndex;
             const total = aiWarp.aiWarpModes.length - 1;
-            showHudNotification(`WARP MODE: ${nextMode.toUpperCase()} [${idx}/${total}]`);
+            showHudNotification(`WARP MODE: ${nextMode.replace(/_/g, ' ').toUpperCase()} [${idx}/${total}]`);
         };
     }
 
@@ -9946,7 +9946,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             aiWarp.aiWarpActive = true;
             aiWarp.triggerButtonEffect('warp_mode_switch');
             syncUiFromEngine();
-            showHudNotification(`WARP MODE: ${selected.toUpperCase()}`);
+            showHudNotification(`WARP MODE: ${selected.replace(/_/g, ' ').toUpperCase()}`);
         };
     }
 
@@ -10238,7 +10238,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (warpValBadge) warpValBadge.textContent = `${Math.round(val * 100)}%`;
             const warpBtn = document.getElementById('aiWarpBtn');
             if (warpBtn) {
-                warpBtn.textContent = `AI WARP: [${aiWarp.aiWarpActive ? 'ON' : 'OFF'}] (${aiWarp.aiWarpMode.toUpperCase()})`;
+                warpBtn.textContent = `AI WARP: [${aiWarp.aiWarpActive ? 'ON' : 'OFF'}] (${aiWarp.aiWarpMode.replace(/_/g, ' ').toUpperCase()})`;
                 warpBtn.classList.toggle('active', aiWarp.aiWarpActive);
             }
         };
@@ -10738,7 +10738,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             aiWarp.triggerButtonEffect('warp_mode_switch');
             if (warpModeSelect) warpModeSelect.value = nextMode;
             syncUiFromEngine();
-            showHudNotification(`WARP MODE: ${nextMode.toUpperCase()}`);
+            showHudNotification(`WARP MODE: ${nextMode.replace(/_/g, ' ').toUpperCase()}`);
             return;
         }
 
