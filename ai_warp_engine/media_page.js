@@ -1634,7 +1634,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (returnToYouTube) {
                 const frame = ytPlayerMount && ytPlayerMount.querySelector('#ytIframe');
                 if (frame && frame.contentWindow) {
-                    frame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), 'https://www.youtube-nocookie.com');
+                    frame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
                 }
             }
         }
@@ -1744,7 +1744,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         const embeddedYouTubeFrame = ytPlayerMount && ytPlayerMount.querySelector('#ytIframe');
         if (embeddedYouTubeFrame && embeddedYouTubeFrame.contentWindow) {
-            embeddedYouTubeFrame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }), 'https://www.youtube-nocookie.com');
+            embeddedYouTubeFrame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }), '*');
         }
         if (!captureReturnToYouTube) {
             if (ytPlayerMount) ytPlayerMount.replaceChildren();
@@ -1808,7 +1808,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return true;
     }
 
-    function buildYouTubeEmbedUrl(videoObj) {
+    const YT_EMBED_HOSTS = ['https://www.youtube-nocookie.com', 'https://www.youtube.com'];
+    let ytEmbedHostIndex = 0;
+    let ytCurrentVideoObj = null;
+
+    function buildYouTubeEmbedUrl(videoObj, hostIndex = ytEmbedHostIndex) {
         const params = new URLSearchParams({
             autoplay: '1',
             enablejsapi: '1',
@@ -1818,15 +1822,41 @@ document.addEventListener('DOMContentLoaded', async () => {
             modestbranding: '1',
             loop: '1'
         });
+        // Embeds on a hosted site need the page origin; file:// and the desktop host have none.
+        if (/^https?:$/.test(window.location.protocol)) params.set('origin', window.location.origin);
+        const host = YT_EMBED_HOSTS[hostIndex] || YT_EMBED_HOSTS[0];
         if (videoObj.id) {
             if (videoObj.playlistId) params.set('list', videoObj.playlistId);
             else params.set('playlist', videoObj.id);
-            return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoObj.id)}?${params}`;
+            return `${host}/embed/${encodeURIComponent(videoObj.id)}?${params}`;
         }
         params.set('listType', 'playlist');
         params.set('list', videoObj.playlistId);
-        return `https://www.youtube-nocookie.com/embed/videoseries?${params}`;
+        return `${host}/embed/videoseries?${params}`;
     }
+
+    // The embed reports playback errors (101/150/152/153 = embedding refused, 2/5 = bad request) through postMessage.
+    window.addEventListener('message', (ev) => {
+        if (!/^https:\/\/www\.youtube(-nocookie)?\.com$/.test(ev.origin)) return;
+        const frame = document.getElementById('ytIframe');
+        if (!frame || ev.source !== frame.contentWindow) return;
+        let data = ev.data;
+        if (typeof data === 'string') { try { data = JSON.parse(data); } catch (e) { return; } }
+        if (!data) return;
+        if (data.event === 'onReady') {
+            try { frame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), ev.origin); } catch (e) {}
+        }
+        if (data.event === 'onError' && ytCurrentVideoObj) {
+            if (ytEmbedHostIndex < YT_EMBED_HOSTS.length - 1) {
+                ytEmbedHostIndex++;
+                showHudNotification('YOUTUBE EMBED ERROR — retrying on alternate host');
+                loadYouTube(ytCurrentVideoObj);
+            } else {
+                ytEmbedHostIndex = 0;
+                showHudNotification('YOUTUBE: this video blocks embedding — use ↗ YOUTUBE, SHARE SCREEN capture, or another video');
+            }
+        }
+    });
 
     function loadYouTube(videoObj, { requireLens = false } = {}) {
         if (!videoObj || (!videoObj.id && !videoObj.playlistId)) return;
@@ -1854,16 +1884,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         pauseAllOtherMedia();
         currentMediaKind = 'youtube';
         syncPlaybackClasses('youtube');
+        ytCurrentVideoObj = videoObj;
 
         // Mount iframe
         if (ytPlayerMount) {
             ytPlayerMount.innerHTML = `
                 <iframe id="ytIframe"
                     src="${embedUrl}"
-                    allow="autoplay; encrypted-media; picture-in-picture"
+                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                    referrerpolicy="strict-origin-when-cross-origin"
                     allowfullscreen>
                 </iframe>
             `;
+            const mountedFrame = ytPlayerMount.querySelector('#ytIframe');
+            // Handshake so the embed starts sending onReady / onError events.
+            mountedFrame.addEventListener('load', () => {
+                try { mountedFrame.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*'); } catch (e) {}
+            });
         }
         if (ytWarpShell) ytWarpShell.style.display = 'block';
 
