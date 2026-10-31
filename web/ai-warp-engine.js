@@ -5940,88 +5940,6 @@
         }
 
         /* ── CANVAS AI WARP SLICER (12 ALGORITHMIC MODES) ────────────────────── */
-        /* VORTEX overlay: a subtle black hole and starfield drawn over the classic ring vortex. */
-        _vortexSpawn(q, anywhere) {
-            q.r = anywhere ? 0.12 + Math.random() * 1.1 : 1.0 + Math.random() * 0.25;
-            q.a = Math.random() * Math.PI * 2;
-            q.z = Math.random();
-            q.c = Math.random() < 0.7 ? 0 : 1;
-            return q;
-        }
-
-        renderVortexOverlay(now, w, h, s, t, bass, treble) {
-            const g = this.gctx;
-            const TAU = Math.PI * 2;
-            const cx = w * 0.5, cy = h * 0.5;
-            const u = Math.min(w, h) * 0.5;
-            let st = this._vortexState;
-            if (!st) {
-                st = this._vortexState = { last: now, stars: [] };
-                for (let i = 0; i < 420; i++) st.stars.push(this._vortexSpawn({ x: 0, y: 0, x0: 0, y0: 0, al: 0 }, true));
-            }
-            const dt = Math.min(0.05, Math.max(0.001, (now - st.last) * 0.001)) * Math.max(0.25, this.glitchSpeed || 1);
-            st.last = now;
-            const k = Math.min(1, 0.35 + s * 0.65);
-            const rh = (0.075 + s * 0.02 + bass * 0.01) * u;
-            const pull = 0.5 + s * 0.6 + bass * 0.4;
-
-            g.save();
-            try {
-                // soft darkening around the hole
-                g.globalCompositeOperation = 'source-over';
-                g.globalAlpha = 1;
-                const dark = g.createRadialGradient(cx, cy, rh * 0.6, cx, cy, rh * 4.5);
-                dark.addColorStop(0, 'rgba(0,0,0,' + (0.85 * k).toFixed(3) + ')');
-                dark.addColorStop(1, 'rgba(0,0,0,0)');
-                g.fillStyle = dark;
-                g.beginPath();
-                g.arc(cx, cy, rh * 4.5, 0, TAU);
-                g.fill();
-
-                // faint lensing ring and the horizon
-                g.globalCompositeOperation = 'lighter';
-                g.lineWidth = Math.max(1, rh * 0.06);
-                g.strokeStyle = 'rgba(255,225,190,' + (0.32 * k).toFixed(3) + ')';
-                g.beginPath();
-                g.arc(cx, cy, rh * 1.12, 0, TAU);
-                g.stroke();
-                g.globalCompositeOperation = 'source-over';
-                g.fillStyle = '#000';
-                g.beginPath();
-                g.arc(cx, cy, rh, 0, TAU);
-                g.fill();
-
-                // starfield: stars drift inward in a gentle spiral and fade into the hole
-                g.globalCompositeOperation = 'lighter';
-                g.lineCap = 'round';
-                const colors = ['rgb(200,220,255)', 'rgb(255,225,170)'];
-                for (let b = 0; b < 2; b++) {
-                    g.strokeStyle = colors[b];
-                    for (let i = 0; i < st.stars.length; i++) {
-                        const q = st.stars[i];
-                        if (q.c !== b) continue;
-                        const da = dt * (0.05 + 0.35 * pull / (q.r * 2 + 0.4)) * (0.5 + q.z);
-                        const dr = dt * 0.04 * pull * (0.4 + q.z);
-                        const pa = q.a;
-                        q.a += da;
-                        q.r -= dr;
-                        if (q.r * u < rh * 1.15) { this._vortexSpawn(q, false); continue; }
-                        const x = cx + Math.cos(q.a) * q.r * u, y = cy + Math.sin(q.a) * q.r * u;
-                        const px = cx + Math.cos(pa - da * 4) * (q.r + dr * 4) * u, py = cy + Math.sin(pa - da * 4) * (q.r + dr * 4) * u;
-                        const fade = Math.min(1, (q.r * u - rh * 1.15) / (rh * 1.5));
-                        g.globalAlpha = fade * (0.25 + 0.5 * q.z) * (0.8 + 0.2 * Math.sin(t * 4 + i)) * k;
-                        g.lineWidth = 0.6 + q.z * 1.1;
-                        g.beginPath();
-                        g.moveTo(px, py);
-                        g.lineTo(x, y);
-                        g.stroke();
-                    }
-                }
-            } finally {
-                g.restore();
-            }
-        }
-
         applyZeroMotionGhost() {
             try {
                 if (this.ghostModes[this.ghostModeIndex] === 'OFF') this.setGhostMode('SPECTRUM', 0.28);
@@ -6037,7 +5955,6 @@
         renderAiWarp(now) {
             if (!this.aiWarpActive || this.aiWarpStrength <= 0.01) return;
             if (this.aiWarpMode === 'ai_zero') return;
-            let vortexOverlay = false;
             const w = this.canvas.width, h = this.canvas.height;
             if (!w || !h) return;
 
@@ -6152,27 +6069,53 @@
                 gctx.fillStyle = auroraGrad;
                 gctx.fillRect(0, 0, w, h);
             }
-            // 6. VORTEX: Centrifugal spiral black hole warp
+            // 6. VORTEX: continuous multi-ring whirlpool. Inner rings spin harder and are pulled inward,
+            // log-spiral light arms ride the flow, and each ring lags in hue for a depth shimmer.
             else if (mode === 'vortex') {
-                const rings = 20 + Math.floor(s * 16);
-                const maxR = Math.min(w, h) * 0.55;
-                const ringW = maxR / rings;
                 const cx = w / 2, cy = h / 2;
+                const maxR = Math.hypot(w, h) * 0.5;
+                const rings = 28 + Math.floor(s * 20);
+                const ringW = maxR / rings;
+                const flow = t * (0.55 + s * 0.7);
+                const twist = (2.2 + s * 3.6 + bass * 1.4) * (0.88 + 0.12 * Math.sin(t * 0.8));
+                const pull = 0.16 + s * 0.2 + bass * 0.1;
                 gctx.drawImage(this.workCanvas, 0, 0);
 
                 for (let i = rings - 1; i >= 1; i--) {
-                    const r = i * ringW;
-                    const spinAngle = (1.0 - (r / maxR)) * (1.2 + s * 2.2) * Math.sin(t * 2.5);
+                    const k = i / rings;
+                    const core = Math.pow(1 - k, 1.7);
+                    const ang = core * twist + core * flow * 1.4;
+                    const sc = 1 - pull * Math.pow(1 - k, 2.2);
                     gctx.save();
                     gctx.beginPath();
-                    gctx.arc(cx, cy, r, 0, Math.PI * 2);
+                    gctx.arc(cx, cy, i * ringW, 0, Math.PI * 2);
                     gctx.clip();
                     gctx.translate(cx, cy);
-                    gctx.rotate(spinAngle);
+                    gctx.rotate(ang);
+                    gctx.scale(sc, sc);
                     gctx.drawImage(this.workCanvas, -cx, -cy);
                     gctx.restore();
                 }
-                vortexOverlay = true;
+
+                const arms = 5;
+                gctx.save();
+                gctx.globalCompositeOperation = 'screen';
+                gctx.lineCap = 'round';
+                gctx.lineWidth = 1.5 + s * 2.5 + bass * 2;
+                for (let a = 0; a < arms; a++) {
+                    const base = (a / arms) * Math.PI * 2 + flow * 1.1;
+                    gctx.strokeStyle = 'hsla(' + ((this.videoPalette.hue + a * 40 + t * 30) % 360).toFixed(0) + ',90%,65%,' + (0.10 + s * 0.16 + treble * 0.12).toFixed(3) + ')';
+                    gctx.beginPath();
+                    for (let j = 0; j <= 48; j++) {
+                        const f = j / 48;
+                        const rr = maxR * (0.04 + 0.96 * f);
+                        const th = base + Math.pow(1 - f, 1.7) * (twist + flow * 1.4) * -1 + f * 1.2;
+                        const x = cx + Math.cos(th) * rr, y = cy + Math.sin(th) * rr;
+                        if (j === 0) gctx.moveTo(x, y); else gctx.lineTo(x, y);
+                    }
+                    gctx.stroke();
+                }
+                gctx.restore();
             }
             // 7. CYBERGRID: Digital matrix quantized isometric block shear
             else if (mode === 'cybergrid') {
@@ -6680,12 +6623,6 @@
             this.aiWarpHue = (this.videoPalette.hue * 0.4 + (now * 0.04) % 360 + (treble) * 160) % 360;
             gctx.fillStyle = `hsla(${this.aiWarpHue}, 85%, 55%, 1)`;
             gctx.fillRect(0, 0, w, h);
-
-            if (vortexOverlay) {
-                gctx.globalCompositeOperation = 'source-over';
-                gctx.globalAlpha = 1;
-                this.renderVortexOverlay(now, w, h, s, t, bass, treble);
-            }
 
             gctx.restore();
         }
