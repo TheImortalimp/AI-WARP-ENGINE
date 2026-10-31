@@ -8,7 +8,9 @@ internal static class Program
     [STAThread]
     private static void Main()
     {
+        CursorGuard.HardenProcess();
         ApplicationConfiguration.Initialize();
+        CursorGuard.Start("AI-Warp-Engine");
         Application.Run(new MainForm());
     }
 }
@@ -47,6 +49,7 @@ internal sealed class MainForm : Form
         await view.EnsureCoreWebView2Async(env);
 
         var core = view.CoreWebView2;
+        await CursorGuard.AttachAsync(core);
         core.SetVirtualHostNameToFolderMapping(Host,
             Path.Combine(AppContext.BaseDirectory, "app"), CoreWebView2HostResourceAccessKind.Allow);
         core.Settings.AreDevToolsEnabled = false;
@@ -116,6 +119,7 @@ internal sealed class MainForm : Form
         };
         lensForm.Show();
         await lensView.EnsureCoreWebView2Async(lensEnv);
+        await CursorGuard.AttachAsync(lensView.CoreWebView2);
         lensView.CoreWebView2.Settings.AreDevToolsEnabled = false;
         lensView.CoreWebView2.SetVirtualHostNameToFolderMapping(Host,
             Path.Combine(AppContext.BaseDirectory, "app"), CoreWebView2HostResourceAccessKind.Allow);

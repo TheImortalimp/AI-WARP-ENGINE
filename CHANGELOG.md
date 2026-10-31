@@ -2,6 +2,11 @@
 
 Standalone Windows app releases. Full notes per release are in the `RELEASE_NOTES_*.md` files.
 
+## 6.4.28 — System-cursor-only
+- The app and its LENS window always show the Windows system mouse pointer; web content cannot replace it (CSS, inline styles, shadow DOM, JS style APIs).
+- Launch guard resets any pointer in `HKCU\Control Panel\Cursors` that is not empty or a `.cur`/`.ani` under `%WINDIR%\Cursors` (blocks GEM-style themed cursor sets) and re-checks on every change. Paths are normalised (8.3 names, `..`, UNC/device paths, alternate streams, symlinks, junctions).
+- Process hardening: legacy extension points and remote or low-integrity image loads disabled.
+- Installer now requests elevation (standard UAC prompt) and runs `cursor_lockdown.ps1` for all local profiles, with registry backups in `%ProgramData%`.
 ## 6.4.27 â€” Hard locks, true LENS screenshots, stronger Neon/ASCII
 - Freeze Frame now saves the full LENS canvas as an opaque PNG without HUD; canvas sizing no longer shrinks when zoomed out (DPR clamped, ResizeObserver).
 - Voice, Speed, Opacity, Ghost and V-Sync locks are enforced every frame against Automated Masters, Continual Randomization, Timed Auto and presets.
