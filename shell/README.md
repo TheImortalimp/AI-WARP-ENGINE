@@ -16,4 +16,4 @@ dotnet publish -c Release -r win-x64 --self-contained true -o publish
 & "C:\Program Files (x86)\NSIS\makensis.exe" setup.nsi
 ```
 
-This produces `AI-WARP-ENGINE-6.4.29-x64-setup.exe` (gold "Я" icon, `app.ico`/`logo.png`). It installs to `Desktop\AI WARP ENGINE` with an elevated (UAC) installer that also runs `cursor_lockdown.ps1` to enforce system-only mouse pointers, and adds a launcher shortcut in that folder, a Start Menu entry and an uninstaller.
+This produces `AI-WARP-ENGINE-6.4.30-x64-setup.exe` (gold "Я" icon, `app.ico`/`logo.png`). It installs to `Desktop\AI WARP ENGINE` with an elevated (UAC) installer that also runs `cursor_lockdown.ps1` to enforce system-only mouse pointers, and adds a launcher shortcut in that folder, a Start Menu entry and an uninstaller.

@@ -1,7 +1,7 @@
 Unicode true
 !include "MUI2.nsh"
 !ifndef VERSION
-  !define VERSION "6.4.29"
+  !define VERSION "6.4.30"
 !endif
 !ifndef SRC
   !define SRC "publish"

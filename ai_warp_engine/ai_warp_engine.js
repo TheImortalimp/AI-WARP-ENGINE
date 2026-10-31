@@ -2499,24 +2499,24 @@
 
             g.save();
             try {
-                // 1. Whirlpool: nested discs, inner ones twisted harder (differential rotation) and
-                //    compressed toward the hole, so the picture spirals in instead of just rotating.
+                // 1. Old VORTEX core: nested clipped rings counter-rotating toward the centre, now also compressed inward.
                 g.globalCompositeOperation = 'source-over';
                 g.globalAlpha = 1;
                 g.drawImage(this.workCanvas, 0, 0);
-                const rings = 26 + Math.floor(s * 12);
-                const twist = 4.2 + s * 5.5 + Math.sin(t * 0.5) * 1.1 + bass * 1.5;
-                for (let i = rings; i >= 1; i--) {
-                    const r = rhPx + (reachPx - rhPx) * (i / rings);
-                    const k = (r - rhPx) / (reachPx - rhPx);
-                    const ang = Math.pow(1 - k, 2.2) * twist + Math.pow(1 - k, 4) * st.phase * 3.0;
-                    const sc = 1 - 0.6 * Math.pow(1 - k, 3);
+                const rings = 20 + Math.floor(s * 16);
+                const maxR = Math.min(w, h) * 0.55;
+                const ringW = maxR / rings;
+                for (let i = rings - 1; i >= 1; i--) {
+                    const r = i * ringW;
+                    const k = r / maxR;
+                    const spinAngle = (1.0 - k) * (1.2 + s * 2.2 + bass) * Math.sin(t * 2.5) + Math.pow(1 - k, 3) * st.phase * 1.5;
+                    const sc = 1 - 0.35 * Math.pow(1 - k, 2);
                     g.save();
                     g.beginPath();
                     g.arc(cx, cy, r, 0, TAU);
                     g.clip();
                     g.translate(cx, cy);
-                    g.rotate(ang);
+                    g.rotate(spinAngle);
                     g.scale(sc, sc);
                     g.drawImage(this.workCanvas, -cx, -cy);
                     g.restore();
@@ -2525,49 +2525,71 @@
                 // 2. Gravitational darkening toward the hole
                 const dark = g.createRadialGradient(cx, cy, rhPx * 0.9, cx, cy, reachPx);
                 dark.addColorStop(0, 'rgba(0,0,0,0.94)');
-                dark.addColorStop(0.35, 'rgba(0,0,0,' + (0.55 * ov).toFixed(3) + ')');
+                dark.addColorStop(0.35, 'rgba(0,0,0,' + (0.5 * ov).toFixed(3) + ')');
                 dark.addColorStop(1, 'rgba(0,0,0,0)');
                 g.fillStyle = dark;
                 g.fillRect(0, 0, w, h);
 
-                // 3. Accretion disk (back half), photon ring and lensed halo, horizon, front half
-                const diskIn = rhPx * 1.22, diskOut = rhPx * 3.4;
-                const tilt = -0.16 + Math.sin(t * 0.25) * 0.05;
-                const hasConic = typeof g.createConicGradient === 'function';
-                const drawDisk = (front) => {
-                    g.save();
-                    g.translate(cx, cy);
-                    g.rotate(tilt);
-                    g.scale(1, 0.30);
-                    g.beginPath();
-                    g.rect(-diskOut * 1.2, front ? 0 : -diskOut * 1.2, diskOut * 2.4, diskOut * 1.2);
-                    g.clip();
-                    g.globalCompositeOperation = 'lighter';
-                    const rad = g.createRadialGradient(0, 0, diskIn, 0, 0, diskOut);
-                    rad.addColorStop(0, 'rgba(255,250,235,1)');
-                    rad.addColorStop(0.12, 'rgba(255,205,120,0.95)');
-                    rad.addColorStop(0.45, 'rgba(255,120,30,0.55)');
-                    rad.addColorStop(0.8, 'rgba(150,40,15,0.22)');
-                    rad.addColorStop(1, 'rgba(90,20,10,0)');
-                    g.globalAlpha = ov * (0.78 + 0.22 * bass);
-                    g.fillStyle = rad;
-                    g.beginPath();
-                    g.arc(0, 0, diskOut, 0, TAU);
-                    g.arc(0, 0, diskIn, 0, TAU, true);
-                    g.fill();
-                    if (hasConic) {
-                        const con = g.createConicGradient(st.phase * 0.6, 0, 0);
-                        con.addColorStop(0, 'rgba(255,255,255,0)');
-                        con.addColorStop(0.2, 'rgba(255,230,190,0.55)');
-                        con.addColorStop(0.5, 'rgba(0,0,0,0)');
-                        con.addColorStop(1, 'rgba(255,255,255,0)');
-                        g.fillStyle = con;
-                        g.fill();
+                // 3. Init-screen highway grid wrapped into a funnel: the 48 perspective spokes become
+                //    spiral arms, the horizontal lines (same pow 2.2 spacing) become concentric rings.
+                g.save();
+                g.globalCompositeOperation = 'lighter';
+                g.strokeStyle = 'rgba(0,255,170,' + ((0.20 + bass * 0.30) * ov).toFixed(3) + ')';
+                g.lineWidth = 1;
+                const spokes = 48, rOut = reachPx * 0.92, rIn = rhPx * 1.15;
+                g.beginPath();
+                for (let c = 0; c < spokes; c++) {
+                    const a0 = (c / spokes) * TAU + st.phase * 0.35;
+                    for (let j = 0; j <= 28; j++) {
+                        const f = j / 28;
+                        const rr = rOut + (rIn - rOut) * f;
+                        const a = a0 + Math.pow(f, 1.6) * (2.4 + s * 2.0);
+                        const x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr * 0.92;
+                        if (j === 0) g.moveTo(x, y); else g.lineTo(x, y);
                     }
-                    g.restore();
-                };
-                drawDisk(false);
+                }
+                g.stroke();
+                g.beginPath();
+                const numRings = 14;
+                for (let i = 1; i <= numRings; i++) {
+                    const yn = Math.pow(((i + st.phase * 0.18) % numRings) / numRings, 2.2);
+                    const rr = rIn + yn * (rOut - rIn);
+                    g.moveTo(cx + rr, cy);
+                    g.arc(cx, cy, rr, 0, TAU);
+                }
+                g.stroke();
+                // magenta neon horizon glow from the init screen, now a ring around the hole
+                const glow = g.createRadialGradient(cx, cy, rhPx, cx, cy, rhPx * 2.6);
+                glow.addColorStop(0, 'rgba(255,0,128,' + (0.55 * ov + bass * 0.25).toFixed(3) + ')');
+                glow.addColorStop(1, 'rgba(255,0,128,0)');
+                g.fillStyle = glow;
+                g.beginPath();
+                g.arc(cx, cy, rhPx * 2.6, 0, TAU);
+                g.fill();
 
+                // 4. Init-screen vector ovals: 8 revolving cyan ellipses orbiting the hole
+                const ovR = rhPx * 2.4 * (1 + bass * 0.25);
+                g.lineWidth = 1.5;
+                g.strokeStyle = 'rgba(0,229,255,' + ((0.55 + treble * 0.4) * ov).toFixed(3) + ')';
+                g.shadowColor = 'rgba(0,229,255,0.8)';
+                g.shadowBlur = 8;
+                for (let r = 0; r < 8; r++) {
+                    const ang = t * 0.8 + (r * Math.PI) / 8;
+                    g.beginPath();
+                    g.ellipse(cx, cy, Math.abs(ovR * Math.cos(ang)) + 2, ovR * 0.45, ang * 0.3 + st.phase * 0.1, 0, TAU);
+                    g.stroke();
+                }
+                g.shadowBlur = 0;
+                if (bass > 0.25) {
+                    g.strokeStyle = 'rgba(255,183,3,' + ((bass - 0.2) * 0.6).toFixed(3) + ')';
+                    g.lineWidth = 2;
+                    g.beginPath();
+                    g.arc(cx, cy, ovR * (1.2 + bass * 1.5), 0, TAU);
+                    g.stroke();
+                }
+                g.restore();
+
+                // 5. Photon ring and black horizon
                 g.save();
                 g.globalCompositeOperation = 'lighter';
                 g.shadowColor = 'rgba(255,170,80,0.9)';
@@ -2577,16 +2599,7 @@
                 g.beginPath();
                 g.arc(cx, cy, rhPx * 1.08, 0, TAU);
                 g.stroke();
-                g.lineWidth = rhPx * 0.22;
-                g.strokeStyle = 'rgba(255,150,60,' + (0.22 * ov).toFixed(3) + ')';
-                g.beginPath();
-                g.arc(cx, cy, rhPx * 1.32, -2.4, -0.74);
-                g.stroke();
-                g.beginPath();
-                g.arc(cx, cy, rhPx * 1.32, 0.74, 2.4);
-                g.stroke();
                 g.restore();
-
                 g.globalCompositeOperation = 'source-over';
                 g.globalAlpha = 1;
                 const hole = g.createRadialGradient(cx, cy, 0, cx, cy, rhPx);
@@ -2597,9 +2610,8 @@
                 g.beginPath();
                 g.arc(cx, cy, rhPx, 0, TAU);
                 g.fill();
-                drawDisk(true);
 
-                // 4. Heavy starfield over everything: twinkling far field + infalling streaks
+                // 6. Heavy starfield over everything: twinkling far field + infalling streaks
                 g.globalCompositeOperation = 'lighter';
                 g.fillStyle = '#dfe8ff';
                 const rot = st.phase * 0.02, cr = Math.cos(rot), sr = Math.sin(rot);
