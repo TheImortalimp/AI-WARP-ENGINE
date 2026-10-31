@@ -64,3 +64,6 @@
 - **Display capture:** the `getDisplayMedia` picker now supports browser tabs, application windows, and full-screen sharing through the same Canvas pipeline. The microphone remains an independent audio input, so it can be used alongside shared display audio; neither input is routed back to speakers.
 - **YouTube continuity:** the existing YouTube iframe/Canvas Warp Bus and Ear modes remain available. Display capture temporarily takes visual focus and restores the YouTube feed when sharing ends. Canceling the browser picker leaves the current media source uninterrupted.
 - **Hotkeys:** `M` toggles microphone input, `Y` loads the featured YouTube playlist, `E` cycles Ear modes (`AUTO` / `AUDIO` / `CANVAS`), and `N` toggles browser-tab/window/full-screen capture.
+
+## 6.4.29
+- VORTEX rebuilt as whirlpool + black hole + heavy starfield; new FX 0 AI ZERO MOTION (subtle Ghost Protocol only).

@@ -32,6 +32,7 @@
     // Deterministic per-AI-Warp blend tuning. Values are intentionally restrained;
     // they shape Ghost/V-Sync character without changing the user's master levels.
     const WARP_BLEND = {
+        ai_zero:                [0.60,0.60,0.60,0.60,0.70, 0.60,0.60,0.60,0.60, 0],
         liquid:                 [1.06,0.96,0.90,0.90,0.92, 0.82,0.82,0.70,0.86, 0],
         prism:                  [0.82,1.08,1.06,1.02,1.04, 1.02,0.92,0.78,0.92, 72],
         breathe:                [0.94,0.90,0.78,0.78,0.84, 0.72,0.72,0.62,0.78, 144],
@@ -63,7 +64,7 @@
         newblue_neon_edges:     [1.02,1.16,0.88,0.96,1.20, 0.94,0.82,0.74,0.90, 279]
     };
     const WARP_AUX = {
-        liquid:[0.82,0.92,0.90,1.02,0.88], prism:[1.08,0.98,1.02,0.94,1.02], breathe:[0.78,0.88,0.92,0.88,0.78],
+        ai_zero:[0.80,0.80,0.80,0.60,0.80], liquid:[0.82,0.92,0.90,1.02,0.88], prism:[1.08,0.98,1.02,0.94,1.02], breathe:[0.78,0.88,0.92,0.88,0.78],
         fold:[1.04,0.96,0.94,1.06,0.98], aurora:[0.92,1.08,1.06,0.98,0.90], vortex:[1.06,1.02,1.06,1.10,1.08],
         cybergrid:[1.08,0.94,0.96,1.04,1.06], hyperdrive:[1.12,1.08,1.04,1.12,1.18], kaleidoscope:[0.98,1.02,0.98,0.96,0.92],
         quantum:[1.14,1.10,1.12,1.10,1.14], ripple:[0.84,0.90,0.94,0.92,0.82], analog_crt:[0.92,0.90,0.88,0.86,0.82],
@@ -346,6 +347,7 @@
                 const p = palette(engine);
                 const upper = systemK > 0.55 ? 1 : 0.86;
                 ghostTarget = clamp(0.22 + random() * (0.58 + p.energy * 0.18), 0.15, upper);
+                if (engine.aiWarpMode === 'ai_zero') ghostTarget = Math.min(ghostTarget, 0.34);
                 nextGhostRetargetAt = now + (2200 + random() * 3600) * lerp(1.8, 1, systemK) / warpBlendFor(engine.aiWarpMode).automation;
             }
             if ((engine.isContinualRandom || engine.isAutoGlitch || engine.isTimedAuto || engine.isAutomatedMasters) && now >= manualGhostUntil) {
@@ -390,7 +392,7 @@
             const p = palette(engine);
             const mp = getGhostProfile(mode);
             const blend = warpBlendFor(engine.aiWarpMode);
-            const baseStrength = clamp01(engine.ghostLevel);
+            const baseStrength = clamp01(engine.ghostLevel) * (engine.aiWarpMode === 'ai_zero' ? 0.45 : 1);
             const intensity = baseStrength * Math.max(0.05, engine.masterOpacity || 0) * 0.025;
             if (intensity <= 0) return;
             const crispK = engine.aiWarpActive ? 1.25 : 1;

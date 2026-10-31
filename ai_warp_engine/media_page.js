@@ -2920,8 +2920,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const warpModeBtn = document.getElementById('warpModeCycleBtn');
         if (warpModeBtn) {
-            const idx = aiWarp.aiWarpModeIndex + 1;
-            const total = aiWarp.aiWarpModes.length;
+            const idx = aiWarp.aiWarpModeIndex;
+            const total = aiWarp.aiWarpModes.length - 1;
             warpModeBtn.textContent = `MODE: ${aiWarp.aiWarpMode.toUpperCase()} [${idx}/${total}]`;
         }
 
@@ -3117,8 +3117,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             aiWarp.triggerButtonEffect('warp_mode_switch');
             if (warpModeSelect) warpModeSelect.value = nextMode;
             syncUiFromEngine();
-            const idx = aiWarp.aiWarpModeIndex + 1;
-            const total = aiWarp.aiWarpModes.length;
+            const idx = aiWarp.aiWarpModeIndex;
+            const total = aiWarp.aiWarpModes.length - 1;
             showHudNotification(`WARP MODE: ${nextMode.toUpperCase()} [${idx}/${total}]`);
         };
     }
