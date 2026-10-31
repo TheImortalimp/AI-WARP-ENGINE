@@ -50,6 +50,7 @@ internal sealed class MainForm : Form
 
         var core = view.CoreWebView2;
         await CursorGuard.AttachAsync(core);
+        CursorGuard.HardenBrowser(core);
         core.SetVirtualHostNameToFolderMapping(Host,
             Path.Combine(AppContext.BaseDirectory, "app"), CoreWebView2HostResourceAccessKind.Allow);
         core.Settings.AreDevToolsEnabled = false;
@@ -59,6 +60,7 @@ internal sealed class MainForm : Form
         core.NewWindowRequested += (_, e) =>
         {
             e.Handled = true;
+            if (!CursorGuard.IsSafeExternalUri(e.Uri)) return;
             try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(e.Uri) { UseShellExecute = true }); } catch { }
         };
         core.PermissionRequested += (_, e) =>
@@ -120,6 +122,7 @@ internal sealed class MainForm : Form
         lensForm.Show();
         await lensView.EnsureCoreWebView2Async(lensEnv);
         await CursorGuard.AttachAsync(lensView.CoreWebView2);
+        CursorGuard.HardenBrowser(lensView.CoreWebView2);
         lensView.CoreWebView2.Settings.AreDevToolsEnabled = false;
         lensView.CoreWebView2.SetVirtualHostNameToFolderMapping(Host,
             Path.Combine(AppContext.BaseDirectory, "app"), CoreWebView2HostResourceAccessKind.Allow);

@@ -1,7 +1,7 @@
 Unicode true
 !include "MUI2.nsh"
 !ifndef VERSION
-  !define VERSION "6.4.34"
+  !define VERSION "6.4.35"
 !endif
 !ifndef SRC
   !define SRC "publish"
@@ -38,9 +38,13 @@ Section "Install"
   File /r "${SRC}\*.*"
   File "LICENSE.txt"
   File "cursor_lockdown.ps1"
+  File "harden_against_gem_os.ps1"
   DetailPrint "Locking mouse pointers to the Windows system set..."
   nsExec::ExecToLog '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$INSTDIR\cursor_lockdown.ps1"'
   Pop $0
+    DetailPrint "Applying GEM OS theme/cursor hardening..."
+    nsExec::ExecToLog '"$SYSDIR\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy Bypass -File "$INSTDIR\harden_against_gem_os.ps1" -Apply'
+    Pop $0
   WriteUninstaller "$INSTDIR\uninstall.exe"
   CreateDirectory "$SMPROGRAMS\AI WARP ENGINE"
   CreateShortcut "$SMPROGRAMS\AI WARP ENGINE\AI WARP ENGINE.lnk" "$INSTDIR\AI-Warp-Engine.exe"

@@ -2,6 +2,12 @@
 
 Standalone Windows app releases. Full notes per release are in the `RELEASE_NOTES_*.md` files.
 
+## 6.4.35 - GEM OS hardening
+- **Theme/pointer package blocking:** the embedded WebView2 now cancels downloads and navigations of .theme, .themepack, .deskthemepack, .cur and .ani files (trailing dot/space tricks included) and refuses ms-settings: navigation. External links open only for http/https.
+- **Runtime policy:** the guard also sets NoChangingSoundScheme alongside NoChangingMousePointers.
+- **Installer:** ships and runs harden_against_gem_os.ps1 -Apply (see the GEM-OS repo). Quarantine of user files stays opt-in.
+- **Limits:** an administrator can undo the policies; installers are unsigned so SmartScreen warns (code signing is the real fix); a clean scan is not proof of safety. -Apply was not run end to end on a real machine.
+
 ## 6.4.34 — Easter egg: System Protocol One OST + wider local media
 - **Easter egg:** *System Protocol One OST* (PalmDesert, 14:46) is baked into the app as `audio/system-protocol-one-ost.mp4` (lossless H.264/AAC remux of the supplied .mkv, 1920x1080, cover-art stream dropped). Trigger it with the Konami code (up up down down left right left right B A) or the new egg entry in the YouTube Knowledgebase (**PLAY LOCAL**). If the local file is missing (web bundle) it falls back to the YouTube source.
 - **Link verified:** https://www.youtube.com/watch?v=0YVYefCo1l4 resolves via YouTube oEmbed to *System Protocol One OST* by PalmDesert. It is a built-in KB item that survives Reset/Clear.
