@@ -1,4 +1,4 @@
-# ⚡ AI WARP ENGINE — R3 Canvas Edition (v6.4.27 · Hard locks · True LENS shots)
+# ⚡ AI WARP ENGINE — R3 Canvas Edition (v6.4.36 · Init + FX restored · Cursor guard)
 
 > **Public-domain visual synthesizer, audio-reactive media playground, and live Canvas glitch suite.**  
 > Created through collaborative work between [imortalimp.nl](https://imortalimp.nl) (River Lyle Reuveni), [Arena.ai](https://arena.ai), and artificial intelligence.
@@ -57,6 +57,30 @@ python3 -m http.server 8000
 ```
 
 Then open `http://localhost:8000/media_page.html`.
+
+### Startup/playback regression fix (6.4.36)
+
+The three app aliases must each contain exactly one app document and one ordered
+engine stack. A 6.4.35 packaging regression concatenated the app, showcase and
+LENS documents, creating duplicate controls and competing render loops that hid
+the initialization grid/rings and prevented effects from responding normally.
+The showcase is again an independent fragment, and `yt_lens.html` is again only
+the validated YouTube player.
+
+Startup is single-instance, configuration loading has a five-second timeout with
+an explicit fallback warning, and missing dependencies or duplicated media mounts
+produce a visible startup error. Optional remote scripts no longer block engine
+startup. Render errors are visible, voice passes restore their canvas state, and
+transient failures cannot stop the animation loop. The Windows system-cursor and
+theme/pointer download guards remain enabled for both views.
+The title-adjacent HUD change notice and installer/app version now agree on
+`v6.4.36 · INIT + FX RESTORED · CURSOR GUARD`.
+
+Run the dependency-free regression checks from the repository root:
+
+```powershell
+node --test tests\regressions.test.cjs
+```
 
 ---
 

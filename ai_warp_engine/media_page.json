@@ -1,7 +1,8 @@
 {
   "engine": {
     "name": "AI Warp Engine — R3 Canvas Edition",
-    "version": "6.4.27-hard-locks-true-lens-shot",
+    "version": "6.4.36-init-fx-restored-cursor-guard",
+    "releaseSummary": "v6.4.36 restores separate app/LENS documents, initialization artwork and effect playback; adds single-instance JavaScript startup, visible errors and render recovery; retains Windows system-cursor and theme protections.",
     "author": "IMORTALIMP.NL & Arena AI",
     "ghostKey": "Gh0sTs 1n Th3 Sh3lLs - D1giTaL R3BiRtHs - f34Rd0t.C0mM4",
     "ghostKeyStanzas": [

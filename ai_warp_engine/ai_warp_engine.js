@@ -1,6 +1,6 @@
 ;/* ===== ai_warp_engine.js ===== */
 /**
- * AI WARP ENGINE — HYPER-INTEGRATED SYNTHESIS (v6.4.27-FULL-APP-FRAME-LENS-FX)
+ * AI WARP ENGINE — HYPER-INTEGRATED SYNTHESIS (v6.4.36-INIT-FX-RESTORED-CURSOR-GUARD)
  *
  * 100% Fully Responsive, Robust & Animated:
  * - 📡 Tab Capture (getDisplayMedia): real pixels AND real audio from any shared tab
@@ -91,11 +91,11 @@
     class AiWarpEngine {
         constructor(canvasId, options = {}) {
             this.canvas = typeof canvasId === 'string' ? document.getElementById(canvasId) : canvasId;
-            if (!this.canvas) {
-                console.error(`AiWarpEngine: Canvas "${canvasId}" not found.`);
-                return;
+            if (!this.canvas || typeof this.canvas.getContext !== 'function') {
+                throw new Error(`AiWarpEngine: Canvas "${canvasId}" not found.`);
             }
             this.gctx = this.canvas.getContext('2d', { alpha: true, desynchronized: true });
+            if (!this.gctx) throw new Error('AiWarpEngine: Canvas 2D rendering is unavailable.');
             this.options = options;
             this._deterministicState = 0x6D2B79F5;
             this.automationPass = 0;
@@ -217,6 +217,10 @@
             this.milkdropFeedbackCtx = this.milkdropFeedbackCanvas.getContext('2d');
             this.milkdropNextCanvas = document.createElement('canvas');
             this.milkdropNextCtx = this.milkdropNextCanvas.getContext('2d');
+            if (![this.workCtx, this.ghostCtx, this.genCtx, this.milkdropFeedbackCtx, this.milkdropNextCtx].every(Boolean)) {
+                throw new Error('AiWarpEngine: Could not allocate the effects rendering buffers.');
+            }
+            this.renderErrors = new Map();
 
             // Three.js Tech Artist Shader
             this.techArtistShader = null;
@@ -3637,8 +3641,18 @@
         }
 
         /* ── MASTER RENDER LOOP ────────────────────────────────────────────────── */
+        reportRenderError(stage, error) {
+            const message = String(error && error.message || error);
+            if (this.renderErrors.get(stage) === message) return;
+            this.renderErrors.set(stage, message);
+            console.error(`AI WARP render error (${stage}):`, error);
+            window.dispatchEvent(new CustomEvent('warp-render-error', { detail: { stage, error } }));
+        }
+
         mainRenderLoop(now) {
-            const dt = (now - this.lastFrameTime) * 0.001;
+            // Queue the next frame before rendering so a transient pass failure cannot stop playback.
+            this.animFrameId = requestAnimationFrame((n) => this.mainRenderLoop(n));
+            const dt = Math.min(0.1, Math.max(0, (now - this.lastFrameTime) * 0.001));
             this.lastFrameTime = now;
             const cw = this.canvas.width;
             const ch = this.canvas.height;
@@ -3690,12 +3704,14 @@
 
             // 3. Render Active Glitch Voices (Persistent closures executed once per frame)
             for (let i = 0; i < this.activeEffects.length; i++) {
+                this.gctx.save();
                 try {
-                    this.gctx.save();
                     this.activeEffects[i](this.gctx, now);
-                    this.gctx.restore();
+                    this.renderErrors.delete(`voice ${i + 1}`);
                 } catch(e) {
-                    console.warn('Effect render error:', e);
+                    this.reportRenderError(`voice ${i + 1}`, e);
+                } finally {
+                    this.gctx.restore();
                 }
             }
 
@@ -3718,7 +3734,6 @@
             // Apply the image-wide FX after every source and overlay has been rendered.
             this.updateCanvasVoiceFilter(now);
 
-            this.animFrameId = requestAnimationFrame((n) => this.mainRenderLoop(n));
         }
 
         updateAutomation(now, dt) {

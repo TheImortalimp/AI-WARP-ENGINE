@@ -23,8 +23,43 @@
  * - Media Transport Bar with Timeline Scrubber & Time Display
  */
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
     'use strict';
+
+    // Claim startup before the first await so repeated script tags cannot start competing engines.
+    if (document.documentElement.dataset.warpStartup) return;
+    document.documentElement.dataset.warpStartup = 'loading';
+    const reportError = (message, error) => {
+        console.error(message, error);
+        const banner = document.getElementById('hudNotificationBanner');
+        if (banner) {
+            clearTimeout(banner.__timer);
+            banner.textContent = message;
+            banner.classList.add('show');
+            banner.setAttribute('role', 'alert');
+        }
+    };
+    window.addEventListener('error', (event) => {
+        if (event.filename && /(?:glitch_engine|r3_gc3_factories|r3_ghost_vsync|ai_warp_engine|media_page)\.js(?:\?|$)/.test(event.filename)) {
+            reportError('AI WARP RUNTIME ERROR: ' + event.message, event.error);
+        }
+    });
+    window.addEventListener('warp-render-error', (event) => {
+        reportError('AI WARP EFFECT ERROR: ' + event.detail.stage, event.detail.error);
+    });
+    window.addEventListener('unhandledrejection', (event) => {
+        reportError('AI WARP ASYNC ERROR: ' + String(event.reason && event.reason.message || event.reason), event.reason);
+    });
+
+    const initialization = (async () => {
+    for (const name of ['GlitchEngine', 'GC3FactoryBank', 'R3GhostVsync', 'AiWarpEngine']) {
+        if (!window[name]) throw new Error(`Required engine script did not load: ${name}`);
+    }
+    for (const id of ['glitchCanvas', 'localVideo', 'localAudio', 'localArtworkImg']) {
+        if (document.querySelectorAll(`[id="${id}"]`).length !== 1) {
+            throw new Error(`Expected exactly one #${id}; the app document is incomplete or duplicated.`);
+        }
+    }
 
     // Global audio references
     let audioCtx = null;
@@ -77,13 +112,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     /* ── 1. LOAD CONFIGURATION (media_page.json) ─────────────────────────── */
     try {
-        const resp = await fetch('media_page.json');
-        if (resp.ok) {
-            configData = await resp.json();
-            if (configData.youtubePool) ytPool = configData.youtubePool;
+        const resp = await fetch('media_page.json', { signal: AbortSignal.timeout(5000) });
+        if (!resp.ok) throw new Error(`media_page.json: HTTP ${resp.status}`);
+        configData = await resp.json();
+        if (!configData || typeof configData !== 'object' || Array.isArray(configData)) {
+            throw new Error('media_page.json must contain a configuration object.');
         }
+        if (Array.isArray(configData.youtubePool)) ytPool = configData.youtubePool;
     } catch (e) {
+        configData = null;
         console.warn('Could not load media_page.json, using built-in defaults:', e);
+        reportError('CONFIGURATION UNAVAILABLE: USING BUILT-IN DEFAULTS', e);
     }
 
     if (ytPool.length === 0) {
@@ -4199,4 +4238,11 @@ const BUILT_IN_YOUTUBE_PLAYLISTS = Object.freeze([
 
     // Initial master UI sync
     syncUiFromEngine();
+    })();
+    initialization.then(() => {
+        document.documentElement.dataset.warpStartup = 'ready';
+    }).catch((error) => {
+        document.documentElement.dataset.warpStartup = 'failed';
+        reportError('AI WARP STARTUP FAILED: ' + error.message + ' — reload after correcting the app files.', error);
+    });
 });

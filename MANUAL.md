@@ -1,6 +1,6 @@
 # AI WARP ENGINE — User Manual
 
-**Applies to:** AI WARP ENGINE standalone Windows app, release 6.4.27
+**Applies to:** AI WARP ENGINE standalone Windows app, release 6.4.36
 **Platform:** Windows 10/11 x64
 
 AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media source, then layer AI Warp modes, glitch voices, Ghost Protocol, V-Sync and audio-reactive automation over it. Release 6.4.27 makes locks hard and the screenshot true: voice locks and new Speed, Opacity, Ghost and V-Sync locks in the bottom controls are enforced every frame against Automated Masters, Continual Randomization, Timed Auto and presets; Freeze Frame (S) saves the full LENS canvas as an opaque PNG without the HUD or app frame, and the canvas no longer shrinks when zooming out (YouTube iframe pixels cannot be read by browsers - use local media, YT LENS or tab capture); Neon Gradient (core and GC#(3)) is a much stronger rotating ribbon with bloom and wash; GC#(3) ASCII streams a continual luminance-mapped character sheet; Twirl is slower and smoother. Release 6.4.26 extends adjustable B&W inversion and Hue rotation across the complete app viewport, including the HUD, controls, dialogs and overlays, and preserves those treatments in freeze-frame screenshots. Release 6.4.25 applies them to the complete LENS composition, including captured frames, initialization art, the Raum X-R showcase and visual easter eggs. Release 6.4.24 makes bottom-dock B&W/Hue tuning activate the paired voices on the LENS Canvas and starts playlist extraction automatically during playback/import. Release 6.4.23 improves YouTube playlist visibility and feed extraction. Release 6.4.22 adds locked B&W/Hue fine-tuning and randomized automation rolls. Release 6.4.21 runs the Raum cover artwork as a slideshow with exclusive glitch sequences while those tracks play. Release 6.4.20 adds the bundled RAUM · X-R showcase of four original tracks. Release 6.4.19 added the subtle-blend DROP THE MILK? feedback effect and audio-aware YouTube playlist playback in the standalone YT LENS.
@@ -20,8 +20,8 @@ AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media sourc
 
 ## Install and launch
 
-1. Download and run `AI-WARP-ENGINE-6.4.27-x64-setup.exe` from the [v6.4.27 GitHub release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.27).
-2. Run the installer and accept the licence terms. It installs for the current user and does not require administrator access.
+1. Download and run `AI-WARP-ENGINE-6.4.36-x64-setup.exe` from the [v6.4.36 GitHub release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.36).
+2. Run the installer, approve UAC elevation and accept the licence terms. It installs into the current user's desktop by default, but requires administrator access to apply Windows cursor/theme/sound policy hardening. Review [About](ABOUT.md#cursor-and-theme-protection) before installing.
 3. Launch **AI WARP ENGINE** from the desktop shortcut or Start Menu.
 
 The release is a self-contained Windows x64 app. It uses the Microsoft Edge WebView2 runtime; current Windows installations generally include the runtime. The application and web profile are stored under `%LOCALAPPDATA%\AI-Warp-Engine`; user settings are kept with the WebView2 profile.

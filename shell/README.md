@@ -5,6 +5,11 @@ A standalone Windows shell (WinForms + Microsoft Edge WebView2) that runs `../ai
 - Camera, microphone and screen capture are auto-allowed for the app's own origin only; external links open in the default browser.
 - F11 toggles fullscreen, F5 reloads.
 - Settings and the web profile live in `%LOCALAPPDATA%\AI-Warp-Engine`.
+- The 6.4.36 build repairs duplicate app documents and restores the
+  dedicated YouTube LENS player without disabling cursor/theme guards. Rebuild
+  the shell to copy the repaired HTML/JS assets; an old installed app does not
+  pick up source-folder edits. Dependency-free regression checks:
+  `node --test tests\regressions.test.cjs` from the repository root.
 
 ## Build
 
@@ -16,4 +21,4 @@ dotnet publish -c Release -r win-x64 --self-contained true -o publish
 & "C:\Program Files (x86)\NSIS\makensis.exe" setup.nsi
 ```
 
-This produces `AI-WARP-ENGINE-6.4.35-x64-setup.exe` (gold "Я" icon, `app.ico`/`logo.png`). It installs to `Desktop\AI WARP ENGINE` with an elevated (UAC) installer that also runs `cursor_lockdown.ps1` to enforce system-only mouse pointers, and adds a launcher shortcut in that folder, a Start Menu entry and an uninstaller.
+This produces `AI-WARP-ENGINE-6.4.36-x64-setup.exe` (gold "Я" icon, `app.ico`/`logo.png`). It installs to `Desktop\AI WARP ENGINE` with an elevated (UAC) installer that also runs `cursor_lockdown.ps1` to enforce system-only mouse pointers, and adds a launcher shortcut in that folder, a Start Menu entry and an uninstaller.

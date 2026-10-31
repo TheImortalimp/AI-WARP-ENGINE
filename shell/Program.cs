@@ -92,7 +92,8 @@ internal sealed class MainForm : Form
     {
         var ok = Uri.TryCreate(embedUrl, UriKind.Absolute, out var u) && u.Scheme == Uri.UriSchemeHttps &&
                  (u.Host == "www.youtube-nocookie.com" || u.Host == "www.youtube.com") &&
-                 u.AbsolutePath.StartsWith("/embed", StringComparison.Ordinal);
+                 string.IsNullOrEmpty(u.UserInfo) && u.IsDefaultPort &&
+                 (u.AbsolutePath == "/embed" || u.AbsolutePath.StartsWith("/embed/", StringComparison.Ordinal));
         if (!ok || lensEnv is null) return;
         var target = $"https://{Host}/yt_lens.html?src={Uri.EscapeDataString(embedUrl)}";
         if (lensForm is { IsDisposed: false } && lensView?.CoreWebView2 is not null)

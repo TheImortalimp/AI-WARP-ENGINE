@@ -2,6 +2,14 @@
 
 Standalone Windows app releases. Full notes per release are in the `RELEASE_NOTES_*.md` files.
 
+## 6.4.36 - Startup and effects regression repair
+- Restored separate app, showcase and YouTube LENS documents after 6.4.35 concatenated them, duplicating controls and starting competing render loops.
+- Hardened JavaScript startup with single-instance initialization, dependency/media-mount checks, bounded configuration loading and visible errors. Optional remote scripts no longer block startup.
+- Render scheduling survives transient failures; voice errors restore canvas state, report visibly and leave later voices running.
+- Retained Windows cursor/theme protections and aligned host/LENS validation to exact HTTPS YouTube embed origins and paths.
+- Updated the title-adjacent HUD notice to `v6.4.36 · INIT + FX RESTORED · CURSOR GUARD`, with matching app/installer and asset-cache versions.
+- Added dependency-free JavaScript, document-boundary, startup, render-recovery, LENS and version-consistency regression tests.
+
 ## 6.4.35 - GEM OS hardening
 - **Theme/pointer package blocking:** the embedded WebView2 now cancels downloads and navigations of .theme, .themepack, .deskthemepack, .cur and .ani files (trailing dot/space tricks included) and refuses ms-settings: navigation. External links open only for http/https.
 - **Runtime policy:** the guard also sets NoChangingSoundScheme alongside NoChangingMousePointers.
