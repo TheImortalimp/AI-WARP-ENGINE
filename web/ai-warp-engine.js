@@ -7216,7 +7216,7 @@
  * 
  * NEW FEATURES:
  * - YouTube Randoms Engine with Back / Forward / Random Navigation & History Stack
- * - Local Media Playback Engine (.mp4, .avi, .mkv, .mov, .mp3, .m4a)
+ * - Local Media Playback Engine (.mp4, .m4v, .mov, .avi, .mkv, .webm, .ogv, .mp3, .m4a, .aac, .wav, .ogg, .oga, .opus, .flac, .weba, .mka)
  * - Local Folder Picking & Image Slideshow for MP3 Audio Playback
  * - ID3 Album Cover Art Extraction
  * - Fullscreen Drag-and-Drop Handler
@@ -8153,6 +8153,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ytKbResetBtn = document.getElementById('ytKbResetBtn');
     const ytKbClearBtn = document.getElementById('ytKbClearBtn');
 
+// Easter egg: the System Protocol One OST is baked into the app (audio/system-protocol-one-ost.mp4)
+    // and mirrored to its verified YouTube source, which is also the fallback when the local file is missing.
+    const EASTER_EGG = Object.freeze({
+        id: '0YVYefCo1l4',
+        title: 'System Protocol One OST',
+        author: 'PalmDesert',
+        url: 'https://www.youtube.com/watch?v=0YVYefCo1l4',
+        localFile: 'audio/system-protocol-one-ost.mp4'
+    });
+
     class YouTubeKnowledgebase {
         constructor(initialCurated = []) {
             this.STORAGE_KEY = 'ai_warp_youtube_kb_v2';
@@ -8176,6 +8186,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 { id: 'vnyLtdufSbE', title: 'Lofi Cyber Beats & Tokyo Rain Neon', source: 'curated' },
                 { id: 'R1UlclDAmwg', title: 'Glitch Core Cybernetic Breakcore Sync', source: 'curated' }
             ];
+            if (!this.defaultCurated.some(x => x.id === EASTER_EGG.id)) {
+                this.defaultCurated = this.defaultCurated.concat([{ id: EASTER_EGG.id, title: EASTER_EGG.title, source: 'curated' }]);
+            }
             this.init();
         }
 
@@ -8446,6 +8459,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             ytKbList.innerHTML = filtered.map(item => {
                 const isActive = item.id === activeVideoId;
+                const isEgg = item.id === EASTER_EGG.id;
                 const sourceBadge = `<span class="yt-kb-source-badge ${item.source}">${item.source}${item.playlistId ? ' · PL' : ''}</span>`;
                 const playInfo = item.playCount ? `· Played ${item.playCount}x` : '';
                 return `
@@ -8460,7 +8474,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             </div>
                         </div>
                         <div class="yt-kb-item-actions">
-                            <button class="wired-button kb-play-item-btn" data-id="${item.id}" title="Play Video Now">▶ PLAY</button>
+                            <button class="wired-button kb-play-item-btn" data-id="${item.id}" title="${isEgg ? 'Play the baked-in local video (falls back to YouTube)' : 'Play Video Now'}">▶ PLAY${isEgg ? ' LOCAL' : ''}</button>
                             <button class="wired-button kb-copy-item-btn" data-id="${item.id}" title="Copy Link">📋</button>
                             <button class="wired-button danger-btn kb-del-item-btn" data-id="${item.id}" title="Remove from Knowledgebase">✕</button>
                         </div>
@@ -8473,7 +8487,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 btn.addEventListener('click', () => {
                     const id = btn.getAttribute('data-id');
                     const it = this.items.find(x => x.id === id);
-                    if (it) {
+                    if (it && it.id === EASTER_EGG.id) {
+                        playEasterEgg();
+                    } else if (it) {
                         ytHistory.push(it);
                         ytHistoryIndex = ytHistory.length - 1;
                         loadYouTube(it);
@@ -9403,7 +9419,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Play Local Video (.mp4, .avi, .mkv, .mov)
-    function playLocalVideo(file, customTitle = null) {
+    function playLocalVideo(file, customTitle = null, onFail = null) {
         pauseAllOtherMedia();
         if (ytWarpShell) ytWarpShell.style.display = 'none';
         currentMediaKind = 'video';
@@ -9417,16 +9433,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         routeElementToAudioContext(localVideo);
 
-        const url = URL.createObjectURL(file);
+        const isUrl = typeof file === 'string';
+        const url = isUrl ? file : URL.createObjectURL(file);
+        localVideo.onerror = null;
+        if (onFail) localVideo.onerror = () => { localVideo.onerror = null; onFail(); };
         localVideo.src = url;
         localVideo.volume = 1.0;
         localVideo.play().then(() => {
             if (aiWarp) aiWarp.setSourceMode('video', localVideo);
-            bindMediaTransportEvents(localVideo, customTitle || file.name);
+            bindMediaTransportEvents(localVideo, customTitle || (isUrl ? url : file.name));
         }).catch(err => {
-            console.warn('Video playback notice (may require H.264/AAC codec container):', err);
+            console.warn('Video playback notice (may require a supported codec/container):', err);
+            if (onFail && !localVideo.error) onFail();
         });
     }
+
+    function playEasterEgg() {
+        const fallback = () => {
+            const it = ytKb.items.find(x => x.id === EASTER_EGG.id) || { id: EASTER_EGG.id, title: EASTER_EGG.title };
+            ytHistory.push(it);
+            ytHistoryIndex = ytHistory.length - 1;
+            loadYouTube(it);
+            showHudNotification('LOCAL FILE MISSING · PLAYING FROM YOUTUBE: ' + EASTER_EGG.title);
+        };
+        playLocalVideo(EASTER_EGG.localFile, EASTER_EGG.title + ' · ' + EASTER_EGG.author, fallback);
+        showHudNotification('\u{1F95A} EASTER EGG · ' + EASTER_EGG.title.toUpperCase());
+    }
+
+    // Konami code: up up down down left right left right B A
+    (function () {
+        const seq = ['arrowup', 'arrowup', 'arrowdown', 'arrowdown', 'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a'];
+        let pos = 0;
+        window.addEventListener('keydown', (e) => {
+            const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+            if (tag === 'input' || tag === 'textarea' || tag === 'select') { pos = 0; return; }
+            const k = (e.key || '').toLowerCase();
+            pos = (k === seq[pos]) ? pos + 1 : (k === seq[0] ? 1 : 0);
+            if (pos === seq.length) { pos = 0; playEasterEgg(); }
+        });
+    })();
 
     // Play Local Audio (.mp3, .m4a) & Hook Folder Artwork Accompaniment
     async function playLocalAudio(file, customTitle = null) {
@@ -9472,8 +9517,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const files = Array.from(fileList);
         if (files.length === 0) return;
 
-        const isVideo = f => /\.(mp4|avi|mkv|mov|webm|m4v)$/i.test(f.name) || f.type.startsWith('video/');
-        const isAudio = f => /\.(mp3|m4a|wav|ogg|flac|aac)$/i.test(f.name) || f.type.startsWith('audio/');
+        const isVideo = f => /\.(mp4|m4v|mov|avi|mkv|webm|ogv|ogm|3gp|av1|ivf)$/i.test(f.name) || f.type.startsWith('video/');
+        const isAudio = f => /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac|weba|mka|spx|aif|aiff)$/i.test(f.name) || f.type.startsWith('audio/');
         const isImage = f => /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(f.name) || f.type.startsWith('image/');
 
         const images = files.filter(isImage);

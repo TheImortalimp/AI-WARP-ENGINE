@@ -8,7 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>AI-Warp-Engine</AssemblyName>
     <RootNamespace>AiWarpEngine</RootNamespace>
-    <Version>6.4.33</Version>
+    <Version>6.4.34</Version>
     <Authors>River Lyle Reuveni</Authors>
     <Company>River Lyle Reuveni (Imortalimp)</Company>
     <Product>AI WARP ENGINE</Product>
@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\ai_warp_engine\audio\*.mp3;..\ai_warp_engine\audio\*.jpg"
+    <Content Include="..\ai_warp_engine\audio\*.mp3;..\ai_warp_engine\audio\*.mp4;..\ai_warp_engine\audio\*.jpg"
              Link="app\audio\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
