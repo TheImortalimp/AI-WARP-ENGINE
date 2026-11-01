@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     window.addEventListener('error', (event) => {
-        if (event.filename && /(?:glitch_engine|r3_gc3_factories|r3_ghost_vsync|ai_warp_engine|media_page)\.js(?:\?|$)/.test(event.filename)) {
+        if (event.filename && /(?:glitch_engine|r3_gc3_factories|r3_ghost_vsync|ai_warp_engine|local_media|freeze_frame|media_page)\.js(?:\?|$)/.test(event.filename)) {
             reportError('AI WARP RUNTIME ERROR: ' + event.message, event.error);
         }
     });
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const initialization = (async () => {
-    for (const name of ['GlitchEngine', 'GC3FactoryBank', 'R3GhostVsync', 'AiWarpEngine', 'LocalMediaPlayback']) {
+    for (const name of ['GlitchEngine', 'GC3FactoryBank', 'R3GhostVsync', 'AiWarpEngine', 'LocalMediaPlayback', 'FreezeFrameCapture']) {
         if (!window[name]) throw new Error(`Required engine script did not load: ${name}`);
     }
     for (const id of ['glitchCanvas', 'localVideo', 'localAudio', 'localArtworkImg']) {
@@ -3962,36 +3962,24 @@ const BUILT_IN_YOUTUBE_PLAYLISTS = Object.freeze([
 
     /* ── 10. FREEZE FRAME (SCREENSHOT CAPTURE) ──────────────────────────── */
     const freezeFrameBtn = document.getElementById('freezeFrameBtn');
+    const freezeCapture = new window.FreezeFrameCapture(lensBridge);
     if (freezeFrameBtn) {
-        freezeFrameBtn.onclick = () => {
+        freezeFrameBtn.onclick = async () => {
             const mainCanvas = document.getElementById('glitchCanvas');
-            if (mainCanvas) {
-                try {
-                    downloadCanvas(mainCanvas, window.getComputedStyle(document.documentElement).filter);
-                    showHudNotification('FREEZE FRAME 📷 // FULL LENS PNG CAPTURED (NO HUD)');
-                } catch (err) {
-                    showHudNotification('FREEZE FRAME FAILED: ' + (err && err.message ? err.message : err));
-                }
+            try {
+                const png = await freezeCapture.capture(mainCanvas, aiWarp.sourceMode);
+                downloadFreezeFrame(png);
+                showHudNotification('FREEZE FRAME 📷 // FULL LENS + FX PNG CAPTURED (NO HUD)');
+            } catch (err) {
+                reportError('FREEZE FRAME FAILED', err);
             }
         };
     }
 
-    function downloadCanvas(canvas, pageFilter = 'none') {
-        const canvasFilter = window.getComputedStyle(canvas).filter;
-        const filter = [canvasFilter, pageFilter].filter(value => value && value !== 'none').join(' ');
-        const out = document.createElement('canvas');
-        out.width = canvas.width;
-        out.height = canvas.height;
-        const context = out.getContext('2d');
-        if (!context) throw new Error('Could not create a canvas context for the screenshot.');
-        context.fillStyle = '#020307';
-        context.fillRect(0, 0, out.width, out.height);
-        if (filter) context.filter = filter;
-        context.drawImage(canvas, 0, 0);
-        canvas = out;
+    function downloadFreezeFrame(png) {
         const link = document.createElement('a');
         link.download = `ai-warp-freeze-frame-${Date.now()}.png`;
-        link.href = canvas.toDataURL('image/png');
+        link.href = png;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

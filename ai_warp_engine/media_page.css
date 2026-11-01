@@ -119,6 +119,11 @@ body {
 }
 
 /* Fullscreen CRT Scanlines & Cyber Vignette */
+.freeze-frame-capture body > :not(#canvas-stage):not(#fullscreen-fx-layer):not(.svg-warp-defs),
+.freeze-frame-capture #fullscreen-fx-layer > :not(.crt-overlay):not(.cyber-vignette) {
+    visibility: hidden !important;
+}
+
 #fullscreen-fx-layer {
     position: fixed;
     top: 0;

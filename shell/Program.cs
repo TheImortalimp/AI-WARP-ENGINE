@@ -25,6 +25,7 @@ internal sealed class MainForm : Form
     private LocalMediaConverter mediaConverter;
     private CancellationTokenSource mediaConversion;
     private string mediaRequestId;
+    private bool freezeCaptureBusy;
 
     public MainForm()
     {
@@ -117,6 +118,7 @@ internal sealed class MainForm : Form
             else if (msg == "lens:frames|stop") { pumpGen++; StopTap(); }
             else if (msg.StartsWith("media:convert|", StringComparison.Ordinal)) ConvertLocalMedia(msg.Substring(14), e);
             else if (msg.StartsWith("media:cancel|", StringComparison.Ordinal) && msg.Substring(13) == mediaRequestId) mediaConversion?.Cancel();
+            else if (msg.StartsWith("freeze:capture|", StringComparison.Ordinal)) CaptureFreezeFrame(msg.Substring(15));
         };
         core.Navigate($"https://{Host}/index.html");
     }
@@ -131,6 +133,35 @@ internal sealed class MainForm : Form
     private CoreWebView2Environment? lensEnv;
     private Form? lensForm;
     private WebView2? lensView;
+
+    private async void CaptureFreezeFrame(string id)
+    {
+        var core = view.CoreWebView2;
+        var document = core.Source;
+        var ownsCapture = false;
+        try
+        {
+            if (string.IsNullOrEmpty(id) || id.Length > 20 || !id.All(char.IsAsciiDigit))
+                throw new ArgumentException("Invalid freeze-frame request ID.");
+            if (freezeCaptureBusy) throw new InvalidOperationException("A screenshot capture is already in progress.");
+            freezeCaptureBusy = true;
+            ownsCapture = true;
+            using var image = new MemoryStream();
+            await core.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png, image);
+            if (!IsDisposed && core.Source == document)
+                core.PostWebMessageAsString("freeze:result|" + JsonSerializer.Serialize(new { id, png = Convert.ToBase64String(image.ToArray()) }));
+        }
+        catch (Exception error) when (error is ArgumentException or InvalidOperationException or IOException or System.Runtime.InteropServices.COMException)
+        {
+            System.Diagnostics.Trace.TraceError("Freeze-frame capture: {0}", error);
+            if (!IsDisposed && core.Source == document)
+                core.PostWebMessageAsString("freeze:result|" + JsonSerializer.Serialize(new { id, error = error.Message }));
+        }
+        finally
+        {
+            if (ownsCapture) freezeCaptureBusy = false;
+        }
+    }
 
     private async void ConvertLocalMedia(string json, CoreWebView2WebMessageReceivedEventArgs message)
     {

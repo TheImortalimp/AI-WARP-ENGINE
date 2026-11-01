@@ -13,7 +13,7 @@ const aliases = ['index.html', 'ai_warp_engine.html', 'media_page.html'];
 const dependencies = [
     'three.min.js',
     'glitch_engine.js', 'r3_gc3_factories.js', 'r3_ghost_vsync.js',
-    'ai_warp_engine.js', 'local_media.js', 'media_page.js'
+    'ai_warp_engine.js', 'local_media.js', 'freeze_frame.js', 'media_page.js'
 ];
 
 test('application aliases contain one document, unique IDs and one ordered engine stack', () => {
@@ -329,12 +329,12 @@ test('HUD change notice, shell version, installer version and asset cache versio
     const installer = fs.readFileSync(path.join(root, 'shell', 'setup.nsi'), 'utf8');
     assert.ok(installer.includes(`!define VERSION "${version}"`));
     assert.ok(JSON.parse(read('media_page.json')).engine.version.startsWith(version + '-'));
-    assert.ok(read('ai_warp_showcase_section.html').includes(`Web v${version}: Glitch Hardened &amp; FX Fixed`));
+    assert.ok(read('ai_warp_showcase_section.html').includes('Web v6.4.37: Glitch Hardened &amp; FX Fixed'));
     for (const name of aliases) {
         const html = read(name);
         assert.ok(html.includes(`v${version} · Glitch Hardened &amp; FX Fixed`));
         const assets = [...html.matchAll(/(?:src|href)="([^"]+\.(?:js|css)\?v=([^"]+))"/g)];
-        assert.equal(assets.length, 8);
-        assert.ok(assets.every(match => match[2] === version + '.0'));
+        assert.equal(assets.length, 9);
+        assert.ok(assets.every(match => match[2] === version));
     }
 });

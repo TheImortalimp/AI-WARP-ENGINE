@@ -52,6 +52,11 @@ The application loads local scripts in this dependency order:
 6. `local_media.js`
 7. `media_page.js`
 
+Private patch 6.4.37.1 additionally loads `freeze_frame.js` immediately before
+`media_page.js`. Freeze Frame now includes fullscreen CRT/vignette and page FX,
+not just the engine canvas. Windows captures the HUD-free compositor output;
+browser YouTube needs screen/tab capture. See `../RELEASE_NOTES_6.4.37.1.md`.
+
 ### Upload to imortalimp.nl
 
 Upload the complete `ai_warp_engine` folder beside the website's updated
