@@ -1,6 +1,9 @@
-# AI WARP ENGINE 6.4.37.1 - private freeze-frame fix
+# AI WARP ENGINE 6.4.37.1 - freeze-frame fix
 
-Private review patch for GyanD; not a public Windows release. The 6.4.37
+The browser patch is public in the v6.4.37 release as
+`AI-WARP-ENGINE-6.4.37.1-browser.zip`. It contains only `ai_warp_engine/`,
+excluding website-root home/index pages, native binaries and FFmpeg.
+The Windows patch is private for GyanD; not a public Windows release. The 6.4.37
 public installer remains gated on verified FFmpeg corresponding-source coverage.
 
 Freeze Frame (button or S) now captures the Windows WebView2 composited viewport:

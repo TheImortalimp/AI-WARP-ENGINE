@@ -37,6 +37,12 @@ including its media, and serve it over localhost rather than opening `file://`.
 The browser ZIP omits website-root `home.html` and `index.html` but includes the
 app folder's own `index.html`. The documentation ZIP is separate.
 
+**Current browser patch: 6.4.37.1.** Download
+`AI-WARP-ENGINE-6.4.37.1-browser.zip` from the same release for full-scope
+freeze-frame exports including fullscreen CRT/vignette and final page filters.
+See [patch notes](RELEASE_NOTES_6.4.37.1.md). Windows 6.4.37.1 remains private
+pending source verification; the original approval workflow still stages 6.4.37.
+
 ## What's fixed in 6.4.37
 
 - Continuous, synchronized FX with smooth mode transitions and frame recovery.

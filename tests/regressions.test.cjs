@@ -329,7 +329,7 @@ test('HUD change notice, shell version, installer version and asset cache versio
     const installer = fs.readFileSync(path.join(root, 'shell', 'setup.nsi'), 'utf8');
     assert.ok(installer.includes(`!define VERSION "${version}"`));
     assert.ok(JSON.parse(read('media_page.json')).engine.version.startsWith(version + '-'));
-    assert.ok(read('ai_warp_showcase_section.html').includes('Web v6.4.37: Glitch Hardened &amp; FX Fixed'));
+    assert.ok(read('ai_warp_showcase_section.html').includes(`Web v${version}: Glitch Hardened &amp; FX Fixed`));
     for (const name of aliases) {
         const html = read(name);
         assert.ok(html.includes(`v${version} · Glitch Hardened &amp; FX Fixed`));

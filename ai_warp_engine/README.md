@@ -50,12 +50,13 @@ The application loads local scripts in this dependency order:
 4. `r3_ghost_vsync.js`
 5. `ai_warp_engine.js`
 6. `local_media.js`
-7. `media_page.js`
+7. `freeze_frame.js`
+8. `media_page.js`
 
-Private patch 6.4.37.1 additionally loads `freeze_frame.js` immediately before
-`media_page.js`. Freeze Frame now includes fullscreen CRT/vignette and page FX,
+Version 6.4.37.1 loads `freeze_frame.js` immediately before
+`media_page.js`. Freeze Frame includes fullscreen CRT/vignette and page FX,
 not just the engine canvas. Windows captures the HUD-free compositor output;
-browser YouTube needs screen/tab capture. See `../RELEASE_NOTES_6.4.37.1.md`.
+browser YouTube needs screen/tab capture. See [browser details](DESCRIPTION.md).
 
 ### Upload to imortalimp.nl
 
@@ -65,18 +66,18 @@ Upload the complete `ai_warp_engine` folder beside the website's updated
 all runtime scripts, configuration, CSS, bundled media, and the Three.js license.
 No Node.js, FFmpeg or Windows executable is needed on the web server.
 
-The release asset `AI-WARP-ENGINE-6.4.37-browser.zip` contains only
+The current release asset `AI-WARP-ENGINE-6.4.37.1-browser.zip` contains only
 `ai_warp_engine/`, including its app `index.html`. It excludes the website-root
 `home.html` and `index.html`, the old ZIP, legacy `web` bundle and native shell.
 Extract it into the website root alongside your existing website pages.
 
-The separate local `AI-WARP-ENGINE-6.4.37-web-upload.zip` is a website **update** bundle:
+The current local `AI-WARP-ENGINE-6.4.37.1-web-upload.zip` is a website **update** bundle:
 its top level contains `home.html`, `index.html` and `ai_warp_engine/`.
 Extract these into the existing website root, replacing matching files and
 preserving the site's other assets. It excludes the obsolete 6.4 ZIP, the legacy
 `web` bundle and native shell files. It is not a backup of the entire website.
 
-The three app aliases show `v6.4.37 · Glitch Hardened & FX Fixed`.
+The three app aliases show `v6.4.37.1 · Glitch Hardened & FX Fixed`.
 Local video and audio use the same continuous FX path as captured frames.
 Browser codec limitations still apply: unsupported AVI must be converted locally
 to H.264/AAC MP4 (or AAC M4A for audio); automatic conversion is Windows-only.
@@ -86,12 +87,13 @@ HTTPS and browser permission approval are required for capture/microphone.
 Main-app scripts load only from this folder, with a local-only script CSP.
 External-browser and new-window links are disabled inside the app; website
 launch links stay in the current tab. Keep any hosting CSP compatible with
-same-origin scripts, media/blob URLs and the YouTube embed. Native Windows
+same-origin scripts, media/blob URLs, data images used for screenshot-layer
+rasterization and the YouTube embed. Native Windows
 navigation/debugging protections do not apply to a normal browser.
 
 Upload runtime assets before the three entry HTML files so their cache-revision
 URLs never point to missing scripts. The old `ai_warp_engine_r3_canvas_v6.4.zip`
-is a historical archive, not the current upload bundle. The v6.4.37 browser ZIP
+is a historical archive, not the current upload bundle. The v6.4.37.1 browser ZIP
 is published separately from the Windows installer; website download links
 identify the previous published Windows installer (v6.4.36).
 
