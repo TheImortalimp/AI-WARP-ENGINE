@@ -16,6 +16,13 @@ third-party software licenses or media rights.
 
 ## Windows distribution pending source review
 
+This section describes the **older FFmpeg-based 6.4.37/6.4.37.1 builds**, not
+the current 6.4.38.1 native edition. Version 6.4.38.1 contains no FFmpeg binary,
+library or bundled Windows codec pack. It uses installed OS media components.
+Its .NET, WebView2 and NAudio dependencies retain their upstream terms.
+NAudio is MIT: <https://github.com/naudio/NAudio>.
+WebView2 is required on the machine rather than redistributed as an installer.
+
 The local Windows installer includes Gyan's full static GPLv3 FFmpeg build and
 its LICENSE/README under `tools`. GPLv3 applies to that binary and its covered
 linked dependencies, not by virtue of app CC0 licensing.
@@ -48,3 +55,15 @@ and verify source coverage matches the binary actually shipped.
 The Windows app also uses Microsoft .NET and WebView2 components under their
 upstream terms. Preserve runtime notices in a complete app package. .NET is
 self-contained; WebView2 remains a prerequisite, not a bundled browser installer.
+
+## Native 6.4.38.1 package notices
+
+NAudio 2.2.1's MIT notice is included as `NAUDIO-LICENSE.txt`.
+The build copies exact .NET runtime-package licenses/notices and WebView2 SDK
+LICENSE/NOTICE files into the app directory. Windows SDK projection/runtime terms
+are included as `WINDOWS-SDK-LICENSE.rtf` (upstream
+<https://aka.ms/WinSDKLicenseURL>); the installer presents these terms separately.
+Preserve those notices and applicable third-party terms when redistributing the
+complete native package. App CC0 licensing does not grant rights to Microsoft's
+components. Licensed OS codecs and WebView2 runtime installation remain the
+user's responsibility.

@@ -1,12 +1,12 @@
 # AI WARP ENGINE — User Manual
 
-**Applies to:** AI WARP ENGINE standalone Windows app, local build 6.4.37
-**Platform:** Windows 10/11 x64
+**Applies to:** AI WARP ENGINE 6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)
+**Platform:** Windows 10 build 19041 or newer / Windows 11 x64
 
-**FINAL NOVEMBER 2026 RELEASE:** the browser app and full documentation are
-published in [v6.4.37](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.37).
-Windows binaries remain local pending complete FFmpeg source/build materials.
-See [release status](RELEASE_NOTES_6.4.37.md) and
+The FFmpeg-free native edition is in
+[v6.4.38.1](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.38.1).
+Older FFmpeg-based Windows binaries remain pending complete source/build materials.
+See [native release status](RELEASE_NOTES_6.4.38.1.md) and
 [third-party notices](THIRD_PARTY_NOTICES.md).
 
 AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media source, then layer AI Warp modes, glitch voices, Ghost Protocol, V-Sync and audio-reactive automation over it. Release 6.4.27 makes locks hard and the screenshot true: voice locks and new Speed, Opacity, Ghost and V-Sync locks in the bottom controls are enforced every frame against Automated Masters, Continual Randomization, Timed Auto and presets; Freeze Frame (S) saves the full LENS canvas as an opaque PNG without the HUD or app frame, and the canvas no longer shrinks when zooming out (YouTube iframe pixels cannot be read by browsers - use local media, YT LENS or tab capture); Neon Gradient (core and GC#(3)) is a much stronger rotating ribbon with bloom and wash; GC#(3) ASCII streams a continual luminance-mapped character sheet; Twirl is slower and smoother. Release 6.4.26 extends adjustable B&W inversion and Hue rotation across the complete app viewport, including the HUD, controls, dialogs and overlays, and preserves those treatments in freeze-frame screenshots. Release 6.4.25 applies them to the complete LENS composition, including captured frames, initialization art, the Raum X-R showcase and visual easter eggs. Release 6.4.24 makes bottom-dock B&W/Hue tuning activate the paired voices on the LENS Canvas and starts playlist extraction automatically during playback/import. Release 6.4.23 improves YouTube playlist visibility and feed extraction. Release 6.4.22 adds locked B&W/Hue fine-tuning and randomized automation rolls. Release 6.4.21 runs the Raum cover artwork as a slideshow with exclusive glitch sequences while those tracks play. Release 6.4.20 adds the bundled RAUM · X-R showcase of four original tracks. Release 6.4.19 added the subtle-blend DROP THE MILK? feedback effect and audio-aware YouTube playlist playback in the standalone YT LENS.
@@ -26,7 +26,7 @@ AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media sourc
 
 ## Install and launch
 
-1. Build and run `shell\AI-WARP-ENGINE-6.4.37-x64-setup.exe`. This local version is not yet published; the [previous v6.4.36 GitHub release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.36) does not include the latest fixes.
+1. Download `AI-WARP-ENGINE-6.4.38.1-x64-setup.exe` from the v6.4.38.1 release and verify its SHA256.
 2. Run the installer, approve UAC elevation and accept the licence terms. It installs into the current user's desktop by default, but requires administrator access to apply Windows cursor/theme/sound policy hardening. Review [About](ABOUT.md#cursor-and-theme-protection) before installing.
 3. Launch **AI WARP ENGINE** from the desktop shortcut or Start Menu.
 
@@ -38,7 +38,7 @@ under `%LOCALAPPDATA%\AI-Warp-Engine\profile`, unless `AIWARP_PROFILE` overrides
 the profile directory.
 
 The executable is not a single-file portable app: keep its runtime DLLs,
-`app` assets and `tools` dependencies together. The local installer is unsigned.
+`app` assets and bundled runtime dependencies together. The installer is unsigned.
 Its elevated cursor/theme/sound policy changes are system settings, not just
 visual effects. The uninstaller removes installed app files and shortcuts; it
 does not automatically revert those policies or remove the separate user profile.
@@ -80,15 +80,18 @@ The app can run its built-in generative Canvas visuals without opening a media f
 
 Use the app’s media/file controls to load local images, video or audio. Video is rendered into the visual pipeline; audio is monitored by the analyser and can accompany artwork. Playback controls include play/pause and transport where applicable. Selecting another source stops the current media first.
 
-Common formats include image files and media containers supported by the installed WebView2 codecs. Video codec support depends on the file’s encoding as well as its extension.
-
-The Windows app now retries unsupported local video/audio with bundled FFmpeg.
-AVI and other unsupported codecs convert offline to H.264/AAC MP4 (video) or AAC
-M4A (audio); the original is never overwritten. The HUD shows conversion status
-and explicit errors for corrupt/unreadable media. Copies are cached under the
-WebView2 profile's `media-cache` folder (including when `AIWARP_PROFILE` is set).
-Changing sources cancels conversion so an old file cannot start later. Conversion
-can take time and disk space; the first playback waits for it to finish.
+Common formats include media supported by installed WebView2/Windows codecs.
+The FFmpeg-free edition retries decode failures through Windows MediaTranscoder.
+When installed Windows decoders/encoders support the file, conversion produces
+H.264/AAC MP4 or AAC M4A (stereo 48 kHz); originals are never overwritten.
+Not every AVI codec works. Missing codecs, corrupt files and unsupported profiles
+produce explicit errors, not a success-shaped fallback. Windows N requires the
+Media Feature Pack; install licensed codec extensions separately if needed.
+The HD720p encoding profile supplies baseline bitrate/frame-rate defaults,
+with input video dimensions rounded up to even values and retained.
+Converted copies live under the profile's `media-cache` folder.
+Source changes cancel pending conversion. Conversion may take time and disk
+space; cache hits avoid unnecessary re-encoding.
 
 Converted video uses the same LENS/FX, audio-analysis, seek, pause and screenshot
 path as directly supported video. During decoder buffering, FX keep running over

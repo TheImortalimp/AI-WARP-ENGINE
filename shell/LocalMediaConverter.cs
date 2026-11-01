@@ -1,91 +1,129 @@
-using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
+using System.Buffers.Binary;
+using Windows.Media.MediaProperties;
+using Windows.Media.Transcoding;
+using Windows.Storage;
 
 namespace AiWarpEngine;
 
 internal sealed class LocalMediaConverter
 {
-    private readonly string executable;
     private readonly string cache;
 
-    public LocalMediaConverter(string executable, string cache)
+    public LocalMediaConverter(string cache)
     {
-        this.executable = executable;
-        this.cache = cache;
-        Directory.CreateDirectory(cache);
+        this.cache = Path.GetFullPath(cache);
+        Directory.CreateDirectory(this.cache);
     }
 
     public async Task<string> ConvertAsync(string source, string kind, CancellationToken cancellation)
     {
         cancellation.ThrowIfCancellationRequested();
         if (kind != "video" && kind != "audio") throw new ArgumentException("Invalid media kind.");
-        if (!File.Exists(executable)) throw new FileNotFoundException("Bundled FFmpeg is missing. Rebuild or reinstall AI WARP ENGINE.");
         var file = new FileInfo(source);
         if (!file.Exists) throw new FileNotFoundException("The selected media file no longer exists.");
-        var identity = $"h264-stereo48k-aac-v2|{file.FullName}|{file.Length}|{file.LastWriteTimeUtc.Ticks}|{kind}";
+        var identity = $"windows-native-h264-aac-v2|{file.FullName}|{file.Length}|{file.LastWriteTimeUtc.Ticks}|{kind}";
         var key = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(identity))).ToLowerInvariant();
         var name = key + (kind == "video" ? ".mp4" : ".m4a");
         var target = Path.Combine(cache, name);
         if (File.Exists(target) && new FileInfo(target).Length > 0) return name;
-        var temporary = Path.Combine(cache, Guid.NewGuid().ToString("N") + ".partial" + Path.GetExtension(name));
-        var start = new ProcessStartInfo(executable)
-        {
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardError = true
-        };
-        var args = new List<string> {
-            "-nostdin", "-hide_banner", "-loglevel", "error", "-nostats", "-y",
-            "-protocol_whitelist", "file,pipe", "-i", file.FullName
-        };
-        if (kind == "video")
-        {
-            args.AddRange(new[] {
-                "-map", "0:v:0", "-map", "0:a:0?", "-c:v", "libx264", "-preset", "veryfast",
-                "-crf", "20", "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-pix_fmt", "yuv420p"
-            });
-        }
-        else args.AddRange(new[] { "-map", "0:a:0", "-vn" });
-        args.AddRange(new[] { "-c:a", "aac", "-ac", "2", "-ar", "48000", "-b:a", "192k", "-movflags", "+faststart", temporary });
-        foreach (var arg in args) start.ArgumentList.Add(arg);
+        var temporary = Guid.NewGuid().ToString("N") + ".partial" + Path.GetExtension(name);
+        var temporaryPath = Path.Combine(cache, temporary);
         try
         {
-            cancellation.ThrowIfCancellationRequested();
-            using var process = new Process { StartInfo = start };
-            if (!process.Start()) throw new IOException("FFmpeg could not start.");
-            using var registration = cancellation.Register(() =>
+            var input = await StorageFile.GetFileFromPathAsync(file.FullName).AsTask(cancellation);
+            var folder = await StorageFolder.GetFolderFromPathAsync(cache).AsTask(cancellation);
+            var output = await folder.CreateFileAsync(temporary, CreationCollisionOption.FailIfExists).AsTask(cancellation);
+            var profile = kind == "video"
+                ? MediaEncodingProfile.CreateMp4(VideoEncodingQuality.HD720p)
+                : MediaEncodingProfile.CreateM4a(AudioEncodingQuality.High);
+            if (kind == "video")
             {
-                try { if (!process.HasExited) process.Kill(entireProcessTree: true); }
-                catch (InvalidOperationException) { /* The conversion exited before cancellation. */ }
-            });
-            var errorsTask = ReadErrorTailAsync(process.StandardError);
-            await process.WaitForExitAsync();
-            var errors = await errorsTask;
+                var properties = await input.Properties.GetVideoPropertiesAsync().AsTask(cancellation);
+                if (properties.Width == 0 || properties.Height == 0)
+                    throw new IOException("Windows could not read the video's dimensions or codec.");
+                profile.Video.Width = (properties.Width + 1) & ~1u;
+                profile.Video.Height = (properties.Height + 1) & ~1u;
+            }
+            profile.Audio.ChannelCount = 2;
+            profile.Audio.SampleRate = 48000;
+            profile.Audio.Bitrate = 192000;
+            var transcoder = new MediaTranscoder { AlwaysReencode = true };
+            var prepared = await transcoder.PrepareFileTranscodeAsync(input, output, profile).AsTask(cancellation);
+            if (!prepared.CanTranscode)
+                throw new IOException($"Windows native conversion cannot decode/encode this file ({prepared.FailureReason}). " +
+                    "Install the appropriate licensed Windows codec or convert the file separately. Windows N requires the Media Feature Pack.");
+            await prepared.TranscodeAsync().AsTask(cancellation);
             cancellation.ThrowIfCancellationRequested();
-            if (process.ExitCode != 0 || !File.Exists(temporary) || new FileInfo(temporary).Length == 0)
-                throw new IOException("Local conversion failed: " + (string.IsNullOrWhiteSpace(errors)
-                    ? "FFmpeg produced no playable output." : errors.Trim()));
-            File.Move(temporary, target, overwrite: true);
+            if (!File.Exists(temporaryPath) || new FileInfo(temporaryPath).Length == 0)
+                throw new IOException("Windows native conversion produced no playable output.");
+            if (!HasMediaSamples(temporaryPath, kind))
+                throw new IOException($"Windows native conversion produced no {kind} frames. " +
+                    "The installed Windows codec cannot convert this input; use a separately licensed codec/converter.");
+            File.Move(temporaryPath, target, overwrite: true);
             return name;
+        }
+        catch (Exception error) when (error is System.Runtime.InteropServices.COMException or NotSupportedException)
+        {
+            throw new IOException("Windows native media conversion failed: " + error.Message +
+                " Check installed Windows media components/codecs; this edition contains no FFmpeg.", error);
         }
         finally
         {
-            if (File.Exists(temporary)) File.Delete(temporary);
+            if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
         }
-
     }
 
-    private static async Task<string> ReadErrorTailAsync(StreamReader reader)
+    // MediaTranscoder can finish an AVI transcode with audio but an empty video track.
+    private static bool HasMediaSamples(string path, string kind)
     {
-        var tail = new StringBuilder();
-        var buffer = new char[2048];
-        int count;
-        while ((count = await reader.ReadAsync(buffer.AsMemory())) > 0)
+        using var stream = File.OpenRead(path);
+        uint Number(long offset)
         {
-            tail.Append(buffer, 0, count);
-            if (tail.Length > 1200) tail.Remove(0, tail.Length - 1200);
+            stream.Position = offset;
+            Span<byte> bytes = stackalloc byte[4];
+            stream.ReadExactly(bytes);
+            return BinaryPrimitives.ReadUInt32BigEndian(bytes);
         }
-        return tail.ToString();
+        IEnumerable<(string Type, long Start, long End)> Boxes(long start, long end)
+        {
+            for (var offset = start; offset + 8 <= end;)
+            {
+                var size = (long)Number(offset);
+                stream.Position = offset + 4;
+                var typeBytes = new byte[4];
+                stream.ReadExactly(typeBytes);
+                var header = 8;
+                if (size == 1)
+                {
+                    stream.Position = offset + 8;
+                    var extended = new byte[8];
+                    stream.ReadExactly(extended);
+                    var length = BinaryPrimitives.ReadUInt64BigEndian(extended);
+                    if (length > long.MaxValue) throw new IOException("Invalid native output box length.");
+                    size = (long)length;
+                    header = 16;
+                }
+                if (size == 0) size = end - offset;
+                if (size < header || size > end - offset) throw new IOException("Invalid native output container.");
+                yield return (Encoding.ASCII.GetString(typeBytes), offset + header, offset + size);
+                offset += size;
+            }
+        }
+        foreach (var moov in Boxes(0, stream.Length).Where(box => box.Type == "moov"))
+        foreach (var trak in Boxes(moov.Start, moov.End).Where(box => box.Type == "trak"))
+        foreach (var mdia in Boxes(trak.Start, trak.End).Where(box => box.Type == "mdia"))
+        {
+            var children = Boxes(mdia.Start, mdia.End).ToArray();
+            var requiredTrack = children.Any(box => box.Type == "hdlr" && box.End - box.Start >= 12 &&
+                Number(box.Start + 8) == (kind == "video" ? 0x76696465u : 0x736f756eu));
+            if (!requiredTrack) continue;
+            foreach (var minf in children.Where(box => box.Type == "minf"))
+            foreach (var stbl in Boxes(minf.Start, minf.End).Where(box => box.Type == "stbl"))
+            foreach (var stsz in Boxes(stbl.Start, stbl.End).Where(box => box.Type == "stsz"))
+                if (stsz.End - stsz.Start >= 12 && Number(stsz.Start + 8) > 0) return true;
+        }
+        return false;
     }
 }

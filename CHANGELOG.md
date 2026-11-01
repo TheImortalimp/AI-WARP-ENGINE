@@ -2,6 +2,17 @@
 
 Standalone Windows app releases. Full notes per release are in the `RELEASE_NOTES_*.md` files.
 
+## 6.4.38.1 - COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)
+- Separate FFmpeg-free Windows edition with MediaTranscoder fallback through installed OS codecs.
+- Bundled .NET runtime and dependency notices; installed WebView2/media components remain prerequisites.
+- Kept original files, distinct cached conversion identity, cancellation and explicit errors.
+- Rejected native AVI outputs with an empty required sample track instead of reporting successful conversion.
+- Retained full-FX HUD-free screenshot capture and continuous warp/media behavior.
+- Explicitly carried all 34 original voices, 29 warp modes, Ghost/V-Sync and 80 Milkdrop presets from 6.4.36; checked 816 visible voice frames and 2,610 gap-free warp frames in the native host.
+- Native label describes the media backend, not universal AVI support or an all-native UI.
+- Validation: 11 native conversion checks, 22 control-policy assertions, converted video/audio playback with readable pixels and audio peak 198, pause/seek/resume and native/browser screenshot pixels.
+- Earlier FFmpeg publication gate and private review build are unchanged.
+
 ## 6.4.37 - Glitch Hardened & FX Fixed
 - Synchronized completed FX frames, continuous warp timing, 240 ms mode blending, gap coverage and last-good-frame recovery for local media and LENS.
 - Bundled offline FFmpeg conversion for unsupported local video/audio, including AVI, with original preservation, cached copies, cancellation and explicit errors.

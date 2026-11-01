@@ -1,8 +1,8 @@
 {
   "engine": {
     "name": "AI Warp Engine — R3 Canvas Edition",
-    "version": "6.4.37.1-glitch-hardened-fx-fixed",
-    "releaseSummary": "v6.4.37.1: Glitch Hardened & FX Fixed. Continuous warp flow, smooth transitions, offline AVI/audio conversion, local-only app scripts and hardened native control boundaries. External browsers and release debugging are disabled; accessibility and existing cursor protections are retained.",
+    "version": "6.4.38.1-glitch-hardened-fx-fixed",
+    "releaseSummary": "6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D). Windows MediaTranscoder converts supported local codecs without FFmpeg. Requires installed Windows media components and WebView2; not universal AVI support. Retains continuous FX, full-scope screenshots and app-control protections.",
     "author": "IMORTALIMP.NL & Arena AI",
     "ghostKey": "Gh0sTs 1n Th3 Sh3lLs - D1giTaL R3BiRtHs - f34Rd0t.C0mM4",
     "ghostKeyStanzas": [

@@ -73,7 +73,7 @@ internal sealed class MainForm : Form
         core.SetVirtualHostNameToFolderMapping(Host,
             Path.Combine(AppContext.BaseDirectory, "app"), CoreWebView2HostResourceAccessKind.DenyCors);
         var mediaCache = Path.Combine(profile, "media-cache");
-        mediaConverter = new LocalMediaConverter(Path.Combine(AppContext.BaseDirectory, "tools", "ffmpeg.exe"), mediaCache);
+        mediaConverter = new LocalMediaConverter(mediaCache);
         core.SetVirtualHostNameToFolderMapping("media.warp.local", mediaCache, CoreWebView2HostResourceAccessKind.Allow);
         core.Settings.AreDevToolsEnabled = false;
         core.Settings.AreHostObjectsAllowed = false;

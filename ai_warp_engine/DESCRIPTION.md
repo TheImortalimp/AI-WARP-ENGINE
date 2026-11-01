@@ -1,4 +1,4 @@
-# AI WARP ENGINE 6.4.37.1 - Glitch Hardened & FX Fixed
+# AI WARP ENGINE 6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)
 
 Browser visual synthesizer with 34 glitch voices, 29 warp effects, local media,
 YouTube playback, audio analysis, presets and Canvas screenshots.
@@ -17,18 +17,21 @@ the completed canvas; they are not duplicated into the export.
 
 Local playback requires browser-supported codecs. AVI and other unsupported
 files must be converted locally to H.264/AAC MP4 or AAC M4A before loading.
-Automatic FFmpeg conversion and desktop YouTube LENS capture are Windows-only.
+Automatic Windows conversion uses installed OS codecs/MediaTranscoder, with
+explicit errors for unsupported inputs. No FFmpeg or Windows codec pack is bundled.
+Desktop YouTube LENS capture is Windows-only.
 For readable YouTube pixels in a browser, use the app's screen/tab capture.
 
 Upload this entire folder, including `audio`, under `ai_warp_engine` beside the
 website's `home.html` and `index.html`. Serve over HTTPS, not `file://`.
 Open [the browser app](index.html) in the same tab.
 
-The v6.4.37 GitHub release provides the current 6.4.37.1 app-only browser ZIP, excluding the
+The v6.4.38.1 GitHub release provides the current app-only browser ZIP, excluding the
 website-root `home.html` and `index.html` but retaining this folder's app aliases.
-The current Windows v6.4.37.1 installer is private pending FFmpeg source
-verification; website download links identify
-the previous published 6.4.36 installer.
+Windows 6.4.38.1 bundles .NET and requires installed WebView2 and Windows media
+components (Windows 10 build 19041+/11 x64). Windows N needs the Media Feature Pack.
+The native label does not promise every codec or an all-native UI.
+Older FFmpeg-based installers remain pending source verification.
 
 App code: CC0 / Unlicense. Bundled Three.js retains its
 [MIT license](THREE-LICENSE.txt); other media retain their own rights.

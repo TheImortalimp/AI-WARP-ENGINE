@@ -1,6 +1,11 @@
 # About AI WARP ENGINE
 
-**Version 6.4.37 - Glitch Hardened & FX Fixed.**
+**6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D).**
+
+The current edition uses Windows MediaTranscoder and installed Windows codecs
+without FFmpeg. .NET is bundled; WebView2 and OS media components are prerequisites.
+The native label describes the media backend, not universal file support or
+an all-native UI. No affiliation with GyanD is implied.
 
 AI WARP ENGINE is a visual synthesizer and audio-reactive media playground.
 It combines a plain HTML/JavaScript/Canvas app with a Windows WinForms/WebView2
@@ -22,15 +27,16 @@ freeze frames exclude the HUD.
 
 ## What changed in 6.4.37
 
-Continuous FX now use synchronized frames, smooth mode transitions and failure
-recovery. Unsupported local video/audio, including AVI, converts offline with
-bundled FFmpeg. App navigation and native controls are restricted, remote app
+Continuous FX use synchronized frames, smooth mode transitions and failure
+recovery. The earlier 6.4.37 Windows build used bundled FFmpeg; current 6.4.38.1
+converts supported files through Windows codecs and reports unsupported inputs.
+App navigation and native controls are restricted, remote app
 scripts and release debugging are disabled, and external browsers cannot launch.
 Accessibility and existing cursor protections remain; no Defender scans or
 physical-input-only guarantee are included.
 
 The title-adjacent HUD notice reads:
-**v6.4.37 - Glitch Hardened & FX Fixed**.
+**6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)**.
 
 ### Previous startup repair in 6.4.36
 

@@ -60,7 +60,7 @@
                 throw new Error('This codec/container cannot play in this browser. Convert the file locally to H.264/AAC MP4 (video) or AAC M4A (audio), or use the updated Windows app.');
             }
             const id = String(++this.requestId);
-            this.onStatus('CONVERTING LOCALLY: ' + file.name + ' - original file stays unchanged', true);
+            this.onStatus('WINDOWS NATIVE CONVERSION: ' + file.name + ' - requires installed codecs; original stays unchanged', true);
             try {
                 return await new Promise((resolve, reject) => {
                     this.pending = { id, resolve, reject };

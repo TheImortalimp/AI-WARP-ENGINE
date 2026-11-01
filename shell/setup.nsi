@@ -1,12 +1,12 @@
 Unicode true
 !include "MUI2.nsh"
 !ifndef VERSION
-  !define VERSION "6.4.37.1"
+  !define VERSION "6.4.38.1"
 !endif
 !ifndef SRC
-  !define SRC "publish"
+  !define SRC "publish-native-6.4.38.1"
 !endif
-Name "AI WARP ENGINE"
+Name "AI WARP ENGINE - 6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)"
 OutFile "AI-WARP-ENGINE-${VERSION}-x64-setup.exe"
 RequestExecutionLevel admin
 InstallDir "$DESKTOP\AI WARP ENGINE"
@@ -26,6 +26,7 @@ UninstallIcon "app.ico"
 
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
+!insertmacro MUI_PAGE_LICENSE "WINDOWS-SDK-LICENSE.rtf"
 !insertmacro MUI_PAGE_INSTFILES
 !define MUI_FINISHPAGE_RUN "$INSTDIR\AI-Warp-Engine.exe"
 !insertmacro MUI_PAGE_FINISH

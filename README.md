@@ -1,4 +1,9 @@
-# AI WARP ENGINE - v6.4.37
+# AI WARP ENGINE - v6.4.38.1
+
+The native 6.4.38.1 edition explicitly retains the complete 6.4.36 FX/voice banks:
+34 voices, 29 warp modes, R3 Ghost/V-Sync and 80 Milkdrop presets, together with
+the newer continuous-frame and full-scope freeze-frame fixes. See
+[the carryover validation](RELEASE_NOTES_6.4.38.1.md#explicit-6436-fxvoice-carryover). - v6.4.38.1
 
 **A Windows visual synthesizer and audio-reactive media playground.**
 Combine live media, generative artwork, 34 glitch voices, 29 warp effects and
@@ -8,19 +13,21 @@ audio-driven automation in one Canvas-based performance interface.
 
 ## Download and install
 
-**Current local build:** `shell\AI-WARP-ENGINE-6.4.37-x64-setup.exe`.
-**FINAL NOVEMBER 2026 RELEASE:** the [v6.4.37 release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.37)
-publishes the browser app and documentation. The Windows installer and app bundle
-are **not yet published**: complete corresponding source/build materials for the
-bundled GPLv3 FFmpeg build are awaiting [upstream request #254](https://github.com/GyanD/codexffmpeg/issues/254).
-See [release notes](RELEASE_NOTES_6.4.37.md) and
+**6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)**:
+the [v6.4.38.1 release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.38.1)
+provides an FFmpeg-free Windows installer, complete app bundle, browser assets
+and documentation. Conversion uses installed Windows codecs/MediaTranscoder;
+this is not universal AVI/codec support or an affiliation with GyanD.
+See [native release notes](RELEASE_NOTES_6.4.38.1.md) and
 [third-party redistribution status](THIRD_PARTY_NOTICES.md).
-Daily upstream checks and approval-gated installer publication are configured;
+The earlier FFmpeg-based Windows release remains pending source review.
+Daily upstream checks and approval-gated publication for that older binary remain configured;
 see [Windows release workflow](WINDOWS_RELEASE_WORKFLOW.md).
 
-[Previous published v6.4.36 installer](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/download/v6.4.36/AI-WARP-ENGINE-6.4.36-x64-setup.exe)
+[Windows v6.4.38.1 installer](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/download/v6.4.38.1/AI-WARP-ENGINE-6.4.38.1-x64-setup.exe)
 
-- Windows 10/11 x64 and Microsoft Edge WebView2 are required.
+- Windows 10 build 19041 or newer / Windows 11 x64 and installed WebView2 are required.
+- Windows N needs Microsoft's Media Feature Pack; codec extensions are installed separately.
 - The .NET runtime and bundled media are included.
 - Run the installer, approve Windows UAC, and complete the wizard.
 - The default destination is `Desktop\AI WARP ENGINE`, with desktop and Start
@@ -31,25 +38,26 @@ see [Windows release workflow](WINDOWS_RELEASE_WORKFLOW.md).
 - The installer is unsigned and may trigger SmartScreen.
 
 Verify downloads against **SHA256SUMS.txt** in the
-[release assets](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.37).
+[release assets](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.38.1).
 The release also includes a matching browser-app ZIP. Extract the entire folder,
 including its media, and serve it over localhost rather than opening `file://`.
 The browser ZIP omits website-root `home.html` and `index.html` but includes the
 app folder's own `index.html`. The documentation ZIP is separate.
 
-**Current browser patch: 6.4.37.1.** Download
-`AI-WARP-ENGINE-6.4.37.1-browser.zip` from the same release for full-scope
+**Current browser edition: 6.4.38.1.** Download
+`AI-WARP-ENGINE-6.4.38.1-browser.zip` from the same release for full-scope
 freeze-frame exports including fullscreen CRT/vignette and final page filters.
-See [patch notes](RELEASE_NOTES_6.4.37.1.md). Windows 6.4.37.1 remains private
+See [screenshot patch notes](RELEASE_NOTES_6.4.37.1.md). Windows 6.4.37.1 remains private
 pending source verification; the original approval workflow still stages 6.4.37.
 
-## What's fixed in 6.4.37
+## Current native edition and retained fixes
 
 - Continuous, synchronized FX with smooth mode transitions and frame recovery.
-- Offline AVI/unsupported audio-video conversion using bundled FFmpeg.
+- Offline conversion through Windows MediaTranscoder where installed codecs support it, with explicit errors otherwise.
 - Local-only app scripts and hardened navigation, permissions and native bridge boundaries.
 - External browsers/new windows blocked; release debugging disabled.
-- Top-panel label: **v6.4.37 - Glitch Hardened & FX Fixed**.
+- Full-scope freeze-frame screenshots, including fullscreen CRT/vignette and page filters.
+- Top-panel label: **6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)**.
 
 See [changelog](CHANGELOG.md) for validation and protection limits.
 
@@ -125,7 +133,7 @@ LENS capture are host-only features.
 
 ## Build and validate
 
-Requires Node.js for tests, the .NET 8 SDK and a complete FFmpeg distribution for the host, and
+Requires Node.js for tests, the .NET 8 SDK for the native host, and
 [NSIS](https://nsis.sourceforge.io/) for the installer.
 
 ```powershell
@@ -135,14 +143,13 @@ Set-Location shell
 & "C:\Program Files (x86)\NSIS\makensis.exe" setup.nsi
 ```
 
-Output: `shell\AI-WARP-ENGINE-6.4.37-x64-setup.exe`.
+Output: `shell\AI-WARP-ENGINE-6.4.38.1-x64-setup.exe`.
 See [shell build documentation](shell/README.md).
 
 Current source changes add synchronized, gap-free FX composition, 240 ms warp
 mode blending, continuous warp phase and last-good-frame recovery for all media
-sources. The Windows build also bundles FFmpeg for offline conversion of
-unsupported local video/audio, including AVI. Existing release downloads do not
-contain these changes; rebuild to use them.
+sources. The Windows native build uses installed Media Foundation codecs for
+offline conversion where supported, with no FFmpeg dependency or bundle.
 
 For browser pixel checks, serve the repository over localhost and run in the
 app's developer console:
@@ -154,7 +161,8 @@ This checks 29 modes at three strengths, transparent/untreated frames, mode
 transitions, scratch-buffer stability, OFF controls and failure recovery.
 Native conversion checks can be run with
 `dotnet run --project tests\MediaConversion -- "<ffmpeg.exe path>" "<empty fixture directory>"`.
-They generate synthetic AVI/AIFF media, verify conversion and cache reuse, and
+FFmpeg is used only as a fixture generator/decoder in these tests, never as the
+app's converter. Tests generate MP4/WAV and unsupported-codec fixtures, verify native conversion and cache reuse, and
 check original preservation, corruption errors and cancellation.
 
 Validation for the previous 6.4.36 release: 11 dependency-free regression tests passed; browser

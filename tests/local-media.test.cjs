@@ -56,7 +56,7 @@ test('unsupported AVI converts once using the selected File object, then plays w
     assert.equal(requests.length, 1);
     assert.deepEqual(JSON.parse(requests[0][0].substring(14)), { id: '1', kind: 'video' });
     assert.equal(requests[0][1][0], file);
-    assert.match(statuses[0], /CONVERTING LOCALLY/);
+    assert.match(statuses[0], /WINDOWS NATIVE CONVERSION/);
     result({ id: '1', url: convertedUrl });
     await playback;
     assert.equal(calls, 2);

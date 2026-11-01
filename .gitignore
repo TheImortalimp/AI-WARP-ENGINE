@@ -1,6 +1,7 @@
 shell/bin/
 shell/obj/
 shell/publish/
+shell/publish-native-*/
 shell/*.exe
 tests/MediaConversion/bin/
 tests/MediaConversion/obj/

@@ -1,10 +1,16 @@
-# AI WARP ENGINE - Description
+# AI WARP ENGINE - Native edition description
+
+Current version: **6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)**.
+Windows MediaTranscoder handles supported conversions through installed OS
+codecs, without FFmpeg. .NET is bundled; WebView2 and Windows media components
+are required. This is not universal AVI support or an all-native UI.
+See [native release notes](RELEASE_NOTES_6.4.38.1.md).
 
 ## GitHub About description
 
-AI WARP ENGINE: Windows visual synthesizer with 34 glitch voices, 29 warp effects and YouTube LENS. v6.4.37: Glitch Hardened & FX Fixed, continuous FX, offline AVI conversion and no external-browser launches.
+AI WARP ENGINE: Windows visual synthesizer with 34 glitch voices, 29 warp effects and YouTube LENS. 6.4.38.1: FFmpeg-free Windows conversion, full-FX screenshots and no external-browser launches.
 
-## Project summary
+## Previous FFmpeg-based edition (historical)
 
 AI WARP ENGINE v6.4.37 is a Canvas-based visual performance app for Windows
 10/11 x64, with a matching browser edition. Layer generative visuals, local
