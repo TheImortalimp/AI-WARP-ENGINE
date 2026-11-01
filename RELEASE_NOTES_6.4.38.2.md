@@ -1,5 +1,25 @@
 # 6.4.38.2 NO-FFMPEG (No~Gyan-D)
 
+**FINAL NOVEMBER FIXED RELEASE**
+
+## Final website and documentation publication
+
+Includes `AI-WARP-ENGINE-6.4.38.2-web-upload.zip`: updated root `home.html`/
+`index.html` and complete `ai_warp_engine/` with the gold favicon and HUD fix.
+Back up the site and extract into the imortalimp.nl document root. Other site
+sections are preserved. This is an update bundle, not a complete site backup,
+and GitHub publication does not automatically deploy imortalimp.nl.
+
+Full About, manual, changelog, third-party notices, release notes and runtime
+license documents accompany the release. A separate website-source ZIP/manifest
+identifies the final website/documentation commit. Existing Windows source/app
+manifests and verified executables retain their build revision.
+
+35 web/FX/media regression checks passed. The user confirmed the elevated
+installer and launched app were no longer clipped; all 288 installed app files
+matched the published manifest, with no FFmpeg files. All release asset sizes
+and SHA256 digests are checked after upload.
+
 Windows x64 native-media edition with a crisp gold reversed-R icon.
 The older 6.4.38.1 release remains available unchanged.
 

@@ -2,6 +2,25 @@
 
 **6.4.38.2 NO-FFMPEG (No~Gyan-D).**
 
+## FINAL NOVEMBER FIXED RELEASE
+
+The public 6.4.38.2 release includes the verified native Windows installer/app,
+crisp gold reversed-R icon, .NET tribute and licensing pages, and corrected
+installer finish text/startup bounds. The elevated installation was tested;
+the user confirmed neither the installer nor app appeared clipped. All 288
+installed app files matched the published app manifest, with no FFmpeg files.
+
+The website update adds the complete browser folder, gold favicon and updated
+root imortalimp.nl home/index showcases while preserving other site sections.
+35 web/FX/media regression checks passed. Back up root pages before extracting
+the website ZIP into the document root; publication on GitHub does not deploy
+the live website. Browser codec limits remain distinct from native conversion.
+
+Windows source/app manifests identify the previously verified executable build
+revision. The separate website-source manifest identifies the later website
+and documentation revision; do not assume it rebuilt the Windows executable.
+The older FFmpeg publication hold and private review channel remain unchanged.
+
 The current edition uses Windows MediaTranscoder and installed Windows codecs
 without FFmpeg. .NET is bundled; WebView2 and OS media components are prerequisites.
 The native label describes the media backend, not universal file support or

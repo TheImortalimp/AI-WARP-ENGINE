@@ -71,6 +71,15 @@ The current release asset `AI-WARP-ENGINE-6.4.38.2-browser.zip` contains only
 `home.html` and `index.html`, the old ZIP, legacy `web` bundle and native shell.
 Extract it into the website root alongside your existing website pages.
 
+The current `AI-WARP-ENGINE-6.4.38.2-web-upload.zip` contains the updated root
+`home.html` and `index.html` plus the complete `ai_warp_engine/` browser folder,
+including the crisp gold favicon and launch-flow HUD fix. Extract it into the
+imortalimp.nl document root, keeping the folder layout. Back up existing root
+pages first; this is an update bundle, not a full-site backup. It contains no
+Windows executables or FFmpeg. Windows-only conversion still requires the native
+app; browser playback uses browser-supported codecs. No server deployment is
+performed automatically.
+
 The earlier local `AI-WARP-ENGINE-6.4.37.1-web-upload.zip` is a website **update** bundle:
 its top level contains `home.html`, `index.html` and `ai_warp_engine/`.
 Extract these into the existing website root, replacing matching files and

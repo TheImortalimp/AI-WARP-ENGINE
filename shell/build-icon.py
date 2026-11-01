@@ -75,5 +75,7 @@ header = bytearray(struct.pack("<HHH", 0, 1, len(entries)))
 for size, data in entries:
     header.extend(struct.pack("<BBBBHHII", size % 256, size % 256, 0, 0, 1, 32, len(data), offset))
     offset += len(data)
-(ROOT / "app.ico").write_bytes(header + b"".join(data for _, data in entries))
+icon = header + b"".join(data for _, data in entries)
+(ROOT / "app.ico").write_bytes(icon)
+(ROOT.parent / "ai_warp_engine" / "favicon.ico").write_bytes(icon)
 print(f"Rendered {len(SIZES)} icon sizes and 1024px logo from app-icon.svg.")

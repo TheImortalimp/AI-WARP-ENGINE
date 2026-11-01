@@ -1,5 +1,13 @@
 # AI WARP ENGINE - v6.4.38.2
 
+## FINAL NOVEMBER FIXED RELEASE
+
+[Public release v6.4.38.2](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.38.2)
+includes the verified native Windows downloads, updated website ZIP with root
+home/index pages, browser bundle, gold icon artwork and full documentation.
+See [About](ABOUT.md) and [release notes](RELEASE_NOTES_6.4.38.2.md) for validation,
+deployment instructions, licensing and native-versus-browser codec limits. - v6.4.38.2
+
 **6.4.38.2 NO-FFMPEG (No~Gyan-D)** adds a crisp gold reversed-R vector icon,
 ten Windows/DPI icon sizes and a 1024px logo. The installer retains the .NET
 tribute and runtime licensing pages. See [release notes](RELEASE_NOTES_6.4.38.2.md). - v6.4.38.2
