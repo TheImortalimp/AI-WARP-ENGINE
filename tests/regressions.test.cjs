@@ -87,6 +87,27 @@ test('application aliases contain one document, unique IDs and one ordered engin
     }
 });
 
+test('the HUD notification banner is a body-level node, not trapped beneath the HUD inside the FX layer', () => {
+    const elementEnd = (html, start) => {
+        const tags = /<div\b|<\/div>/g;
+        tags.lastIndex = start;
+        let depth = 0;
+        for (let tag = tags.exec(html); tag; tag = tags.exec(html)) {
+            depth += tag[0] === '</div>' ? -1 : 1;
+            if (depth === 0) return tag.index + tag[0].length;
+        }
+        throw new Error('Unbalanced <div>');
+    };
+    for (const name of aliases) {
+        const html = read(name);
+        const layerStart = html.indexOf('<div id="fullscreen-fx-layer">');
+        const bannerAt = html.indexOf('id="hudNotificationBanner"');
+        assert.ok(layerStart > 0 && bannerAt > 0, name);
+        // The FX layer is a z-index 2 stacking context: anything inside it paints beneath the HUD bars.
+        assert.ok(bannerAt < layerStart || bannerAt > elementEnd(html, layerStart), `${name}: the banner is nested in the FX layer`);
+    }
+});
+
 test('the showcase is only a fragment and the lens is only a player', () => {
     const showcase = read('ai_warp_showcase_section.html');
     assert.ok(!/<(?:html|body)\b/i.test(showcase));
@@ -383,7 +404,7 @@ test('HUD change notice, shell version, installer version and asset cache versio
     const installer = fs.readFileSync(path.join(root, 'shell', 'setup.nsi'), 'utf8');
     assert.ok(installer.includes(`!define VERSION "${version}"`));
     assert.ok(JSON.parse(read('media_page.json')).engine.version.startsWith(version + '-'));
-    const label = `${version} NO-FFMPEG (No~Gyan-D)`;
+    const label = `${version} ULTIMATE`;
     assert.ok(project.includes(`<Product>AI WARP ENGINE - ${label}</Product>`));
     assert.ok(installer.includes(`Name "AI WARP ENGINE - ${label}"`));
     assert.ok(read('ai_warp_showcase_section.html').includes(label));

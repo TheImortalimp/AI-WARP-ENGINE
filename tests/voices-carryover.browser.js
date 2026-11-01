@@ -24,6 +24,9 @@ async function runVoiceCarryoverChecks() {
     let voiceFrames = 0;
     const voices = [];
     try {
+        const registry = engine.fxRegistryReport;
+        check(registry && registry.ok && registry.baseline === '6.4.36' && registry.voices === 34 && registry.warpModes === 29,
+            `The frozen 6.4.36 FX registry check failed: ${JSON.stringify(registry)}`);
         check(engine.coreEffectNames.length === 17, 'Core voice bank count changed.');
         check(engine.gc3EffectNames.length === 17, 'GC3 voice bank count changed.');
         check(new Set(engine.effectNames).size === 34, 'Missing/duplicate voice.');
@@ -75,7 +78,11 @@ async function runVoiceCarryoverChecks() {
             check(engine.renderErrors.size === 0, 'Milkdrop failed.');
         }
         check(engine.milkdropPresetDeck.length === 80, 'Milkdrop preset deck changed.');
-        return { result: 'passed', voices, voiceFrames, systems, milkdropPresets: 80 };
+        // Re-hash the banks this page was actually served against the pinned 6.4.36 sources.
+        const attestation = await engine.attestEffectBanks();
+        check(attestation.ok, `Effect banks differ from the 6.4.36 sources: ${attestation.problems.join('; ')}`);
+        const banks = Object.fromEntries(Object.entries(attestation.files).map(([file, entry]) => [file, entry.sha256]));
+        return { result: 'passed', voices, voiceFrames, systems, milkdropPresets: 80, registry, banks };
     } finally {
         cancelAnimationFrame(engine.animFrameId);
         document.documentElement.style.filter = 'none';

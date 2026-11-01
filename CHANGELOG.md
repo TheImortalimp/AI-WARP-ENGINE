@@ -2,6 +2,20 @@
 
 Standalone Windows app releases. Full notes per release are in the `RELEASE_NOTES_*.md` files.
 
+## 6.4.38.21 - ULTIMATE
+- Confluence release: 6.4.36 effects, 6.4.37 continuous FX flow, 6.4.37.1 Freeze Frame and the native Windows media backend verified together in one build.
+- 6.4.36 effect banks stay byte-identical and SHA-256 pinned; a frozen `FX_MANIFEST` (34 voices, 29 warp modes plus AI ZERO, 80 Milkdrop presets), a startup registry check and a runtime `attestEffectBanks()` prove them.
+- One pipeline: no external converter in the app, build or tests; a repository-wide test enforces it. Older gated-release files are the only exception.
+- Fixed Tech Artist drawing at a different size than the lens (cropped/drifting image at 125% scaling and above); its WebGL buffer now equals the lens buffer.
+- Resizing keeps the last picture in every buffer instead of blanking the lens for a frame; all nine effect buffers, the lens canvas and the fullscreen layers share one size.
+- A failed WebGL start now falls back to 2D rays and retries at most every 5 seconds instead of every frame.
+- Fixed Freeze Frame leaking HUD pixels: the mask now covers descendants and in-flight transitions of every HUD root, and capture waits for the HUD to settle.
+- Fixed the HUD notification banner painting underneath the control bars: it sat inside the fullscreen effects layer and is now a page-level HUD node above them.
+- New in-host proofs: magenta-sentinel Freeze Frame, canvas alignment across display scales, effect-bank attestation; `tests\NativeHost` runs them in the real WebView2 app.
+- Native conversion cleans up partial files without hiding the original error and gives plain-language unsupported-codec messages.
+- Native media tests build and decode their fixtures with Windows APIs only.
+- Not claimed: universal codec/AVI support, OS-level anti-hijack protection, or automatic imortalimp.nl deployment.
+
 ## 6.4.38.2 - NO-FFMPEG (No~Gyan-D)
 - Crisp gold reversed-R vector master, ten DPI-specific ICO sizes and 1024px logo.
 - New app/installer/uninstaller artwork; shortcuts retain executable icon wiring.

@@ -52,7 +52,7 @@ internal sealed class LocalMediaConverter
             var transcoder = new MediaTranscoder { AlwaysReencode = true };
             var prepared = await transcoder.PrepareFileTranscodeAsync(input, output, profile).AsTask(cancellation);
             if (!prepared.CanTranscode)
-                throw new IOException($"Windows native conversion cannot decode/encode this file ({prepared.FailureReason}). " +
+                throw new IOException($"Windows native conversion cannot decode/encode this file ({Describe(prepared.FailureReason)}). " +
                     "Install the appropriate licensed Windows codec or convert the file separately. Windows N requires the Media Feature Pack.");
             await prepared.TranscodeAsync().AsTask(cancellation);
             cancellation.ThrowIfCancellationRequested();
@@ -67,13 +67,21 @@ internal sealed class LocalMediaConverter
         catch (Exception error) when (error is System.Runtime.InteropServices.COMException or NotSupportedException)
         {
             throw new IOException("Windows native media conversion failed: " + error.Message +
-                " Check installed Windows media components/codecs; this edition contains no FFmpeg.", error);
+                " Check installed Windows media components/codecs.", error);
         }
         finally
         {
-            if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
+            try { if (File.Exists(temporaryPath)) File.Delete(temporaryPath); }
+            catch (Exception cleanup) when (cleanup is IOException or UnauthorizedAccessException) { }
         }
     }
+
+    private static string Describe(TranscodeFailureReason reason) => reason switch
+    {
+        TranscodeFailureReason.CodecNotFound => "no installed Windows codec can read this format",
+        TranscodeFailureReason.InvalidProfile => "Windows rejected the output profile",
+        _ => "no installed Windows decoder matches this file's video or audio format"
+    };
 
     // MediaTranscoder can finish an AVI transcode with audio but an empty video track.
     private static bool HasMediaSamples(string path, string kind)

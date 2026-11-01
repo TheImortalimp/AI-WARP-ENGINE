@@ -1,35 +1,49 @@
 # About AI WARP ENGINE
 
-**6.4.38.2 NO-FFMPEG (No~Gyan-D).**
-
-## FINAL NOVEMBER FIXED RELEASE
-
-The public 6.4.38.2 release includes the verified native Windows installer/app,
-crisp gold reversed-R icon, .NET tribute and licensing pages, and corrected
-installer finish text/startup bounds. The elevated installation was tested;
-the user confirmed neither the installer nor app appeared clipped. All 288
-installed app files matched the published app manifest, with no FFmpeg files.
-
-The website update adds the complete browser folder, gold favicon and updated
-root imortalimp.nl home/index showcases while preserving other site sections.
-35 web/FX/media regression checks passed. Back up root pages before extracting
-the website ZIP into the document root; publication on GitHub does not deploy
-the live website. Browser codec limits remain distinct from native conversion.
-
-Windows source/app manifests identify the previously verified executable build
-revision. The separate website-source manifest identifies the later website
-and documentation revision; do not assume it rebuilt the Windows executable.
-The older FFmpeg publication hold and private review channel remain unchanged.
-
-The current edition uses Windows MediaTranscoder and installed Windows codecs
-without FFmpeg. .NET is bundled; WebView2 and OS media components are prerequisites.
-The native label describes the media backend, not universal file support or
-an all-native UI. No affiliation with GyanD is implied.
+**6.4.38.21 ULTIMATE**
 
 AI WARP ENGINE is a visual synthesizer and audio-reactive media playground.
 It combines a plain HTML/JavaScript/Canvas app with a Windows WinForms/WebView2
 host. The same app files support browser use, while the host supplies desktop
-YouTube LENS frame capture, audio loopback and Windows-specific protections.
+YouTube LENS frame capture, audio loopback, native media conversion and
+Windows-specific protections.
+
+## 6.4.38.21 ULTIMATE
+
+The confluence release. One build carries the 6.4.36 effect banks, the 6.4.37
+FX-flow hardening, the 6.4.37.1 Freeze Frame and the native Windows media
+backend of 6.4.38.x. Each claim below is backed by a test in this repository.
+
+- **6.4.36 effects, proven and pinned.** The 34 voices (17 core and 17 `GC#(3)`),
+  the 29 warp modes plus AI ZERO, the Ghost Protocol and V-Sync rails and the
+  80 Milkdrop presets come from the 6.4.36 sources. `glitch_engine.js`,
+  `r3_gc3_factories.js`, `r3_ghost_vsync.js` and `yt_lens.html` are
+  byte-identical to 6.4.36 and pinned by SHA-256. The engine checks a frozen
+  effect registry at startup, and `attestEffectBanks()` re-hashes the files the
+  page was actually served.
+- **One pipeline.** Rendering, conversion, building and testing use only the
+  app's own Canvas/WebGL code and Windows components. No external media tool is
+  bundled, installed or launched; a test scans the whole tree to keep it that way.
+- **Aligned canvases.** The lens canvas, all nine effect buffers, the Tech Artist
+  WebGL buffer and its resolution uniform, and the fullscreen layers share one
+  size at every window size and display scaling. Resizing redraws the last
+  picture into the new buffers instead of blanking the lens for a frame.
+- **Freeze Frame without the HUD.** The still contains the effects canvas, the
+  LENS/media layer underneath, CRT scanlines, vignette and the page filter once.
+  The whole HUD is hidden first: bars, mixer, badges, the HIDE U.I. tab, drawers
+  and dialogs, including nodes that were mid-transition or force their own
+  visibility. A magenta-sentinel test proves nothing from the HUD reaches the PNG.
+- **Steady Tech Artist.** The WebGL raymarcher now draws at the same size as the
+  lens (it used to crop and drift at 125% scaling and above). If WebGL cannot
+  start, the 2D rays take over and WebGL is retried at most every 5 seconds.
+- **Notifications you can see.** The HUD notification banner (blocked links,
+  playlist and LENS errors, confirmations) used to sit inside the effects layer,
+  beneath the control bars, and was hidden by them. It is now a page-level HUD
+  node above the bars, still hidden with the collapsed HUD and in Freeze Frame.
+- **Gold reversed-R icon, crisp at every size**, and the .NET tribute and licence
+  pages in the installer.
+
+The title-adjacent HUD notice reads **6.4.38.21 ULTIMATE**.
 
 ## Creative engine
 
@@ -44,30 +58,43 @@ displays, YouTube, microphones and original bundled synth/RAUM X-R material.
 The complete web viewport can receive B&W/Hue treatment, while Canvas
 freeze frames exclude the HUD.
 
-## What changed in 6.4.37
+## Native media
 
-Continuous FX use synchronized frames, smooth mode transitions and failure
-recovery. The earlier 6.4.37 Windows build used bundled FFmpeg; current 6.4.38.2
-converts supported files through Windows codecs and reports unsupported inputs.
-App navigation and native controls are restricted, remote app
-scripts and release debugging are disabled, and external browsers cannot launch.
-Accessibility and existing cursor protections remain; no Defender scans or
-physical-input-only guarantee are included.
+The Windows host converts local media that the browser engine cannot decode,
+using Windows MediaTranscoder and the codecs installed on the PC, to H.264/AAC
+MP4 or AAC M4A copies in the profile's `media-cache`. Originals are never
+overwritten. Unsupported or corrupt files produce an explicit error. This is not
+a promise that every AVI or codec plays: it depends on the Windows codecs
+present. .NET is bundled; WebView2 and the Windows media components are
+prerequisites, and the native label describes the media backend, not an
+all-native UI. The earlier 6.4.37 and 6.4.37.1 Windows binaries stay withheld
+pending source review; see their release notes.
 
-The title-adjacent HUD notice reads:
-**6.4.38.2 NO-FFMPEG (No~Gyan-D)**.
+## Release history
 
-### Previous startup repair in 6.4.36
+- **6.4.38.2 - FINAL NOVEMBER FIXED RELEASE.** Native installer/app with the
+  crisp gold icon, .NET tribute and licence pages, and corrected installer finish
+  text and startup bounds. An elevated installation was tested; all 288
+  installed app files matched the published manifest.
+- **6.4.38.1.** First native Windows media edition.
+- **6.4.37.1.** Freeze Frame captures all FX and excludes the HUD.
+- **6.4.37.** Continuous FX flow: synchronized frames, 240 ms mode transitions
+  and failure recovery. App navigation and native controls are restricted,
+  remote app scripts and release debugging are disabled, and external browsers
+  cannot launch. Accessibility and existing cursor protections remain; no
+  Defender scans or physical-input-only guarantee are included.
+- **6.4.36.** Startup repair. The 6.4.35 packaging regression joined independent
+  HTML documents, duplicating controls and creating competing engines; this
+  release separated the app aliases, showcase fragment and LENS player again.
+  Startup is single-instance and validates required scripts and media mounts.
 
-The 6.4.35 packaging regression joined independent HTML documents together,
-duplicating controls and creating competing engines. This release separates
-the app aliases, showcase fragment and LENS player again. Startup is
-single-instance and validates required scripts/media mounts; configuration
-loading is bounded, errors are surfaced, and transient rendering failures
-cannot cancel animation scheduling.
+## Website
 
-The previous title-adjacent HUD notice read:
-**v6.4.36 - INIT + FX RESTORED - CURSOR GUARD**.
+The website ZIP adds the complete browser folder, the gold favicon and updated
+root imortalimp.nl home/index showcases while preserving the other site
+sections. Back up the root pages before extracting it into the document root;
+publishing on GitHub does not deploy the live website. Browser codec limits
+remain distinct from native conversion.
 
 ## Cursor and theme protection
 
@@ -95,6 +122,8 @@ enforce Windows settings.
 - Online video embedding, external services and media codecs can be unavailable.
 - Settings use the local WebView2 profile; microphone/display sources require
   appropriate permissions.
+- App-layer hardening cannot stop malware running with the user's or an
+  administrator's privileges.
 
 ## Credits and license
 
@@ -108,5 +137,5 @@ affiliation. [Support the original album](https://pole-stefanbetke.bandcamp.com/
 
 [Installation and build guide](README.md) |
 [User manual](MANUAL.md) |
-[Release notes](RELEASE_NOTES_6.4.37.md) |
+[Release notes](RELEASE_NOTES_6.4.38.21.md) |
 [Third-party notices](THIRD_PARTY_NOTICES.md)

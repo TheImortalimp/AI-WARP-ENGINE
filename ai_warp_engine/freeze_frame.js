@@ -1,11 +1,19 @@
 (function (root) {
     'use strict';
 
+    // Must stay in sync with the .freeze-frame-capture rule in media_page.css.
+    const HUD_ROOTS = 'body > :not(#canvas-stage):not(#fullscreen-fx-layer):not(.svg-warp-defs)';
+    const FX_LAYER_ROOTS = '#fullscreen-fx-layer > :not(.crt-overlay):not(.cyber-vignette)';
+    const HUD_SELECTOR = [HUD_ROOTS, HUD_ROOTS + ' *', FX_LAYER_ROOTS, FX_LAYER_ROOTS + ' *'].join(', ');
+    const FRAME_FALLBACK_MS = 100;
+    const MAX_SETTLE_FRAMES = 30;
+
     class FreezeFrameCapture {
         constructor(bridge) {
             this.bridge = bridge;
             this.pending = null;
             this.sequence = 0;
+            this.busy = false;
             if (bridge) bridge.addEventListener('message', event => {
                 if (typeof event.data !== 'string' || !event.data.startsWith('freeze:result|')) return;
                 try {
@@ -33,7 +41,7 @@
                     return await this.captureBrowser(canvas);
                 }
                 page.classList.add('freeze-frame-capture');
-                await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                await this.settleHud();
                 return await new Promise((resolve, reject) => {
                     const id = String(++this.sequence);
                     this.pending = { id, resolve, reject };
@@ -46,6 +54,29 @@
                 page.classList.remove('freeze-frame-capture');
                 this.busy = false;
             }
+        }
+
+        nextFrame() {
+            return new Promise(resolve => {
+                const finish = () => { clearTimeout(timer); resolve(); };
+                // A hidden or occluded window may never run animation frames.
+                const timer = setTimeout(finish, FRAME_FALLBACK_MS);
+                requestAnimationFrame(finish);
+            });
+        }
+
+        hudHidden() {
+            for (const node of document.querySelectorAll(HUD_SELECTOR)) {
+                if (getComputedStyle(node).visibility !== 'hidden') return false;
+            }
+            return true;
+        }
+
+        // Waits until every HUD node is hidden, then one more frame so the compositor has presented it.
+        async settleHud() {
+            await this.nextFrame();
+            for (let frame = 0; frame < MAX_SETTLE_FRAMES && !this.hudHidden(); frame++) await this.nextFrame();
+            await this.nextFrame();
         }
 
         async captureBrowser(canvas) {
@@ -97,5 +128,6 @@
         }
     }
 
+    FreezeFrameCapture.HUD_SELECTOR = HUD_SELECTOR;
     root.FreezeFrameCapture = FreezeFrameCapture;
 })(window);

@@ -1,8 +1,8 @@
 {
   "engine": {
     "name": "AI Warp Engine — R3 Canvas Edition",
-    "version": "6.4.38.2-glitch-hardened-fx-fixed",
-    "releaseSummary": "6.4.38.2 NO-FFMPEG (No~Gyan-D). Windows MediaTranscoder converts supported local codecs without FFmpeg. Requires installed Windows media components and WebView2; not universal AVI support. Retains continuous FX, full-scope screenshots and app-control protections.",
+    "version": "6.4.38.21-ultimate",
+    "releaseSummary": "6.4.38.21 ULTIMATE. Hardcoded, hash-pinned 6.4.36 effect set (34 voices, 29 warp modes, Ghost/V-Sync, 80 Milkdrop presets), aligned canvases and HUD-free full-scope freeze frames. Windows-native media conversion uses installed Windows media components and WebView2; not universal AVI support.",
     "author": "IMORTALIMP.NL & Arena AI",
     "ghostKey": "Gh0sTs 1n Th3 Sh3lLs - D1giTaL R3BiRtHs - f34Rd0t.C0mM4",
     "ghostKeyStanzas": [

@@ -1,6 +1,6 @@
 ;/* ===== ai_warp_engine.js ===== */
 /**
- * AI WARP ENGINE — HYPER-INTEGRATED SYNTHESIS (v6.4.37-GLITCH-HARDENED-FX-FIXED)
+ * AI WARP ENGINE — HYPER-INTEGRATED SYNTHESIS (v6.4.38.21-ULTIMATE)
  *
  * 100% Fully Responsive, Robust & Animated:
  * - 📡 Tab Capture (getDisplayMedia): real pixels AND real audio from any shared tab
@@ -38,6 +38,65 @@
     function lerp(a, b, t) {
         return a + (b - a) * t;
     }
+
+    function deepFreeze(value) {
+        if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+            Object.freeze(value);
+            Object.values(value).forEach(deepFreeze);
+        }
+        return value;
+    }
+
+    // The raymarcher is drawn at most this large and scaled onto the lens canvas.
+    const TECH_ARTIST_MAX_PIXELS = 2560 * 1440;
+    // A failed WebGL start is retried this rarely, so a GPU-less session never stalls frames on it.
+    const TECH_ARTIST_RETRY_MS = 5000;
+
+    /* Hardcoded 6.4.36 effect registry. The effect banks below are the untouched 6.4.36
+       sources and their LF-normalised SHA-256 values are pinned here and in the test-suite.
+       Every voice, warp mode, Ghost/V-Sync rail and Milkdrop preset is plain in-page
+       Canvas/WebGL code: nothing is transcoded, piped or rendered by an external tool. */
+    const FX_MANIFEST = deepFreeze({
+        baseline: '6.4.36',
+        voices: {
+            core: [
+                'Neon Grad', 'Scanlines', 'Data Bands', 'Flash', 'HSL Rainbow', 'ASCII',
+                'Font Burn', 'Strobe', 'Gemini Bomb', 'Tech Artist', 'VHS Glitch',
+                'Data Bomb', 'Ink Glyphs', 'Matrix ASCII', 'Matrix Chord',
+                'B&W Invert', 'Hue/Color Cycle'
+            ],
+            gc3: [
+                'ASCII GC#(3)', 'B&W Invert GC#(3)', 'Data Bands GC#(3)', 'Data Bomb GC#(3)',
+                'Flash GC#(3)', 'Font Burn GC#(3)', 'Gemini Bomb GC#(3)', 'HSL Rainbow GC#(3)',
+                'Hue/Color Cycle GC#(3)', 'Ink Glyphs GC#(3)', 'Matrix ASCII GC#(3)',
+                'Matrix Chord GC#(3)', 'Neon Grad GC#(3)', 'Scanlines GC#(3)', 'Strobe GC#(3)',
+                'Tech Artist GC#(3)', 'VHS Glitch GC#(3)'
+            ]
+        },
+        warp: {
+            zero: 'ai_zero',
+            modes: [
+                'liquid', 'prism', 'breathe', 'fold', 'aurora',
+                'vortex', 'cybergrid', 'hyperdrive', 'kaleidoscope',
+                'quantum', 'ripple', 'analog_crt',
+                'newblue_roll', 'newblue_active_cam', 'newblue_shear', 'newblue_wiggle',
+                'newblue_zoom_blur', 'newblue_video_tile', 'newblue_twirl', 'newblue_light_ring',
+                'newblue_earthquake', 'newblue_water_drop', 'newblue_rgb_shift', 'newblue_quad_mirror',
+                'newblue_fish_eye', 'newblue_pinch', 'newblue_solarize', 'newblue_cathode_beam', 'newblue_neon_edges'
+            ]
+        },
+        ghostModes: ['OFF', 'DIA', 'SPECTRUM', 'CRT', 'PLASMA', 'LED'],
+        vsyncModes: ['OFF', 'ON', 'GHOST_OFF', 'FULL'],
+        softEyeModes: ['OFF', 'CALM', 'SURGE', 'CRESCENDO'],
+        timedCadences: ['1_bar', '2_bar', '4_bar', 'soft_eye', 'lfo_wave', 'half_beat'],
+        milkdrop: { presets: 80 },
+        banks: {
+            'glitch_engine.js': '5d8a18d078a5543ecd3a90c34f714fe85b741eee934281a944a38071cbef9650',
+            'r3_gc3_factories.js': '67fe9840e64133584825cd1e73310349eb80d8909f77ec23493b0c9a80217448',
+            'r3_ghost_vsync.js': '7138afb8cbaec5280f9fc613f28f5c8f1802dfc2558033dfb0ca8d544fef7167',
+            'yt_lens.html': 'b32b8ffc1e874129cc75aa40e66036d021f7aa35054eac8751a6d1f391227334'
+        }
+    });
 
     function buildMilkdropPresetBank() {
         const families = [
@@ -238,6 +297,7 @@
 
             // Three.js Tech Artist Shader
             this.techArtistShader = null;
+            this.techArtistRetryAt = 0;
             this.techArtistMouse = { x: 0.5, y: 0.5 };
             this.techArtistLastMouse = { x: 0.5, y: 0.5 };
             this.techArtistVelocity = { x: 0, y: 0 };
@@ -302,8 +362,7 @@
             this.factories = this.buildFactories();
             this.initEffectRunners();
             this.initGC3EffectRunners();
-
-            // Start animation loop
+            this.fxRegistryReport = this.verifyFxRegistry();
             this.lastFrameTime = performance.now();
             this.animFrameId = requestAnimationFrame((now) => this.mainRenderLoop(now));
         }
@@ -350,31 +409,174 @@
             });
         }
 
-        resize() {
+        measureCanvasLayout() {
             const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 1), 2);
-            const w = this.canvas.clientWidth || window.innerWidth;
-            const h = this.canvas.clientHeight || window.innerHeight;
-            if (w < 2 || h < 2) return;
-            if (this.canvas.width !== Math.round(w * dpr) || this.canvas.height !== Math.round(h * dpr)) {
-                this.canvas.width = Math.round(w * dpr);
-                this.canvas.height = Math.round(h * dpr);
+            const cssWidth = this.canvas.clientWidth || window.innerWidth;
+            const cssHeight = this.canvas.clientHeight || window.innerHeight;
+            return { cssWidth, cssHeight, dpr, width: Math.round(cssWidth * dpr), height: Math.round(cssHeight * dpr) };
+        }
+
+        getTechArtistBufferSize(width = this.canvas.width, height = this.canvas.height) {
+            const scale = Math.min(1, Math.sqrt(TECH_ARTIST_MAX_PIXELS / Math.max(1, width * height)));
+            return { width: Math.max(2, Math.round(width * scale)), height: Math.max(2, Math.round(height * scale)) };
+        }
+
+        // Keeps every effect buffer at exactly the lens-canvas size so no layer is cropped or off-centre,
+        // and re-draws the last picture into the new buffers so a resize never shows a blank frame.
+        resize() {
+            const layout = this.measureCanvasLayout();
+            if (layout.cssWidth < 2 || layout.cssHeight < 2) return false;
+            const { width, height } = layout;
+            const buffers = [this.canvas, this.workCanvas, this.ghostCanvas, this.genCanvas, this.warpCanvas,
+                this.warpTransitionCanvas, this.completedFrameCanvas, this.milkdropFeedbackCanvas, this.milkdropNextCanvas];
+            const changed = buffers.some(c => c && (c.width !== width || c.height !== height));
+            if (changed) {
+                this.resizeBuffers(width, height);
+                this.warpRenderedMode = null;
+                this.warpTransitionAt = null;
             }
-            [this.workCanvas, this.ghostCanvas, this.genCanvas, this.warpCanvas, this.warpTransitionCanvas,
-                this.completedFrameCanvas, this.milkdropFeedbackCanvas, this.milkdropNextCanvas].forEach(c => {
-                if (c && (c.width !== this.canvas.width || c.height !== this.canvas.height)) {
-                    c.width = this.canvas.width;
-                    c.height = this.canvas.height;
-                    this.hasCompletedFrame = false;
-                    this.warpRenderedMode = null;
-                    this.warpTransitionAt = null;
+            this.syncTechArtistSize();
+            return changed;
+        }
+
+        resizeBuffers(width, height) {
+            const scratch = this.workCanvas;
+            // Assigning a canvas size clears it, so the pictures that must survive pass through the scratch buffer.
+            const carried = [
+                [this.canvas, [this.canvas, this.completedFrameCanvas]],
+                [this.genCanvas, [this.genCanvas]],
+                [this.milkdropFeedbackCanvas, [this.milkdropFeedbackCanvas]]
+            ];
+            for (const [source, targets] of carried) {
+                const hasPicture = source.width > 0 && source.height > 0
+                    && targets.some(c => c.width !== width || c.height !== height);
+                if (hasPicture) {
+                    scratch.width = source.width;
+                    scratch.height = source.height;
+                    this.workCtx.drawImage(source, 0, 0);
+                }
+                for (const target of targets) {
+                    if (target.width === width && target.height === height) continue;
+                    target.width = width;
+                    target.height = height;
+                    if (hasPicture) target.getContext('2d').drawImage(scratch, 0, 0, width, height);
+                }
+            }
+            [this.workCanvas, this.ghostCanvas, this.warpCanvas, this.warpTransitionCanvas, this.milkdropNextCanvas].forEach(c => {
+                if (c.width !== width || c.height !== height) {
+                    c.width = width;
+                    c.height = height;
                 }
             });
-            if (this.techArtistShader && this.techArtistShader.renderer) {
-                this.techArtistShader.renderer.setSize(this.canvas.width, this.canvas.height);
-                if (this.techArtistShader.uniforms.resolution) {
-                    this.techArtistShader.uniforms.resolution.value.set(this.canvas.width, this.canvas.height);
+        }
+
+        syncTechArtistSize() {
+            const shader = this.techArtistShader;
+            if (!shader || !shader.renderer) return null;
+            const size = this.getTechArtistBufferSize();
+            if (shader.width !== size.width || shader.height !== size.height) {
+                shader.renderer.setPixelRatio(1);
+                shader.renderer.setSize(size.width, size.height, false);
+                shader.uniforms.resolution.value.set(size.width, size.height);
+                shader.width = size.width;
+                shader.height = size.height;
+            }
+            return shader;
+        }
+
+        // Diagnostic: reports whether every effect buffer matches the lens canvas for the current CSS size and DPR.
+        getCanvasLayout() {
+            const layout = this.measureCanvasLayout();
+            const named = {
+                main: this.canvas, work: this.workCanvas, ghost: this.ghostCanvas, gen: this.genCanvas,
+                warp: this.warpCanvas, warpTransition: this.warpTransitionCanvas,
+                completedFrame: this.completedFrameCanvas, milkdropFeedback: this.milkdropFeedbackCanvas,
+                milkdropNext: this.milkdropNextCanvas
+            };
+            const buffers = {};
+            const mismatched = [];
+            for (const [name, canvas] of Object.entries(named)) {
+                buffers[name] = { width: canvas.width, height: canvas.height };
+                if (canvas.width !== layout.width || canvas.height !== layout.height) mismatched.push(name);
+            }
+            let techArtist = null;
+            const shader = this.techArtistShader;
+            if (shader && shader.renderer) {
+                const expected = this.getTechArtistBufferSize(layout.width, layout.height);
+                const uniform = shader.uniforms.resolution.value;
+                techArtist = {
+                    width: shader.canvas.width, height: shader.canvas.height,
+                    resolution: { width: uniform.x, height: uniform.y }, expected
+                };
+                if (shader.canvas.width !== expected.width || shader.canvas.height !== expected.height
+                    || uniform.x !== shader.canvas.width || uniform.y !== shader.canvas.height) mismatched.push('techArtist');
+            }
+            return {
+                css: { width: layout.cssWidth, height: layout.cssHeight }, dpr: layout.dpr,
+                expected: { width: layout.width, height: layout.height },
+                buffers, techArtist, mismatched, aligned: mismatched.length === 0
+            };
+        }
+
+        /* ── FROZEN 6.4.36 EFFECT REGISTRY ─────────────────────────────────────── */
+        // Never throws or blocks playback: a mismatch is reported once and the engine keeps running.
+        verifyFxRegistry() {
+            const problems = [];
+            const same = (label, actual, expected) => {
+                if (!Array.isArray(actual) || actual.length !== expected.length || actual.some((v, i) => v !== expected[i])) {
+                    problems.push(`${label} differ from the ${FX_MANIFEST.baseline} registry.`);
+                }
+            };
+            same('Core voices', this.coreEffectNames, FX_MANIFEST.voices.core);
+            same('GC#(3) voices', this.gc3EffectNames, FX_MANIFEST.voices.gc3);
+            same('AI Warp modes', this.aiWarpModes, [FX_MANIFEST.warp.zero].concat(FX_MANIFEST.warp.modes));
+            same('Ghost modes', this.ghostModes, FX_MANIFEST.ghostModes);
+            same('V-Sync modes', this.vsyncModes, FX_MANIFEST.vsyncModes);
+            same('Soft-Eye modes', this.softEyeModes, FX_MANIFEST.softEyeModes);
+            same('Timed cadences', this.timedCadences, FX_MANIFEST.timedCadences);
+            if (this.milkdropPresetDeck.length !== FX_MANIFEST.milkdrop.presets) problems.push('The Milkdrop preset deck size changed.');
+            const voiceCount = FX_MANIFEST.voices.core.length + FX_MANIFEST.voices.gc3.length;
+            if (this.activeEffects.length !== voiceCount) {
+                problems.push(`Expected ${voiceCount} voice runners but found ${this.activeEffects.length}.`);
+            }
+            if (!this.r3GhostVsync) problems.push('The R3 Ghost Protocol / V-Sync rails are not running.');
+            if (problems.length) console.warn('AI WARP FX registry:', problems.join(' '));
+            return {
+                ok: problems.length === 0, baseline: FX_MANIFEST.baseline,
+                voices: this.activeEffects.length, warpModes: FX_MANIFEST.warp.modes.length, problems
+            };
+        }
+
+        // Re-hashes the effect banks actually served to this page against the pinned 6.4.36 sources.
+        async attestEffectBanks(baseUrl = '') {
+            const report = { baseline: FX_MANIFEST.baseline, ok: false, files: {}, problems: [] };
+            const subtle = window.crypto && window.crypto.subtle;
+            if (!subtle || typeof window.fetch !== 'function') {
+                report.problems.push('Hashing is unavailable in this context.');
+                return report;
+            }
+            for (const [file, expected] of Object.entries(FX_MANIFEST.banks)) {
+                try {
+                    const response = await window.fetch(baseUrl + file, { cache: 'no-store' });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const raw = new Uint8Array(await response.arrayBuffer());
+                    const bytes = new Uint8Array(raw.length);
+                    let length = 0;
+                    for (let i = 0; i < raw.length; i++) {
+                        if (raw[i] === 13 && raw[i + 1] === 10) continue;
+                        bytes[length++] = raw[i];
+                    }
+                    const digest = await subtle.digest('SHA-256', bytes.subarray(0, length));
+                    const actual = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
+                    report.files[file] = { sha256: actual, match: actual === expected };
+                    if (actual !== expected) report.problems.push(`${file} differs from the ${FX_MANIFEST.baseline} source.`);
+                } catch (error) {
+                    report.files[file] = { sha256: null, match: false };
+                    report.problems.push(`${file} could not be verified: ${error && error.message || error}`);
                 }
             }
+            report.ok = report.problems.length === 0;
+            return report;
         }
 
         setSourceMode(mode, element = null) {
@@ -1919,16 +2121,21 @@
         initTechArtistShader() {
             if (this.techArtistShader) return this.techArtistShader;
             if (!window.THREE) return null;
+            // A failed WebGL start (no GPU, remote session, lost context) retries slowly instead of on every frame.
+            if (this.techArtistRetryAt && performance.now() < this.techArtistRetryAt) return null;
             try {
                 const scene = new THREE.Scene();
                 const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+                const size = this.getTechArtistBufferSize();
                 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-                renderer.setSize(this.canvas.width, this.canvas.height, false);
+                // The drawing buffer is exactly size.width x size.height (pixel ratio 1) so the
+                // resolution uniform, gl_FragCoord and the 2D blit all share one coordinate space.
+                renderer.setPixelRatio(1);
+                renderer.setSize(size.width, size.height, false);
 
                 const uniforms = {
                     time: { value: 0 },
-                    resolution: { value: new THREE.Vector2(this.canvas.width, this.canvas.height) },
+                    resolution: { value: new THREE.Vector2(size.width, size.height) },
                     mouse: { value: new THREE.Vector2(0.5, 0.5) },
                     velocity: { value: new THREE.Vector2(0, 0) },
                     depthScale: { value: 0.62 },
@@ -1993,9 +2200,10 @@
                 });
 
                 scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material));
-                this.techArtistShader = { renderer, scene, camera, uniforms, canvas: renderer.domElement };
+                this.techArtistShader = { renderer, scene, camera, uniforms, canvas: renderer.domElement, width: size.width, height: size.height };
                 return this.techArtistShader;
             } catch(e) {
+                this.techArtistRetryAt = performance.now() + TECH_ARTIST_RETRY_MS;
                 console.warn('Three.js shader init error, using procedural fallback:', e);
                 return null;
             }
@@ -2417,6 +2625,7 @@
 
                         const shader = self.initTechArtistShader();
                         if (shader && shader.renderer) {
+                            self.syncTechArtistSize();
                             shader.uniforms.time.value = performance.now() * 0.001;
                             shader.uniforms.mouse.value.set(self.techArtistMouse.x, self.techArtistMouse.y);
                             shader.uniforms.velocity.value.set(self.techArtistVelocity.x, self.techArtistVelocity.y);
@@ -2427,7 +2636,7 @@
                             gctx.save();
                             gctx.globalCompositeOperation = 'screen';
                             gctx.globalAlpha = clamp01(0.85 * s * dp * self.masterOpacity);
-                            gctx.drawImage(shader.canvas, 0, 0);
+                            gctx.drawImage(shader.canvas, 0, 0, self.canvas.width, self.canvas.height);
                             gctx.restore();
                         } else {
                             const w = self.canvas.width, h = self.canvas.height;
@@ -3892,5 +4101,6 @@
         }
     }
 
+    AiWarpEngine.FX_MANIFEST = FX_MANIFEST;
     root.AiWarpEngine = AiWarpEngine;
 })(typeof window !== 'undefined' ? window : this);

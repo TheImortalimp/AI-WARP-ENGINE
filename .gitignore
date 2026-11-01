@@ -7,3 +7,5 @@ tests/MediaConversion/bin/
 tests/MediaConversion/obj/
 tests/AppControl/bin/
 tests/AppControl/obj/
+tests/NativeHost/bin/
+tests/NativeHost/obj/

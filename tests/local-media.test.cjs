@@ -98,7 +98,7 @@ test('switching sources cancels conversion and stale replies cannot restart the 
 
 test('conversion failures and unsafe output URLs fail explicitly', async () => {
     for (const response of [
-        { id: '1', error: 'FFmpeg: corrupt source' },
+        { id: '1', error: 'Windows conversion: corrupt source' },
         { id: '1', url: 'https://remote.invalid/private.mp4' }
     ]) {
         const { player, element, result } = harness();

@@ -1,5 +1,5 @@
 param(
-    [string]$OutputDirectory = (Join-Path $PSScriptRoot 'publish-native-6.4.38.2')
+    [string]$OutputDirectory = (Join-Path $PSScriptRoot 'publish-native-6.4.38.21')
 )
 $ErrorActionPreference = 'Stop'
 $output = $OutputDirectory

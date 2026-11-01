@@ -118,11 +118,19 @@ body {
     will-change: contents;
 }
 
-/* Fullscreen CRT Scanlines & Cyber Vignette */
+/* Freeze-frame capture hides the whole HUD in the first frame. Descendants are listed too:
+   rules such as body.ui-collapsed #toggle-ui-btn force visibility on children, and
+   "transition: all" would otherwise keep a node painted for its whole transition time. */
 .freeze-frame-capture body > :not(#canvas-stage):not(#fullscreen-fx-layer):not(.svg-warp-defs),
-.freeze-frame-capture #fullscreen-fx-layer > :not(.crt-overlay):not(.cyber-vignette) {
+.freeze-frame-capture body > :not(#canvas-stage):not(#fullscreen-fx-layer):not(.svg-warp-defs) *,
+.freeze-frame-capture #fullscreen-fx-layer > :not(.crt-overlay):not(.cyber-vignette),
+.freeze-frame-capture #fullscreen-fx-layer > :not(.crt-overlay):not(.cyber-vignette) * {
     visibility: hidden !important;
+    transition: none !important;
+    animation: none !important;
 }
+
+/* Fullscreen CRT Scanlines & Cyber Vignette */
 
 #fullscreen-fx-layer {
     position: fixed;

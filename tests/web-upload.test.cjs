@@ -20,12 +20,16 @@ function showcase(html) {
 test('website showcases have current branding, valid local paths and accurate download status', () => {
     for (const file of pages) {
         const html = showcase(fs.readFileSync(path.join(root, file), 'utf8'));
-        assert.match(html, /6\.4\.38\.2 NO-FFMPEG \(No~Gyan-D\)/);
+        assert.match(html, /6\.4\.38\.21 ULTIMATE/);
         assert.match(html, /Browser AVI requires local conversion/);
         assert.match(html, /Windows-only/);
-        assert.match(html, /Full FX Freeze Frame \(6\.4\.38\.2\)/);
+        assert.match(html, /Full FX Freeze Frame \(6\.4\.38\.21\)/);
+        assert.match(html, /SHA-256 pinned/);
+        assert.match(html, /attestEffectBanks\(\)/);
+        assert.doesNotMatch(html, /verified at start-up/);
+        assert.match(html, /Aligned canvases/);
         assert.doesNotMatch(html, /releases\/(?:download|tag)\/v6\.4\.(?:36|37)/);
-        assert.doesNotMatch(html, /automatic FFmpeg conversion|Windows 6\.4\.38\.2 is private|Previous installer/);
+        assert.doesNotMatch(html, /Windows 6\.4\.38\.21 is private|Previous installer/);
         assert.match(html, /Crisp gold reversed-R/);
         assert.match(html, /installed Windows codecs/);
         for (const [, href] of html.matchAll(/href="([^"]+)"/g)) {
@@ -34,7 +38,7 @@ test('website showcases have current branding, valid local paths and accurate do
         }
         const launch = html.match(/<a id="ai-warp-open-full"[^>]*>/)[0];
         assert.doesNotMatch(launch, /target="_blank"/);
-        assert.match(launch, /\?v=6\.4\.38\.2/);
+        assert.match(launch, /\?v=6\.4\.38\.21/);
     }
 });
 
@@ -51,7 +55,7 @@ test('showcase controllers resolve runtime and documentation links from the dete
         const script = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].at(-1)[1];
         new vm.Script(script, { filename: file }).runInContext(context);
         assert.equal(elements.get('ai-warp-open-full').href,
-            'ai_warp_engine/index.html?v=6.4.38.2');
+            'ai_warp_engine/index.html?v=6.4.38.21');
         for (const [id, element] of elements) {
             if (!element.href || /^https?:/.test(element.href)) continue;
             assert.ok(fs.existsSync(path.join(root, element.href.split('?')[0])), `${file}: ${id}`);

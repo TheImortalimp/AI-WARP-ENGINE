@@ -1,21 +1,27 @@
-# AI WARP ENGINE - v6.4.38.2
+# AI WARP ENGINE - v6.4.38.21
 
-## FINAL NOVEMBER FIXED RELEASE
+## 6.4.38.21 ULTIMATE
 
-[Public release v6.4.38.2](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.38.2)
-includes the verified native Windows downloads, updated website ZIP with root
-home/index pages, browser bundle, gold icon artwork and full documentation.
-See [About](ABOUT.md) and [release notes](RELEASE_NOTES_6.4.38.2.md) for validation,
-deployment instructions, licensing and native-versus-browser codec limits. - v6.4.38.2
+[Public release v6.4.38.21](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.38.21)
+includes the verified native Windows installer and app, the browser bundle, the
+updated website ZIP with root home/index pages, the exact source, full
+documentation and a verification report. See [About](ABOUT.md) and the
+[release notes](RELEASE_NOTES_6.4.38.21.md) for what was verified, deployment
+instructions, licensing and native-versus-browser codec limits.
 
-**6.4.38.2 NO-FFMPEG (No~Gyan-D)** adds a crisp gold reversed-R vector icon,
-ten Windows/DPI icon sizes and a 1024px logo. The installer retains the .NET
-tribute and runtime licensing pages. See [release notes](RELEASE_NOTES_6.4.38.2.md). - v6.4.38.2
+**6.4.38.21 ULTIMATE** is the confluence release. It keeps the 6.4.36 effect
+banks byte-identical and SHA-256 pinned, aligns the lens, every effect buffer and
+the fullscreen layers at any window size or display scaling, makes Freeze Frame
+exclude the entire HUD, and runs local-media conversion through one native Windows
+pipeline with no external converter. See
+[what changed](RELEASE_NOTES_6.4.38.21.md#what-changed).
 
-The native 6.4.38.2 edition explicitly retains the complete 6.4.36 FX/voice banks:
-34 voices, 29 warp modes, R3 Ghost/V-Sync and 80 Milkdrop presets, together with
-the newer continuous-frame and full-scope freeze-frame fixes. See
-[the retained features](RELEASE_NOTES_6.4.38.2.md#retained-features). - v6.4.38.2
+The gold reversed-R icon, ten Windows/DPI icon sizes, the 1024px logo, the .NET
+tribute and the runtime licensing pages from 6.4.38.2 are retained.
+
+The edition explicitly retains the complete 6.4.36 FX/voice banks: 34 voices,
+29 warp modes plus AI ZERO, R3 Ghost/V-Sync and 80 Milkdrop presets, together with
+the continuous-frame and full-scope freeze-frame fixes.
 
 **A Windows visual synthesizer and audio-reactive media playground.**
 Combine live media, generative artwork, 34 glitch voices, 29 warp effects and
@@ -25,18 +31,18 @@ audio-driven automation in one Canvas-based performance interface.
 
 ## Download and install
 
-**6.4.38.2 NO-FFMPEG (No~Gyan-D)**:
-the [v6.4.38.2 release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.38.2)
-provides an FFmpeg-free Windows installer, complete app bundle, browser assets
-and documentation. Conversion uses installed Windows codecs/MediaTranscoder;
-this is not universal AVI/codec support or an affiliation with GyanD.
-See [native release notes](RELEASE_NOTES_6.4.38.2.md) and
+**6.4.38.21 ULTIMATE**:
+the [v6.4.38.21 release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.38.21)
+provides the Windows installer, complete app bundle, browser assets
+and documentation. Conversion uses the installed Windows codecs through
+MediaTranscoder; this is not universal AVI/codec support.
+See [release notes](RELEASE_NOTES_6.4.38.21.md) and
 [third-party redistribution status](THIRD_PARTY_NOTICES.md).
-The earlier FFmpeg-based Windows release remains pending source review.
+The 6.4.37 and 6.4.37.1 Windows binaries remain withheld pending source review.
 Daily upstream checks and approval-gated publication for that older binary remain configured;
 see [Windows release workflow](WINDOWS_RELEASE_WORKFLOW.md).
 
-[Windows v6.4.38.2 installer](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/download/v6.4.38.2/AI-WARP-ENGINE-6.4.38.2-x64-setup.exe)
+[Windows v6.4.38.21 installer](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/download/v6.4.38.21/AI-WARP-ENGINE-6.4.38.21-x64-setup.exe)
 
 - Windows 10 build 19041 or newer / Windows 11 x64 and installed WebView2 are required.
 - Windows N needs Microsoft's Media Feature Pack; codec extensions are installed separately.
@@ -49,16 +55,17 @@ see [Windows release workflow](WINDOWS_RELEASE_WORKFLOW.md).
   before installing; this is not a visuals-only, no-admin installation.
 - The installer is unsigned and may trigger SmartScreen.
 
-Verify downloads against **SHA256SUMS.txt** in the
-[release assets](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.38.2).
+Verify downloads against **SHA256SUMS-6.4.38.21.txt** in the
+[release assets](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.38.21).
 The release also includes a matching browser-app ZIP. Extract the entire folder,
 including its media, and serve it over localhost rather than opening `file://`.
 The browser ZIP omits website-root `home.html` and `index.html` but includes the
 app folder's own `index.html`. The documentation ZIP is separate.
 
-**Current browser edition: 6.4.38.2.** Download
-`AI-WARP-ENGINE-6.4.38.2-browser.zip` from the same release for full-scope
-freeze-frame exports including fullscreen CRT/vignette and final page filters.
+**Current browser edition: 6.4.38.21.** Download
+`AI-WARP-ENGINE-6.4.38.21-browser.zip` from the same release for full-scope
+freeze-frame exports including fullscreen CRT/vignette and final page filters,
+without the HUD.
 See [screenshot patch notes](RELEASE_NOTES_6.4.37.1.md). Windows 6.4.37.1 remains private
 pending source verification; the original approval workflow still stages 6.4.37.
 
@@ -68,8 +75,9 @@ pending source verification; the original approval workflow still stages 6.4.37.
 - Offline conversion through Windows MediaTranscoder where installed codecs support it, with explicit errors otherwise.
 - Local-only app scripts and hardened navigation, permissions and native bridge boundaries.
 - External browsers/new windows blocked; release debugging disabled.
-- Full-scope freeze-frame screenshots, including fullscreen CRT/vignette and page filters.
-- Top-panel label: **6.4.38.2 NO-FFMPEG (No~Gyan-D)**.
+- Full-scope freeze-frame screenshots, including fullscreen CRT/vignette and page filters, never the HUD.
+- Aligned lens canvas, effect buffers and fullscreen layers at any window size and display scaling.
+- Top-panel label: **6.4.38.21 ULTIMATE**.
 
 See [changelog](CHANGELOG.md) for validation and protection limits.
 
@@ -149,19 +157,19 @@ Requires Node.js for tests, the .NET 8 SDK for the native host, and
 [NSIS](https://nsis.sourceforge.io/) for the installer.
 
 ```powershell
-node --test tests\regressions.test.cjs tests\local-media.test.cjs
+node --test tests\*.test.cjs
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File shell\build.ps1
 Set-Location shell
 & "C:\Program Files (x86)\NSIS\makensis.exe" setup.nsi
 ```
 
-Output: `shell\AI-WARP-ENGINE-6.4.38.2-x64-setup.exe`.
+Output: `shell\AI-WARP-ENGINE-6.4.38.21-x64-setup.exe`.
 See [shell build documentation](shell/README.md).
 
-Current source changes add synchronized, gap-free FX composition, 240 ms warp
+Current source adds synchronized, gap-free FX composition, 240 ms warp
 mode blending, continuous warp phase and last-good-frame recovery for all media
-sources. The Windows native build uses installed Media Foundation codecs for
-offline conversion where supported, with no FFmpeg dependency or bundle.
+sources. The Windows native build converts unsupported local media through
+Windows Media Foundation (MediaTranscoder) where the installed codecs support it.
 
 For browser pixel checks, serve the repository over localhost and run in the
 app's developer console:
@@ -171,11 +179,28 @@ await runFxContinuityChecks();
 ```
 This checks 29 modes at three strengths, transparent/untreated frames, mode
 transitions, scratch-buffer stability, OFF controls and failure recovery.
+
+To run the in-page proofs inside the real Windows app (its WebView2, native
+bridge and true window size) use the NativeHost harness against a published build:
+
+```powershell
+dotnet run --project tests\NativeHost -c Release -- --app shell\publish-native-6.4.38.21 `
+  --profile tests\NativeHost\bin\nh-profile-1 --out result.json `
+  --script tests\freeze-frame.browser.js --call "runFreezeFrameChecks()" --size 1280x720
+```
+
+It runs FX continuity, voice carry-over, canvas alignment, Freeze Frame HUD
+exclusion and native media. Use a fresh `--profile` folder per run. See
+[tests/NativeHost](tests/NativeHost/README.md).
+
 Native conversion checks can be run with
-`dotnet run --project tests\MediaConversion -- "<ffmpeg.exe path>" "<empty fixture directory>"`.
-FFmpeg is used only as a fixture generator/decoder in these tests, never as the
-app's converter. Tests generate MP4/WAV and unsupported-codec fixtures, verify native conversion and cache reuse, and
-check original preservation, corruption errors and cancellation.
+`dotnet run --project tests\MediaConversion -- "<empty fixture directory>"`.
+These tests are fully native: no external tool or process is used. They generate
+MP4 (H.264/AAC), WAV, uncompressed AVI, MJPEG AVI and unsupported-codec AVI fixtures with Windows media
+components and hand-written RIFF code, and decode the converted output with Windows APIs. The
+uncompressed AVI is converted end to end as a positive control, while codec-dependent AVIs report
+explicit errors when Windows cannot convert them. The tests also verify cache reuse and check
+original preservation, corruption errors and cancellation.
 
 Validation for the previous 6.4.36 release: 11 dependency-free regression tests passed; browser
 checks rendered all 34 voices and exercised all 30 mode selections without
@@ -187,7 +212,7 @@ This is not an end-to-end certification of native capture or machine policies.
 
 - [ai_warp_engine/](ai_warp_engine/) - app HTML, JavaScript, CSS, configuration and bundled media.
 - [shell/](shell/) - WinForms/WebView2 host, audio capture, cursor guards and NSIS installer.
-- [tests/](tests/) - document, JavaScript, startup, render, LENS and version regression checks.
+- [tests/](tests/) - document, JavaScript, startup, render, LENS, version, effect-bank, canvas-alignment and Freeze Frame checks, plus the native host harness.
 - [ABOUT.md](ABOUT.md) - project overview and protection boundaries.
 - [DESCRIPTION.md](DESCRIPTION.md) - short GitHub/project description.
 
