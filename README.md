@@ -1,9 +1,13 @@
-# AI WARP ENGINE - v6.4.38.1
+# AI WARP ENGINE - v6.4.38.2
 
-The native 6.4.38.1 edition explicitly retains the complete 6.4.36 FX/voice banks:
+**6.4.38.2 NO-FFMPEG (No~Gyan-D)** adds a crisp gold reversed-R vector icon,
+ten Windows/DPI icon sizes and a 1024px logo. The installer retains the .NET
+tribute and runtime licensing pages. See [release notes](RELEASE_NOTES_6.4.38.2.md). - v6.4.38.2
+
+The native 6.4.38.2 edition explicitly retains the complete 6.4.36 FX/voice banks:
 34 voices, 29 warp modes, R3 Ghost/V-Sync and 80 Milkdrop presets, together with
 the newer continuous-frame and full-scope freeze-frame fixes. See
-[the carryover validation](RELEASE_NOTES_6.4.38.1.md#explicit-6436-fxvoice-carryover). - v6.4.38.1
+[the retained features](RELEASE_NOTES_6.4.38.2.md#retained-features). - v6.4.38.2
 
 **A Windows visual synthesizer and audio-reactive media playground.**
 Combine live media, generative artwork, 34 glitch voices, 29 warp effects and
@@ -13,18 +17,18 @@ audio-driven automation in one Canvas-based performance interface.
 
 ## Download and install
 
-**6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)**:
-the [v6.4.38.1 release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.38.1)
+**6.4.38.2 NO-FFMPEG (No~Gyan-D)**:
+the [v6.4.38.2 release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.38.2)
 provides an FFmpeg-free Windows installer, complete app bundle, browser assets
 and documentation. Conversion uses installed Windows codecs/MediaTranscoder;
 this is not universal AVI/codec support or an affiliation with GyanD.
-See [native release notes](RELEASE_NOTES_6.4.38.1.md) and
+See [native release notes](RELEASE_NOTES_6.4.38.2.md) and
 [third-party redistribution status](THIRD_PARTY_NOTICES.md).
 The earlier FFmpeg-based Windows release remains pending source review.
 Daily upstream checks and approval-gated publication for that older binary remain configured;
 see [Windows release workflow](WINDOWS_RELEASE_WORKFLOW.md).
 
-[Windows v6.4.38.1 installer](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/download/v6.4.38.1/AI-WARP-ENGINE-6.4.38.1-x64-setup.exe)
+[Windows v6.4.38.2 installer](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/download/v6.4.38.2/AI-WARP-ENGINE-6.4.38.2-x64-setup.exe)
 
 - Windows 10 build 19041 or newer / Windows 11 x64 and installed WebView2 are required.
 - Windows N needs Microsoft's Media Feature Pack; codec extensions are installed separately.
@@ -38,14 +42,14 @@ see [Windows release workflow](WINDOWS_RELEASE_WORKFLOW.md).
 - The installer is unsigned and may trigger SmartScreen.
 
 Verify downloads against **SHA256SUMS.txt** in the
-[release assets](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.38.1).
+[release assets](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.38.2).
 The release also includes a matching browser-app ZIP. Extract the entire folder,
 including its media, and serve it over localhost rather than opening `file://`.
 The browser ZIP omits website-root `home.html` and `index.html` but includes the
 app folder's own `index.html`. The documentation ZIP is separate.
 
-**Current browser edition: 6.4.38.1.** Download
-`AI-WARP-ENGINE-6.4.38.1-browser.zip` from the same release for full-scope
+**Current browser edition: 6.4.38.2.** Download
+`AI-WARP-ENGINE-6.4.38.2-browser.zip` from the same release for full-scope
 freeze-frame exports including fullscreen CRT/vignette and final page filters.
 See [screenshot patch notes](RELEASE_NOTES_6.4.37.1.md). Windows 6.4.37.1 remains private
 pending source verification; the original approval workflow still stages 6.4.37.
@@ -57,7 +61,7 @@ pending source verification; the original approval workflow still stages 6.4.37.
 - Local-only app scripts and hardened navigation, permissions and native bridge boundaries.
 - External browsers/new windows blocked; release debugging disabled.
 - Full-scope freeze-frame screenshots, including fullscreen CRT/vignette and page filters.
-- Top-panel label: **6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)**.
+- Top-panel label: **6.4.38.2 NO-FFMPEG (No~Gyan-D)**.
 
 See [changelog](CHANGELOG.md) for validation and protection limits.
 
@@ -143,7 +147,7 @@ Set-Location shell
 & "C:\Program Files (x86)\NSIS\makensis.exe" setup.nsi
 ```
 
-Output: `shell\AI-WARP-ENGINE-6.4.38.1-x64-setup.exe`.
+Output: `shell\AI-WARP-ENGINE-6.4.38.2-x64-setup.exe`.
 See [shell build documentation](shell/README.md).
 
 Current source changes add synchronized, gap-free FX composition, 240 ms warp

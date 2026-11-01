@@ -1,6 +1,6 @@
-# Windows native edition 6.4.38.1
+# Windows native edition 6.4.38.2
 
-**6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)**
+**6.4.38.2 NO-FFMPEG (No~Gyan-D)**
 
 WinForms/WebView2 shell for the app in `../ai_warp_engine`. The media-conversion
 backend uses Windows `MediaTranscoder`, not FFmpeg. This is not universal codec
@@ -18,13 +18,17 @@ Set-Location shell
 
 The project targets Windows build 19041 or newer. SDK projections restore from
 the target framework. The script publishes self-contained .NET x64 into a new
-`publish-native-6.4.38.1` directory, rejects an existing directory, and checks
+`publish-native-6.4.38.2` directory, rejects an existing directory, and checks
 that no FFmpeg files exist. NSIS packages that directory, never the old `publish`.
 
 For a clean rebuild, pass `-OutputDirectory` to the build script and the same
 directory via NSIS `/DSRC=...`. Existing outputs are never overwritten by the
 publish script. The app, installer, uninstaller and shortcuts retain the
-existing gold reversed-R `app.ico`; no replacement artwork is generated.
+gold reversed-R `app.ico`, regenerated from `app-icon.svg` with ten sizes:
+16, 20, 24, 32, 40, 48, 64, 96, 128 and 256 pixels. The 1024px `logo.png`
+is generated from the same vector master. Rebuild with
+`python shell\build-icon.py` (requires Pillow); no artwork service is used.
+Supersampled curves and DPI-specific sizes avoid enlarging a tiny icon.
 Installer licensing includes a .NET team/community tribute and a separate
 page showing the bundled .NET runtime's actual MIT license, followed by Windows
 SDK terms. Runtime notices remain in the installed app.
@@ -77,6 +81,6 @@ Native conversion tests use FFmpeg only to generate/check fixtures, never as the
 converter or shipped app dependency.
 
 The older FFmpeg-based 6.4.37 Windows publication remains gated on its exact
-corresponding-source materials. See [native release notes](../RELEASE_NOTES_6.4.38.1.md),
+corresponding-source materials. See [native release notes](../RELEASE_NOTES_6.4.38.2.md),
 [third-party notices](../THIRD_PARTY_NOTICES.md) and
 [older release gate](../WINDOWS_RELEASE_WORKFLOW.md).

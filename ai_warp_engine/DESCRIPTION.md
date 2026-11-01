@@ -1,4 +1,4 @@
-# AI WARP ENGINE 6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)
+# AI WARP ENGINE 6.4.38.2 NO-FFMPEG (No~Gyan-D)
 
 Browser visual synthesizer with 34 glitch voices, 29 warp effects, local media,
 YouTube playback, audio analysis, presets and Canvas screenshots.
@@ -26,9 +26,9 @@ Upload this entire folder, including `audio`, under `ai_warp_engine` beside the
 website's `home.html` and `index.html`. Serve over HTTPS, not `file://`.
 Open [the browser app](index.html) in the same tab.
 
-The v6.4.38.1 GitHub release provides the current app-only browser ZIP, excluding the
+The v6.4.38.2 GitHub release provides the current app-only browser ZIP, excluding the
 website-root `home.html` and `index.html` but retaining this folder's app aliases.
-Windows 6.4.38.1 bundles .NET and requires installed WebView2 and Windows media
+Windows 6.4.38.2 bundles .NET and requires installed WebView2 and Windows media
 components (Windows 10 build 19041+/11 x64). Windows N needs the Media Feature Pack.
 The native label does not promise every codec or an all-native UI.
 Older FFmpeg-based installers remain pending source verification.

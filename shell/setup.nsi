@@ -1,12 +1,12 @@
 Unicode true
 !include "MUI2.nsh"
 !ifndef VERSION
-  !define VERSION "6.4.38.1"
+  !define VERSION "6.4.38.2"
 !endif
 !ifndef SRC
-  !define SRC "publish-native-6.4.38.1"
+  !define SRC "publish-native-6.4.38.2"
 !endif
-Name "AI WARP ENGINE - 6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)"
+Name "AI WARP ENGINE - 6.4.38.2 NO-FFMPEG (No~Gyan-D)"
 OutFile "AI-WARP-ENGINE-${VERSION}-x64-setup.exe"
 RequestExecutionLevel admin
 InstallDir "$DESKTOP\AI WARP ENGINE"

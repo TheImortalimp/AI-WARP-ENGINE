@@ -1,6 +1,6 @@
 # About AI WARP ENGINE
 
-**6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D).**
+**6.4.38.2 NO-FFMPEG (No~Gyan-D).**
 
 The current edition uses Windows MediaTranscoder and installed Windows codecs
 without FFmpeg. .NET is bundled; WebView2 and OS media components are prerequisites.
@@ -28,7 +28,7 @@ freeze frames exclude the HUD.
 ## What changed in 6.4.37
 
 Continuous FX use synchronized frames, smooth mode transitions and failure
-recovery. The earlier 6.4.37 Windows build used bundled FFmpeg; current 6.4.38.1
+recovery. The earlier 6.4.37 Windows build used bundled FFmpeg; current 6.4.38.2
 converts supported files through Windows codecs and reports unsupported inputs.
 App navigation and native controls are restricted, remote app
 scripts and release debugging are disabled, and external browsers cannot launch.
@@ -36,7 +36,7 @@ Accessibility and existing cursor protections remain; no Defender scans or
 physical-input-only guarantee are included.
 
 The title-adjacent HUD notice reads:
-**6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)**.
+**6.4.38.2 NO-FFMPEG (No~Gyan-D)**.
 
 ### Previous startup repair in 6.4.36
 

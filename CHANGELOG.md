@@ -2,6 +2,13 @@
 
 Standalone Windows app releases. Full notes per release are in the `RELEASE_NOTES_*.md` files.
 
+## 6.4.38.2 - NO-FFMPEG (No~Gyan-D)
+- Crisp gold reversed-R vector master, ten DPI-specific ICO sizes and 1024px logo.
+- New app/installer/uninstaller artwork; shortcuts retain executable icon wiring.
+- Updated native edition HUD, version, cache keys and complete documentation.
+- Retained .NET tribute/licensing, all voices/FX, native conversion and full-FX capture.
+- Earlier releases and pending FFmpeg publication automation are unchanged.
+
 ## 6.4.38.1 - COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)
 - Separate FFmpeg-free Windows edition with MediaTranscoder fallback through installed OS codecs.
 - Bundled .NET runtime and dependency notices; installed WebView2/media components remain prerequisites.

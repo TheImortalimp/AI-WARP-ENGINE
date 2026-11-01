@@ -31,6 +31,35 @@ test('native installer retains gold icon wiring and presents .NET licensing trib
     assert.match(shell('LICENSE.txt'), /does not imply Microsoft sponsorship or endorsement/);
 });
 
+test('crisp icon supplies ten valid PNG sizes and a high-resolution logo', () => {
+    const bytes = fs.readFileSync(path.join(root, 'shell', 'app.ico'));
+    assert.equal(bytes.readUInt16LE(0), 0);
+    assert.equal(bytes.readUInt16LE(2), 1);
+    const sizes = [16, 20, 24, 32, 40, 48, 64, 96, 128, 256];
+    assert.equal(bytes.readUInt16LE(4), sizes.length);
+    const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+    let next = 6 + sizes.length * 16;
+    sizes.forEach((size, index) => {
+        const entry = 6 + index * 16;
+        assert.equal(bytes[entry] || 256, size);
+        assert.equal(bytes[entry + 1] || 256, size);
+        assert.equal(bytes.readUInt16LE(entry + 6), 32);
+        const length = bytes.readUInt32LE(entry + 8);
+        const offset = bytes.readUInt32LE(entry + 12);
+        assert.equal(offset, next);
+        assert.ok(offset + length <= bytes.length);
+        assert.ok(bytes.subarray(offset, offset + 8).equals(signature));
+        assert.equal(bytes.readUInt32BE(offset + 16), size);
+        assert.equal(bytes.readUInt32BE(offset + 20), size);
+        next += length;
+    });
+    assert.equal(next, bytes.length);
+    const logo = fs.readFileSync(path.join(root, 'shell', 'logo.png'));
+    assert.equal(logo.readUInt32BE(16), 1024);
+    assert.equal(logo.readUInt32BE(20), 1024);
+    assert.ok(fs.existsSync(path.join(root, 'shell', 'app-icon.svg')));
+});
+
 test('application aliases contain one document, unique IDs and one ordered engine stack', () => {
     for (const name of aliases) {
         const html = read(name);
@@ -344,10 +373,13 @@ test('HUD change notice, shell version, installer version and asset cache versio
     const installer = fs.readFileSync(path.join(root, 'shell', 'setup.nsi'), 'utf8');
     assert.ok(installer.includes(`!define VERSION "${version}"`));
     assert.ok(JSON.parse(read('media_page.json')).engine.version.startsWith(version + '-'));
-    assert.ok(read('ai_warp_showcase_section.html').includes(`${version} COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)`));
+    const label = `${version} NO-FFMPEG (No~Gyan-D)`;
+    assert.ok(project.includes(`<Product>AI WARP ENGINE - ${label}</Product>`));
+    assert.ok(installer.includes(`Name "AI WARP ENGINE - ${label}"`));
+    assert.ok(read('ai_warp_showcase_section.html').includes(label));
     for (const name of aliases) {
         const html = read(name);
-        assert.ok(html.includes(`${version} COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)`));
+        assert.ok(html.includes(label));
         const assets = [...html.matchAll(/(?:src|href)="([^"]+\.(?:js|css)\?v=([^"]+))"/g)];
         assert.equal(assets.length, 9);
         assert.ok(assets.every(match => match[2] === version));

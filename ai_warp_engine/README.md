@@ -1,4 +1,4 @@
-# ⚡ AI WARP ENGINE — 6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)
+# ⚡ AI WARP ENGINE — 6.4.38.2 NO-FFMPEG (No~Gyan-D)
 
 > **Public-domain visual synthesizer, audio-reactive media playground, and live Canvas glitch suite.**  
 > Created through collaborative work between [imortalimp.nl](https://imortalimp.nl) (River Lyle Reuveni), [Arena.ai](https://arena.ai), and artificial intelligence.
@@ -53,7 +53,7 @@ The application loads local scripts in this dependency order:
 7. `freeze_frame.js`
 8. `media_page.js`
 
-Version 6.4.38.1 loads `freeze_frame.js` immediately before
+Version 6.4.38.2 loads `freeze_frame.js` immediately before
 `media_page.js`. Freeze Frame includes fullscreen CRT/vignette and page FX,
 not just the engine canvas. Windows captures the HUD-free compositor output;
 browser YouTube needs screen/tab capture. See [browser details](DESCRIPTION.md).
@@ -66,18 +66,18 @@ Upload the complete `ai_warp_engine` folder beside the website's updated
 all runtime scripts, configuration, CSS, bundled media, and the Three.js license.
 No Node.js, FFmpeg or Windows executable is needed on the web server.
 
-The current release asset `AI-WARP-ENGINE-6.4.38.1-browser.zip` contains only
+The current release asset `AI-WARP-ENGINE-6.4.38.2-browser.zip` contains only
 `ai_warp_engine/`, including its app `index.html`. It excludes the website-root
 `home.html` and `index.html`, the old ZIP, legacy `web` bundle and native shell.
 Extract it into the website root alongside your existing website pages.
 
-The current local `AI-WARP-ENGINE-6.4.37.1-web-upload.zip` is a website **update** bundle:
+The earlier local `AI-WARP-ENGINE-6.4.37.1-web-upload.zip` is a website **update** bundle:
 its top level contains `home.html`, `index.html` and `ai_warp_engine/`.
 Extract these into the existing website root, replacing matching files and
 preserving the site's other assets. It excludes the obsolete 6.4 ZIP, the legacy
 `web` bundle and native shell files. It is not a backup of the entire website.
 
-The three app aliases show `6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)`.
+The three app aliases show `6.4.38.2 NO-FFMPEG (No~Gyan-D)`.
 Local video and audio use the same continuous FX path as captured frames.
 Browser codec limitations still apply: unsupported AVI must be converted locally
 to H.264/AAC MP4 (or AAC M4A for audio); automatic Windows conversion uses only
@@ -96,7 +96,7 @@ navigation/debugging protections do not apply to a normal browser.
 
 Upload runtime assets before the three entry HTML files so their cache-revision
 URLs never point to missing scripts. The old `ai_warp_engine_r3_canvas_v6.4.zip`
-is a historical archive, not the current upload bundle. Version 6.4.38.1 is a
+is a historical archive, not the current upload bundle. Version 6.4.38.2 is a
 separate FFmpeg-free Windows edition; older website pages/downloads may still
 identify the prior release. Use the version-specific release assets.
 
@@ -124,7 +124,7 @@ startup. Render errors are visible, voice passes restore their canvas state, and
 transient failures cannot stop the animation loop. The Windows system-cursor and
 theme/pointer download guards remain enabled for both views.
 The title-adjacent HUD change notice and installer/app version now agree on
-`6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)`.
+`6.4.38.2 NO-FFMPEG (No~Gyan-D)`.
 
 Run the dependency-free regression checks from the repository root:
 

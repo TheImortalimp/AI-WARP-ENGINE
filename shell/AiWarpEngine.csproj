@@ -8,10 +8,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>AI-Warp-Engine</AssemblyName>
     <RootNamespace>AiWarpEngine</RootNamespace>
-    <Version>6.4.38.1</Version>
+    <Version>6.4.38.2</Version>
     <Authors>River Lyle Reuveni</Authors>
     <Company>River Lyle Reuveni (Imortalimp)</Company>
-    <Product>AI WARP ENGINE - 6.4.38.1 COMPLETE (ALL WINDOWS x64 NATIVE) -noffmpeg_(~Gyan-D)</Product>
+    <Product>AI WARP ENGINE - 6.4.38.2 NO-FFMPEG (No~Gyan-D)</Product>
     <Description>Glitch visual synthesizer and audio-reactive media playground</Description>
     <Copyright>(c) 2026 River Lyle Reuveni - imortalimp.nl - CC0 1.0 / The Unlicense</Copyright>
     <PackageProjectUrl>https://imortalimp.nl</PackageProjectUrl>
