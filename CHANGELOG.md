@@ -2,6 +2,15 @@
 
 Standalone Windows app releases. Full notes per release are in the `RELEASE_NOTES_*.md` files.
 
+## 6.4.37 - Glitch Hardened & FX Fixed
+- Synchronized completed FX frames, continuous warp timing, 240 ms mode blending, gap coverage and last-good-frame recovery for local media and LENS.
+- Bundled offline FFmpeg conversion for unsupported local video/audio, including AVI, with original preservation, cached copies, cancellation and explicit errors.
+- Blocked external-browser launches, restricted app/LENS navigation and native bridge callers, disabled release debugging, and bundled Three.js with local-only script policy.
+- Preserved accessibility and existing cursor protections; no Defender scanning or physical-input-only guarantee.
+- Updated app, installer, metadata and HUD to `v6.4.37 · Glitch Hardened & FX Fixed`.
+- Validation: 25 JavaScript regressions, 22 control-policy assertions, eight native conversion checks, and 2,610 native FX frames with no transparent/untreated frames.
+- Built locally; not yet published to GitHub.
+
 ## 6.4.36 - Startup and effects regression repair
 - Restored separate app, showcase and YouTube LENS documents after 6.4.35 concatenated them, duplicating controls and starting competing render loops.
 - Hardened JavaScript startup with single-instance initialization, dependency/media-mount checks, bounded configuration loading and visible errors. Optional remote scripts no longer block startup.

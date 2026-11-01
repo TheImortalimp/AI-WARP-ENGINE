@@ -1,6 +1,6 @@
 # AI WARP ENGINE — User Manual
 
-**Applies to:** AI WARP ENGINE standalone Windows app, release 6.4.36
+**Applies to:** AI WARP ENGINE standalone Windows app, local build 6.4.37
 **Platform:** Windows 10/11 x64
 
 AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media source, then layer AI Warp modes, glitch voices, Ghost Protocol, V-Sync and audio-reactive automation over it. Release 6.4.27 makes locks hard and the screenshot true: voice locks and new Speed, Opacity, Ghost and V-Sync locks in the bottom controls are enforced every frame against Automated Masters, Continual Randomization, Timed Auto and presets; Freeze Frame (S) saves the full LENS canvas as an opaque PNG without the HUD or app frame, and the canvas no longer shrinks when zooming out (YouTube iframe pixels cannot be read by browsers - use local media, YT LENS or tab capture); Neon Gradient (core and GC#(3)) is a much stronger rotating ribbon with bloom and wash; GC#(3) ASCII streams a continual luminance-mapped character sheet; Twirl is slower and smoother. Release 6.4.26 extends adjustable B&W inversion and Hue rotation across the complete app viewport, including the HUD, controls, dialogs and overlays, and preserves those treatments in freeze-frame screenshots. Release 6.4.25 applies them to the complete LENS composition, including captured frames, initialization art, the Raum X-R showcase and visual easter eggs. Release 6.4.24 makes bottom-dock B&W/Hue tuning activate the paired voices on the LENS Canvas and starts playlist extraction automatically during playback/import. Release 6.4.23 improves YouTube playlist visibility and feed extraction. Release 6.4.22 adds locked B&W/Hue fine-tuning and randomized automation rolls. Release 6.4.21 runs the Raum cover artwork as a slideshow with exclusive glitch sequences while those tracks play. Release 6.4.20 adds the bundled RAUM · X-R showcase of four original tracks. Release 6.4.19 added the subtle-blend DROP THE MILK? feedback effect and audio-aware YouTube playlist playback in the standalone YT LENS.
@@ -20,7 +20,7 @@ AI WARP ENGINE is a real-time visual synthesizer. Choose a visual or media sourc
 
 ## Install and launch
 
-1. Download and run `AI-WARP-ENGINE-6.4.36-x64-setup.exe` from the [v6.4.36 GitHub release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.36).
+1. Build and run `shell\AI-WARP-ENGINE-6.4.37-x64-setup.exe`. This local version is not yet published; the [previous v6.4.36 GitHub release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.36) does not include the latest fixes.
 2. Run the installer, approve UAC elevation and accept the licence terms. It installs into the current user's desktop by default, but requires administrator access to apply Windows cursor/theme/sound policy hardening. Review [About](ABOUT.md#cursor-and-theme-protection) before installing.
 3. Launch **AI WARP ENGINE** from the desktop shortcut or Start Menu.
 
@@ -41,6 +41,19 @@ Effects can be combined. If a result becomes too intense, lower the master opaci
 
 ## Choosing a source
 
+### Windows app control boundary
+
+The Windows build restricts top-level navigation and native bridge requests to
+its local app documents. The supporting LENS has no native command bridge,
+host objects or device permissions. External browsers and new windows never
+launch, including from user-clicked links. Release debugging paths are disabled, and blocked
+control requests appear in the HUD.
+
+This preserves local media, YouTube playback, microphone/camera access from the
+app, and accessibility input. It does not add Defender scanning, block remote
+desktop or certify that every input came from a physical mouse/keyboard. Malware
+running with the user's or administrator's privileges remains an OS-level risk.
+
 ### Generated visuals
 
 The app can run its built-in generative Canvas visuals without opening a media file. This is a useful starting point for exploring the effect controls and presets.
@@ -50,6 +63,19 @@ The app can run its built-in generative Canvas visuals without opening a media f
 Use the app’s media/file controls to load local images, video or audio. Video is rendered into the visual pipeline; audio is monitored by the analyser and can accompany artwork. Playback controls include play/pause and transport where applicable. Selecting another source stops the current media first.
 
 Common formats include image files and media containers supported by the installed WebView2 codecs. Video codec support depends on the file’s encoding as well as its extension.
+
+The Windows app now retries unsupported local video/audio with bundled FFmpeg.
+AVI and other unsupported codecs convert offline to H.264/AAC MP4 (video) or AAC
+M4A (audio); the original is never overwritten. The HUD shows conversion status
+and explicit errors for corrupt/unreadable media. Copies are cached under the
+WebView2 profile's `media-cache` folder (including when `AIWARP_PROFILE` is set).
+Changing sources cancels conversion so an old file cannot start later. Conversion
+can take time and disk space; the first playback waits for it to finish.
+
+Converted video uses the same LENS/FX, audio-analysis, seek, pause and screenshot
+path as directly supported video. During decoder buffering, FX keep running over
+the last clean source frame. A normal browser does not have the native converter:
+convert unsupported files locally before loading them.
 
 ### RAUM · X-R showcase (bundled tracks)
 
@@ -115,6 +141,14 @@ Cycle modes with `W` or use the warp-mode control. There are 29 modes:
 - **NewBlue-inspired:** roll, active cam, shear, wiggle, zoom blur, video tile, twirl, light ring, earthquake, water drop, RGB shift, quad mirror, fish eye, pinch, solarize, cathode beam and neon edges.
 
 Use the AI Warp strength slider to scale the warp and master opacity to control the overall visual blend. Mode-aware FX profiles coordinate selected Ghost, V-Sync, Canvas and automation responses with the active mode.
+
+The LENS presents synchronized, completed frames instead of low-latency mid-pass
+updates. Warp motion keeps a continuous phase when speed changes. Canvas mode changes blend
+over 240 ms, including preset midpoint changes and rapid manual cycling. Displaced
+slices are backed by the current source before the warp color passes, so gaps do
+not reveal an untreated LENS. Failed rendering passes report an error and retain
+the last completed frame until rendering recovers. AI ZERO, Warp OFF and zero
+strength bypass the warp immediately; intentional strobe and glitch rhythms remain.
 
 ### FX Mixer
 

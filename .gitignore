@@ -2,3 +2,7 @@ shell/bin/
 shell/obj/
 shell/publish/
 shell/*.exe
+tests/MediaConversion/bin/
+tests/MediaConversion/obj/
+tests/AppControl/bin/
+tests/AppControl/obj/

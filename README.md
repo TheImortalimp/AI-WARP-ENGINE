@@ -1,4 +1,4 @@
-# AI WARP ENGINE - v6.4.36
+# AI WARP ENGINE - v6.4.37
 
 **A Windows visual synthesizer and audio-reactive media playground.**
 Combine live media, generative artwork, 34 glitch voices, 29 warp effects and
@@ -8,7 +8,10 @@ audio-driven automation in one Canvas-based performance interface.
 
 ## Download and install
 
-**[Download the v6.4.36 Windows x64 installer](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/download/v6.4.36/AI-WARP-ENGINE-6.4.36-x64-setup.exe)**
+**Current local build:** `shell\AI-WARP-ENGINE-6.4.37-x64-setup.exe`.
+Version 6.4.37 is not yet published to GitHub.
+
+[Previous published v6.4.36 installer](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/download/v6.4.36/AI-WARP-ENGINE-6.4.36-x64-setup.exe)
 
 - Windows 10/11 x64 and Microsoft Edge WebView2 are required.
 - The .NET runtime and bundled media are included.
@@ -25,7 +28,17 @@ Verify downloads against **SHA256SUMS.txt** in the
 The release also includes a matching browser-app ZIP. Extract the entire folder,
 including its media, and serve it over localhost rather than opening `file://`.
 
-## What's fixed in 6.4.36
+## What's fixed in 6.4.37
+
+- Continuous, synchronized FX with smooth mode transitions and frame recovery.
+- Offline AVI/unsupported audio-video conversion using bundled FFmpeg.
+- Local-only app scripts and hardened navigation, permissions and native bridge boundaries.
+- External browsers/new windows blocked; release debugging disabled.
+- Top-panel label: **v6.4.37 - Glitch Hardened & FX Fixed**.
+
+See [changelog](CHANGELOG.md) for validation and protection limits.
+
+### Previous startup repair in 6.4.36
 
 The previous release accidentally concatenated the app, showcase and YouTube
 LENS documents. Duplicate canvases and controls started competing engines,
@@ -97,20 +110,39 @@ LENS capture are host-only features.
 
 ## Build and validate
 
-Requires Node.js for tests, the .NET 8 SDK for the host, and
+Requires Node.js for tests, the .NET 8 SDK and a complete FFmpeg distribution for the host, and
 [NSIS](https://nsis.sourceforge.io/) for the installer.
 
 ```powershell
-node --test tests\regressions.test.cjs
+node --test tests\regressions.test.cjs tests\local-media.test.cjs
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File shell\build.ps1
 Set-Location shell
-dotnet publish -c Release -r win-x64 --self-contained true -o publish
 & "C:\Program Files (x86)\NSIS\makensis.exe" setup.nsi
 ```
 
-Output: `shell\AI-WARP-ENGINE-6.4.36-x64-setup.exe`.
+Output: `shell\AI-WARP-ENGINE-6.4.37-x64-setup.exe`.
 See [shell build documentation](shell/README.md).
 
-Validation for this release: 11 dependency-free regression tests passed; browser
+Current source changes add synchronized, gap-free FX composition, 240 ms warp
+mode blending, continuous warp phase and last-good-frame recovery for all media
+sources. The Windows build also bundles FFmpeg for offline conversion of
+unsupported local video/audio, including AVI. Existing release downloads do not
+contain these changes; rebuild to use them.
+
+For browser pixel checks, serve the repository over localhost and run in the
+app's developer console:
+```javascript
+await import('/tests/fx-continuity.browser.js');
+await runFxContinuityChecks();
+```
+This checks 29 modes at three strengths, transparent/untreated frames, mode
+transitions, scratch-buffer stability, OFF controls and failure recovery.
+Native conversion checks can be run with
+`dotnet run --project tests\MediaConversion -- "<ffmpeg.exe path>" "<empty fixture directory>"`.
+They generate synthetic AVI/AIFF media, verify conversion and cache reuse, and
+check original preservation, corruption errors and cancellation.
+
+Validation for the previous 6.4.36 release: 11 dependency-free regression tests passed; browser
 checks rendered all 34 voices and exercised all 30 mode selections without
 JavaScript errors, including with the injected cursor guard. Windows publish
 and NSIS packaging succeeded; all packaged HTML/JS/CSS/JSON matched source.
@@ -125,8 +157,11 @@ This is not an end-to-end certification of native capture or machine policies.
 - [DESCRIPTION.md](DESCRIPTION.md) - short GitHub/project description.
 
 Settings live in `%LOCALAPPDATA%\AI-Warp-Engine\profile`. Optional
-`AIWARP_PROFILE` selects a different profile, and `AIWARP_DEBUG_PORT` enables
-local Chromium remote debugging when explicitly configured.
+`AIWARP_PROFILE` selects a different profile. `AIWARP_DEBUG_PORT` enables local
+Chromium remote debugging only in Debug builds; Release builds disallow debugger
+environment overrides. Current source also restricts app/LENS navigation, bridge
+callers, permissions and external-link launches. This is app-level hardening, not
+a physical-input-only guarantee or Defender integration.
 
 ## License and credits
 

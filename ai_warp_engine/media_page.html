@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI WARP ENGINE — Hyper-Integrated Synthesis | IMORTALIMP.NL</title>
     <meta name="description" content="AI Warp Engine unified synthesis: YouTube Randoms with forward/back navigation, the YouTube Warp Bus and per-pixel SVG Warp Lens, browser tab/window/full-screen capture feeding real pixels and optional audio into the Canvas engine, independent microphone monitoring and Audio Reactive Ear modes, local media, 34 glitch voices, 29 AI Warp modes, presets, and Soft-Eye crescendo.">
-    <link rel="stylesheet" href="media_page.css?v=6.4.36.0">
+    <link rel="stylesheet" href="media_page.css?v=6.4.37.0">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -60,7 +61,7 @@
     <header id="glitch-top-bar">
         <div class="hud-title-cluster">
             <h1>AI Warp Engine</h1>
-            <span class="hud-version-badge" title="Startup screen and effect playback restored; single-instance JavaScript startup; system-cursor protection retained">v6.4.36 · INIT + FX RESTORED · CURSOR GUARD</span>
+            <span class="hud-version-badge" title="App control hardened; external browsers blocked; continuous FX and local media playback fixed">v6.4.37 · Glitch Hardened &amp; FX Fixed</span>
         </div>
 
         <div class="hud-visualizer-group">
@@ -144,7 +145,7 @@
         </div>
 
         <!-- Hidden File Inputs -->
-        <input type="file" id="localFileInput" accept=".mp4,.m4v,.mov,.avi,.mkv,.webm,.ogv,.ogm,.3gp,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.flac,.weba,.mka,.spx,.aif,.aiff,video/*,audio/*" style="display:none;">
+        <input type="file" id="localFileInput" accept=".mp4,.m4v,.mov,.avi,.mkv,.webm,.ogv,.ogm,.3gp,.av1,.ivf,.wmv,.asf,.mpg,.mpeg,.ts,.mts,.m2ts,.flv,.vob,.mp3,.m4a,.aac,.wav,.ogg,.oga,.opus,.flac,.weba,.mka,.spx,.aif,.aiff,.wma,.ac3,.dts,.amr,video/*,audio/*" style="display:none;">
         <input type="file" id="localFolderInput" webkitdirectory directory multiple accept="video/*,audio/*,image/*" style="display:none;">
         <input type="file" id="localArtworkInput" multiple accept="image/*" style="display:none;">
         <input type="file" id="customBgFile" multiple accept="image/*" style="display:none;">
@@ -319,13 +320,13 @@
     </div>
 
     <!-- ── EXTERNAL & INTERNAL ENGINE LIBRARIES ───────────────────────────── -->
-    <script async src="https://www.youtube.com/iframe_api"></script>
-    <script async src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
-    <script src="glitch_engine.js?v=6.4.36.0"></script>
-    <script src="r3_gc3_factories.js?v=6.4.36.0"></script>
-    <script src="r3_ghost_vsync.js?v=6.4.36.0"></script>
-    <script src="ai_warp_engine.js?v=6.4.36.0"></script>
-    <script src="media_page.js?v=6.4.36.0"></script>
+    <script src="three.min.js?v=6.4.37.0"></script>
+    <script src="glitch_engine.js?v=6.4.37.0"></script>
+    <script src="r3_gc3_factories.js?v=6.4.37.0"></script>
+    <script src="r3_ghost_vsync.js?v=6.4.37.0"></script>
+    <script src="ai_warp_engine.js?v=6.4.37.0"></script>
+    <script src="local_media.js?v=6.4.37.0"></script>
+    <script src="media_page.js?v=6.4.37.0"></script>
 
 
     <!-- ── YOUTUBE KNOWLEDGEBASE & PLAYLIST VAULT MODAL ────────────────── -->

@@ -1,6 +1,6 @@
 # About AI WARP ENGINE
 
-**Version 6.4.36 - Initialization and effects restored; cursor guard retained.**
+**Version 6.4.37 - Glitch Hardened & FX Fixed.**
 
 AI WARP ENGINE is a visual synthesizer and audio-reactive media playground.
 It combines a plain HTML/JavaScript/Canvas app with a Windows WinForms/WebView2
@@ -20,7 +20,19 @@ displays, YouTube, microphones and original bundled synth/RAUM X-R material.
 The complete web viewport can receive B&W/Hue treatment, while Canvas
 freeze frames exclude the HUD.
 
-## What changed in 6.4.36
+## What changed in 6.4.37
+
+Continuous FX now use synchronized frames, smooth mode transitions and failure
+recovery. Unsupported local video/audio, including AVI, converts offline with
+bundled FFmpeg. App navigation and native controls are restricted, remote app
+scripts and release debugging are disabled, and external browsers cannot launch.
+Accessibility and existing cursor protections remain; no Defender scans or
+physical-input-only guarantee are included.
+
+The title-adjacent HUD notice reads:
+**v6.4.37 - Glitch Hardened & FX Fixed**.
+
+### Previous startup repair in 6.4.36
 
 The 6.4.35 packaging regression joined independent HTML documents together,
 duplicating controls and creating competing engines. This release separates
@@ -29,7 +41,7 @@ single-instance and validates required scripts/media mounts; configuration
 loading is bounded, errors are surfaced, and transient rendering failures
 cannot cancel animation scheduling.
 
-The title-adjacent HUD notice reads:
+The previous title-adjacent HUD notice read:
 **v6.4.36 - INIT + FX RESTORED - CURSOR GUARD**.
 
 ## Cursor and theme protection

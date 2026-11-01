@@ -1,5 +1,6 @@
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
+using System.Text.Json;
 
 namespace AiWarpEngine;
 
@@ -21,6 +22,9 @@ internal sealed class MainForm : Form
     private readonly WebView2 view = new() { Dock = DockStyle.Fill };
     private FormBorderStyle savedStyle;
     private FormWindowState savedState;
+    private LocalMediaConverter mediaConverter;
+    private CancellationTokenSource mediaConversion;
+    private string mediaRequestId;
 
     public MainForm()
     {
@@ -31,7 +35,16 @@ internal sealed class MainForm : Form
         BackColor = Color.Black;
         try { Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch { }
         Controls.Add(view);
-        Load += async (_, _) => await InitAsync();
+        Load += async (_, _) =>
+        {
+            try { await InitAsync(); }
+            catch (Exception error) when (error is InvalidOperationException or ArgumentException or System.Runtime.InteropServices.COMException)
+            {
+                System.Diagnostics.Trace.TraceError("App startup: {0}", error);
+                MessageBox.Show(this, error.Message, "AI WARP startup blocked", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Close();
+            }
+        };
     }
 
     private async Task InitAsync()
@@ -41,9 +54,14 @@ internal sealed class MainForm : Form
         var profileOverride = Environment.GetEnvironmentVariable("AIWARP_PROFILE");
         if (!string.IsNullOrWhiteSpace(profileOverride)) profile = profileOverride;
         var args = "--autoplay-policy=no-user-gesture-required --disable-features=CalculateNativeWinOcclusion --disable-backgrounding-occluded-windows --disable-renderer-backgrounding";
+#if DEBUG
         var debugPort = Environment.GetEnvironmentVariable("AIWARP_DEBUG_PORT");
         if (int.TryParse(debugPort, out var port) && port > 0 && port < 65536)
             args += $" --remote-debugging-port={port}";
+#else
+        if (AppControlPolicy.HasBrowserControlOverride())
+            throw new InvalidOperationException("Release playback does not allow WebView2 browser-argument or script-debugger environment overrides. Remove the WEBVIEW2_* debugging override and restart.");
+#endif
         var env = await CoreWebView2Environment.CreateAsync(null, profile, new CoreWebView2EnvironmentOptions(args));
         lensEnv = env;
         await view.EnsureCoreWebView2Async(env);
@@ -52,39 +70,103 @@ internal sealed class MainForm : Form
         await CursorGuard.AttachAsync(core);
         CursorGuard.HardenBrowser(core);
         core.SetVirtualHostNameToFolderMapping(Host,
-            Path.Combine(AppContext.BaseDirectory, "app"), CoreWebView2HostResourceAccessKind.Allow);
+            Path.Combine(AppContext.BaseDirectory, "app"), CoreWebView2HostResourceAccessKind.DenyCors);
+        var mediaCache = Path.Combine(profile, "media-cache");
+        mediaConverter = new LocalMediaConverter(Path.Combine(AppContext.BaseDirectory, "tools", "ffmpeg.exe"), mediaCache);
+        core.SetVirtualHostNameToFolderMapping("media.warp.local", mediaCache, CoreWebView2HostResourceAccessKind.Allow);
         core.Settings.AreDevToolsEnabled = false;
+        core.Settings.AreHostObjectsAllowed = false;
+        core.Settings.AreBrowserAcceleratorKeysEnabled = false;
         core.Settings.IsStatusBarEnabled = false;
         core.DocumentTitleChanged += (_, _) => Text = string.IsNullOrWhiteSpace(core.DocumentTitle) ? "AI WARP ENGINE" : core.DocumentTitle;
+        core.NavigationStarting += (_, e) =>
+        {
+            if (!AppControlPolicy.IsAppDocument(e.Uri))
+            {
+                e.Cancel = true;
+                NotifyControlBlocked("External top-level navigation was blocked.");
+                return;
+            }
+            mediaConversion?.Cancel();
+        };
         core.ContainsFullScreenElementChanged += (_, _) => SetFullscreen(core.ContainsFullScreenElement);
         core.NewWindowRequested += (_, e) =>
         {
             e.Handled = true;
-            if (!CursorGuard.IsSafeExternalUri(e.Uri)) return;
-            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(e.Uri) { UseShellExecute = true }); } catch { }
+            NotifyControlBlocked("Opening external browsers or new windows is disabled.");
         };
         core.PermissionRequested += (_, e) =>
         {
             // Camera/mic/display capture are only auto-granted to the app's own origin.
-            if (e.Uri.StartsWith($"https://{Host}/", StringComparison.OrdinalIgnoreCase))
-                e.State = CoreWebView2PermissionState.Allow;
+            e.State = AppControlPolicy.IsAppDocument(e.Uri) &&
+                e.PermissionKind is CoreWebView2PermissionKind.Camera or CoreWebView2PermissionKind.Microphone
+                ? CoreWebView2PermissionState.Allow : CoreWebView2PermissionState.Deny;
         };
         core.WebMessageReceived += (_, e) =>
         {
-            if (!e.Source.StartsWith($"https://{Host}/", StringComparison.OrdinalIgnoreCase)) return;
+            if (!AppControlPolicy.IsAppDocument(e.Source))
+            {
+                NotifyControlBlocked("A native bridge request from an untrusted document was blocked.");
+                return;
+            }
             string msg;
             try { msg = e.TryGetWebMessageAsString(); } catch { return; }
             if (msg.StartsWith("lens:open|", StringComparison.Ordinal)) OpenLens(msg.Substring(10));
             else if (msg == "lens:close") CloseLens();
             else if (msg == "lens:frames|start") { StartFramePump(); StartTap(); }
             else if (msg == "lens:frames|stop") { pumpGen++; StopTap(); }
+            else if (msg.StartsWith("media:convert|", StringComparison.Ordinal)) ConvertLocalMedia(msg.Substring(14), e);
+            else if (msg.StartsWith("media:cancel|", StringComparison.Ordinal) && msg.Substring(13) == mediaRequestId) mediaConversion?.Cancel();
         };
         core.Navigate($"https://{Host}/index.html");
+    }
+
+    private void NotifyControlBlocked(string message)
+    {
+        System.Diagnostics.Trace.TraceWarning("App control: {0}", message);
+        if (!IsDisposed && view.CoreWebView2 is not null)
+            view.CoreWebView2.PostWebMessageAsString("control:blocked|" + message);
     }
 
     private CoreWebView2Environment? lensEnv;
     private Form? lensForm;
     private WebView2? lensView;
+
+    private async void ConvertLocalMedia(string json, CoreWebView2WebMessageReceivedEventArgs message)
+    {
+        string id = null;
+        CancellationTokenSource conversion = null;
+        try
+        {
+            using var request = JsonDocument.Parse(json);
+            id = request.RootElement.GetProperty("id").GetString();
+            var kind = request.RootElement.GetProperty("kind").GetString();
+            if (string.IsNullOrEmpty(id) || id.Length > 20 || !id.All(char.IsAsciiDigit))
+                throw new ArgumentException("Invalid conversion request ID.");
+            var objects = message.AdditionalObjects;
+            if (objects.Count != 1 || objects[0] is not CoreWebView2File file)
+                throw new ArgumentException("Conversion requires one user-selected local file.");
+            mediaConversion?.Cancel();
+            conversion = new CancellationTokenSource();
+            mediaConversion = conversion;
+            mediaRequestId = id;
+            var name = await mediaConverter.ConvertAsync(file.Path, kind, conversion.Token);
+            if (!conversion.IsCancellationRequested && !IsDisposed)
+                view.CoreWebView2.PostWebMessageAsString("media:result|" + JsonSerializer.Serialize(new { id, url = "https://media.warp.local/" + name }));
+        }
+        catch (OperationCanceledException) { /* Source changes explicitly cancel pending conversion. */ }
+        catch (Exception error) when (error is ArgumentException or JsonException or KeyNotFoundException or InvalidOperationException or IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception or NotImplementedException or System.Runtime.InteropServices.COMException)
+        {
+            System.Diagnostics.Trace.TraceError("Local media conversion: {0}", error);
+            if (!IsDisposed)
+                view.CoreWebView2.PostWebMessageAsString("media:result|" + JsonSerializer.Serialize(new { id, error = error.Message }));
+        }
+        finally
+        {
+            if (mediaConversion == conversion) { mediaConversion = null; mediaRequestId = null; }
+            conversion?.Dispose();
+        }
+    }
 
     // The "AI WARP LENS" window plays the YouTube embed; the main page captures it (getDisplayMedia,
     // auto-selected by window title) so the canvas pipeline receives the real video pixels.
@@ -125,10 +207,20 @@ internal sealed class MainForm : Form
         await CursorGuard.AttachAsync(lensView.CoreWebView2);
         CursorGuard.HardenBrowser(lensView.CoreWebView2);
         lensView.CoreWebView2.Settings.AreDevToolsEnabled = false;
+        lensView.CoreWebView2.Settings.AreHostObjectsAllowed = false;
+        lensView.CoreWebView2.Settings.IsWebMessageEnabled = false;
+        lensView.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = false;
         lensView.CoreWebView2.SetVirtualHostNameToFolderMapping(Host,
-            Path.Combine(AppContext.BaseDirectory, "app"), CoreWebView2HostResourceAccessKind.Allow);
+            Path.Combine(AppContext.BaseDirectory, "app"), CoreWebView2HostResourceAccessKind.DenyCors);
         lensView.CoreWebView2.Settings.IsStatusBarEnabled = false;
         lensView.CoreWebView2.NewWindowRequested += (_, e) => e.Handled = true;
+        lensView.CoreWebView2.NavigationStarting += (_, e) =>
+        {
+            if (AppControlPolicy.IsAppDocument(e.Uri, lens: true)) return;
+            e.Cancel = true;
+            NotifyControlBlocked("External LENS navigation was blocked.");
+        };
+        lensView.CoreWebView2.PermissionRequested += (_, e) => e.State = CoreWebView2PermissionState.Deny;
         lensView.CoreWebView2.Navigate(target);
         Activate();
     }
@@ -189,6 +281,7 @@ internal sealed class MainForm : Form
 
     protected override void OnFormClosed(FormClosedEventArgs e)
     {
+        mediaConversion?.Cancel();
         CloseLens();
         base.OnFormClosed(e);
     }

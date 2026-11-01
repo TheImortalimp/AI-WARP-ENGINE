@@ -1,6 +1,6 @@
 ;/* ===== ai_warp_engine.js ===== */
 /**
- * AI WARP ENGINE — HYPER-INTEGRATED SYNTHESIS (v6.4.36-INIT-FX-RESTORED-CURSOR-GUARD)
+ * AI WARP ENGINE — HYPER-INTEGRATED SYNTHESIS (v6.4.37-GLITCH-HARDENED-FX-FIXED)
  *
  * 100% Fully Responsive, Robust & Animated:
  * - 📡 Tab Capture (getDisplayMedia): real pixels AND real audio from any shared tab
@@ -77,7 +77,7 @@
         const mw = media.videoWidth || media.naturalWidth || media.width || cw;
         const mh = media.videoHeight || media.naturalHeight || media.height || ch;
         if (!mw || !mh) {
-            try { ctx.drawImage(media, 0, 0, cw, ch); } catch(e) {}
+            ctx.drawImage(media, 0, 0, cw, ch);
             return;
         }
         const scale = Math.max(cw / mw, ch / mh);
@@ -85,7 +85,7 @@
         const nh = mh * scale;
         const cx = (cw - nw) * 0.5;
         const cy = (ch - nh) * 0.5;
-        try { ctx.drawImage(media, cx, cy, nw, nh); } catch(e) {}
+        ctx.drawImage(media, cx, cy, nw, nh);
     }
 
     class AiWarpEngine {
@@ -94,7 +94,8 @@
             if (!this.canvas || typeof this.canvas.getContext !== 'function') {
                 throw new Error(`AiWarpEngine: Canvas "${canvasId}" not found.`);
             }
-            this.gctx = this.canvas.getContext('2d', { alpha: true, desynchronized: true });
+            // Present complete FX frames rather than allowing low-latency mid-pass scanout.
+            this.gctx = this.canvas.getContext('2d', { alpha: true, desynchronized: false });
             if (!this.gctx) throw new Error('AiWarpEngine: Canvas 2D rendering is unavailable.');
             this.options = options;
             this._deterministicState = 0x6D2B79F5;
@@ -119,6 +120,12 @@
             this.aiWarpHue = 0;
             this.aiWarpSeed = Math.random() * 1000;
             this.aiWarpState = { disp: 2.0, freq: 0.001, pulse: 0.3, fold: 0, aurora: 0, scale: 1.0, driftX: 0, driftY: 0, skewX: 0, skewY: 0 };
+            this.warpTime = 0;
+            this.warpClockAt = null;
+            this.warpRenderedMode = null;
+            this.warpTransitionAt = null;
+            this.warpTransitionDuration = 240;
+            this.hasCompletedFrame = false;
 
             // Transient Button Effects Overlay
             this.transientEffects = [];
@@ -213,11 +220,18 @@
             this.ghostCtx = this.ghostCanvas.getContext('2d');
             this.genCanvas = document.createElement('canvas');
             this.genCtx = this.genCanvas.getContext('2d');
+            this.warpCanvas = document.createElement('canvas');
+            this.warpCtx = this.warpCanvas.getContext('2d');
+            this.warpTransitionCanvas = document.createElement('canvas');
+            this.warpTransitionCtx = this.warpTransitionCanvas.getContext('2d');
+            this.completedFrameCanvas = document.createElement('canvas');
+            this.completedFrameCtx = this.completedFrameCanvas.getContext('2d');
             this.milkdropFeedbackCanvas = document.createElement('canvas');
             this.milkdropFeedbackCtx = this.milkdropFeedbackCanvas.getContext('2d');
             this.milkdropNextCanvas = document.createElement('canvas');
             this.milkdropNextCtx = this.milkdropNextCanvas.getContext('2d');
-            if (![this.workCtx, this.ghostCtx, this.genCtx, this.milkdropFeedbackCtx, this.milkdropNextCtx].every(Boolean)) {
+            if (![this.workCtx, this.ghostCtx, this.genCtx, this.warpCtx, this.warpTransitionCtx,
+                this.completedFrameCtx, this.milkdropFeedbackCtx, this.milkdropNextCtx].every(Boolean)) {
                 throw new Error('AiWarpEngine: Could not allocate the effects rendering buffers.');
             }
             this.renderErrors = new Map();
@@ -345,10 +359,14 @@
                 this.canvas.width = Math.round(w * dpr);
                 this.canvas.height = Math.round(h * dpr);
             }
-            [this.workCanvas, this.ghostCanvas, this.genCanvas, this.milkdropFeedbackCanvas, this.milkdropNextCanvas].forEach(c => {
+            [this.workCanvas, this.ghostCanvas, this.genCanvas, this.warpCanvas, this.warpTransitionCanvas,
+                this.completedFrameCanvas, this.milkdropFeedbackCanvas, this.milkdropNextCanvas].forEach(c => {
                 if (c && (c.width !== this.canvas.width || c.height !== this.canvas.height)) {
                     c.width = this.canvas.width;
                     c.height = this.canvas.height;
+                    this.hasCompletedFrame = false;
+                    this.warpRenderedMode = null;
+                    this.warpTransitionAt = null;
                 }
             });
             if (this.techArtistShader && this.techArtistShader.renderer) {
@@ -360,6 +378,9 @@
         }
 
         setSourceMode(mode, element = null) {
+            this.hasCompletedFrame = false;
+            this.warpRenderedMode = null;
+            this.warpTransitionAt = null;
             this.sourceMode = mode;
             if (mode === 'video') this.activeVideoElement = element;
             if (mode === 'image') this.activeImageElement = element;
@@ -667,24 +688,37 @@
             if (this.aiWarpModes.includes(mode)) {
                 this.aiWarpMode = mode;
                 this.aiWarpModeIndex = this.aiWarpModes.indexOf(mode);
-                if (mode === 'ai_zero') this.applyZeroMotionGhost();
+                if (mode === 'ai_zero') {
+                    this.warpRenderedMode = null;
+                    this.warpTransitionAt = null;
+                    this.hasCompletedFrame = false;
+                    this.applyZeroMotionGhost();
+                }
             }
         }
 
         cycleWarpMode() {
-            this.aiWarpModeIndex = (this.aiWarpModeIndex + 1) % this.aiWarpModes.length;
-            this.aiWarpMode = this.aiWarpModes[this.aiWarpModeIndex];
-            if (this.aiWarpMode === 'ai_zero') this.applyZeroMotionGhost();
+            this.setWarpMode(this.aiWarpModes[(this.aiWarpModeIndex + 1) % this.aiWarpModes.length]);
             return this.aiWarpMode;
         }
 
         setAiWarpActive(active) {
             this.aiWarpActive = !!active;
+            if (!this.aiWarpActive) {
+                this.warpRenderedMode = null;
+                this.warpTransitionAt = null;
+                this.hasCompletedFrame = false;
+            }
             return this.aiWarpActive;
         }
 
         setAiWarpStrength(val) {
             this.aiWarpStrength = Math.max(0.0, Math.min(1.0, parseFloat(val) || 0.0));
+            if (this.aiWarpStrength <= 0.01) {
+                this.warpRenderedMode = null;
+                this.warpTransitionAt = null;
+                this.hasCompletedFrame = false;
+            }
             return this.aiWarpStrength;
         }
 
@@ -776,6 +810,8 @@
                 this.effectUserDisabled[name] = true;
                 this.effectAlphas[name] = 0;
                 this.effectUserLevel[name] = 0;
+                this.warpRenderedMode = null;
+                this.warpTransitionAt = null;
             }
             this.snapshotVoiceLock(name);
         }
@@ -796,6 +832,8 @@
             if (v <= 0.005) {
                 // Dragged to zero: mark as user-disabled so automations don't flip it back on
                 this.effectUserDisabled[name] = true;
+                this.warpRenderedMode = null;
+                this.warpTransitionAt = null;
             } else {
                 this.effectUserDisabled[name] = false;
             }
@@ -1802,7 +1840,7 @@
             const ctx = this.genCtx;
             const w = this.canvas.width;
             const h = this.canvas.height;
-            const t = now * 0.001 * this.glitchSpeed;
+            const t = this.getWarpTime(now);
             const audio = this.audioDrive;
             const bass = audio.bass || 0;
             const treble = audio.treble || 0;
@@ -2094,7 +2132,6 @@
                         const dp = self.depthFor('VHS Glitch');
                         const w = self.canvas.width, h = self.canvas.height;
                         // Copy to offscreen work canvas safely
-                        self.workCanvas.width = w; self.workCanvas.height = h;
                         self.workCtx.clearRect(0, 0, w, h);
                         self.workCtx.drawImage(self.canvas, 0, 0);
 
@@ -2267,7 +2304,6 @@
                         const sz = self.sizeFor('Data Bomb');
                         const dp = self.depthFor('Data Bomb');
                         const w = self.canvas.width, h = self.canvas.height;
-                        self.workCanvas.width = w; self.workCanvas.height = h;
                         self.workCtx.clearRect(0, 0, w, h);
                         self.workCtx.drawImage(self.canvas, 0, 0);
 
@@ -2484,26 +2520,67 @@
         }
 
         renderAiWarp(now) {
-            if (!this.aiWarpActive || this.aiWarpStrength <= 0.01) return;
-            if (this.aiWarpMode === 'ai_zero') return;
+            if (!this.aiWarpActive || this.aiWarpStrength <= 0.01 || this.aiWarpMode === 'ai_zero') {
+                this.warpRenderedMode = null;
+                this.warpTransitionAt = null;
+                return;
+            }
+            const w = this.canvas.width, h = this.canvas.height;
+            if (!w || !h) return;
+            if (this.warpRenderedMode && this.warpRenderedMode !== this.aiWarpMode) {
+                this.warpTransitionCtx.clearRect(0, 0, w, h);
+                this.warpTransitionCtx.drawImage(this.warpCanvas, 0, 0);
+                this.warpTransitionAt = now;
+            }
+            this.workCtx.clearRect(0, 0, w, h);
+            this.workCtx.drawImage(this.canvas, 0, 0);
+            this.warpCtx.clearRect(0, 0, w, h);
+            try {
+                this.renderAiWarpFrame(now, this.warpCtx);
+                if (this.warpTransitionAt !== null) {
+                    const p = clamp01((now - this.warpTransitionAt) / this.warpTransitionDuration);
+                    this.warpCtx.save();
+                    this.warpCtx.globalAlpha = 1 - p * p * (3 - 2 * p);
+                    this.warpCtx.drawImage(this.warpTransitionCanvas, 0, 0);
+                    this.warpCtx.restore();
+                    if (p >= 1) this.warpTransitionAt = null;
+                }
+            } catch (error) {
+                // Discard the failed pass, including any unbalanced nested canvas saves.
+                this.warpCanvas.width = w;
+                this.warpRenderedMode = null;
+                this.warpTransitionAt = null;
+                throw error;
+            }
+            this.gctx.save();
+            this.gctx.globalCompositeOperation = 'copy';
+            this.gctx.drawImage(this.warpCanvas, 0, 0);
+            this.gctx.restore();
+            this.warpRenderedMode = this.aiWarpMode;
+        }
+
+        getWarpTime(now) {
+            if (this.warpClockAt !== null) {
+                const dt = Math.min(0.1, Math.max(0, (now - this.warpClockAt) * 0.001));
+                this.warpTime += dt * this.glitchSpeed;
+            }
+            this.warpClockAt = now;
+            return this.warpTime;
+        }
+
+        renderAiWarpFrame(now, gctx) {
             const w = this.canvas.width, h = this.canvas.height;
             if (!w || !h) return;
 
             const s = this.aiWarpStrength * this.masterOpacity * this.getWarpBlendProfile().canvas;
-            const t = now * 0.001 * this.glitchSpeed;
-            const gctx = this.gctx;
+            const t = this.getWarpTime(now);
             const mode = this.aiWarpMode;
             const audio = this.audioDrive;
             const bass = audio.bass || 0;
             const mid = audio.mid || 0;
             const treble = audio.treble || 0;
 
-            this.workCanvas.width = w; this.workCanvas.height = h;
-            this.workCtx.clearRect(0, 0, w, h);
-            this.workCtx.drawImage(this.canvas, 0, 0);
-
             gctx.save();
-            gctx.clearRect(0, 0, w, h);
 
             // 1. LIQUID: Multi-frequency bidirectional harmonic fluid waves
             if (mode === 'liquid') {
@@ -2519,7 +2596,7 @@
                     const waveY = Math.sin(t * 2.8 + c * 0.35) * ampY;
                     try {
                         gctx.drawImage(this.workCanvas, sx, 0, sw, h, sx + waveX, waveY, sw, h);
-                    } catch(e) {}
+                    } catch(e) { throw e; }
                 }
             }
             // 2. PRISM: Multi-angle crystal refraction & chromatic dispersion
@@ -2534,14 +2611,14 @@
                     const dx = Math.sin(t * 4.0 + i * 0.5) * disp;
                     try {
                         gctx.drawImage(this.workCanvas, 0, sy, w, sh, dx, sy, w, sh);
-                    } catch(e) {}
+                    } catch(e) { throw e; }
                 }
                 gctx.globalCompositeOperation = 'screen';
                 gctx.globalAlpha = 0.35 * s;
                 try {
                     gctx.drawImage(this.workCanvas, -disp * 1.5, -disp * 0.5);
                     gctx.drawImage(this.workCanvas, disp * 1.5, disp * 0.5);
-                } catch(e) {}
+                } catch(e) { throw e; }
             }
             // 3. BREATHE: Organic radial expansion & spherical contraction
             else if (mode === 'breathe') {
@@ -2574,7 +2651,7 @@
                         gctx.drawImage(this.workCanvas, sx, 0, sw, h, sx + offset, 0, sw, h);
                         gctx.fillStyle = isEven ? `rgba(0, 0, 0, ${0.28 * s})` : `rgba(255, 255, 255, ${0.16 * s})`;
                         gctx.fillRect(sx + offset, 0, sw, h);
-                    } catch(e) {}
+                    } catch(e) { throw e; }
                 }
             }
             // 5. AURORA: Sinuous undulating neon ribbon curtains
@@ -2589,7 +2666,7 @@
                     const wave = Math.sin(t * 2.2 + r * 0.6) * (20 + s * 45) + drift;
                     try {
                         gctx.drawImage(this.workCanvas, sx, 0, sw, h, sx + wave, 0, sw, h);
-                    } catch(e) {}
+                    } catch(e) { throw e; }
                 }
                 gctx.globalCompositeOperation = 'screen';
                 gctx.globalAlpha = 0.25 * s;
@@ -2668,7 +2745,7 @@
                                 gctx.lineWidth = 1;
                                 gctx.strokeRect(sx + shiftX, sy + shiftY, sw, sh);
                             }
-                        } catch(e) {}
+                        } catch(e) { throw e; }
                     }
                 }
             }
@@ -2719,7 +2796,7 @@
                     }
                     try {
                         gctx.drawImage(this.workCanvas, 0, sy, w, sh, dx, sy, w, sh);
-                    } catch(e) {}
+                    } catch(e) { throw e; }
                 }
             }
             // 11. RIPPLE: Concentric circular water droplet impact shockwaves & optical displacement (FIXED)
@@ -2761,9 +2838,7 @@
                         gctx.strokeStyle = `rgba(0, 229, 255, ${Math.max(0, 0.24 * s * Math.abs(wavePhase))})`;
                         gctx.stroke();
                         gctx.restore();
-                    } catch(e) {
-                        // Protected against any canvas math exceptions
-                    }
+                    } catch(e) { throw e; }
                 }
             }
             // 12. ANALOG CRT: Spherical glass cathode tube & magnetic barrel distortion
@@ -2780,7 +2855,7 @@
                     const scanJitter = Math.sin(t * 15 + c) * 3;
                     try {
                         gctx.drawImage(this.workCanvas, sx, 0, sw, h, sx + scanJitter, -bulge * 0.4, sw, h + bulge * 0.8);
-                    } catch(e) {}
+                    } catch(e) { throw e; }
                 }
             }
             // 13. ROLL: NewBlue Rolling Shutter & film frame roll with vertical seam wrapping
@@ -2806,7 +2881,7 @@
                         const jx = Math.sin(t * 25 + j) * (12 * s);
                         gctx.drawImage(this.workCanvas, 0, jy, w, 4, jx, jy, w, 4);
                     }
-                } catch(e) {}
+                } catch(e) { throw e; }
             }
             // 14. ACTIVE CAM: NewBlue Active Camera organic handheld gimbal shake & lens tremor
             else if (mode === 'newblue_active_cam') {
@@ -2828,7 +2903,7 @@
                         gctx.drawImage(this.workCanvas, shakeX * 1.5, shakeY * 1.5);
                         gctx.restore();
                     }
-                } catch(e) {}
+                } catch(e) { throw e; }
             }
             // 15. SHEAR: NewBlue Shear Energy directional angular displacement & vector slant
             else if (mode === 'newblue_shear') {
@@ -2843,7 +2918,7 @@
                     const dx = norm * shearAngle * (w * 0.25);
                     try {
                         gctx.drawImage(this.workCanvas, 0, sy, w, sh, dx, sy, w, sh);
-                    } catch(e) {}
+                    } catch(e) { throw e; }
                 }
             }
             // 16. WIGGLE: NewBlue Micro Wiggle rapid coordinate tremor & sub-pixel vibration
@@ -2860,7 +2935,7 @@
                         const jy = (Math.cos(t * 19.0 + r * 2.9 + c * 1.3) * 0.6 + (Math.random() - 0.5) * 0.4) * maxJitter;
                         try {
                             gctx.drawImage(this.workCanvas, sx, sy, sw, sh, sx + jx, sy + jy, sw, sh);
-                        } catch(e) {}
+                        } catch(e) { throw e; }
                     }
                 }
             }
@@ -2881,7 +2956,7 @@
                         gctx.scale(factor, factor);
                         gctx.drawImage(this.workCanvas, -cx, -cy);
                         gctx.restore();
-                    } catch(e) {}
+                    } catch(e) { throw e; }
                 }
                 gctx.restore();
             }
@@ -2902,7 +2977,7 @@
                             gctx.lineWidth = 1.5;
                             gctx.strokeRect(-tw / 2, -th / 2, tw, th);
                             gctx.restore();
-                        } catch(e) {}
+                        } catch(e) { throw e; }
                     }
                 }
             }
@@ -2930,7 +3005,7 @@
                         gctx.rotate(twist);
                         gctx.drawImage(this.workCanvas, -cx, -cy);
                         gctx.restore();
-                    } catch(e) {}
+                    } catch(e) { throw e; }
                 }
             }
             // 20. LIGHT RING: NewBlue Anamorphic optical lens flare with chromatic light rings
@@ -2957,7 +3032,7 @@
                         gctx.stroke();
                     }
                     gctx.restore();
-                } catch(e) {}
+                } catch(e) { throw e; }
             }
             // 21. EARTHQUAKE: NewBlue Seismic Earthquake shockwave pulses & clamp jolt
             else if (mode === 'newblue_earthquake') {
@@ -2973,7 +3048,7 @@
                         gctx.drawImage(this.workCanvas, -quakeX * 1.5, -quakeY * 1.5);
                         gctx.restore();
                     }
-                } catch(e) {}
+                } catch(e) { throw e; }
             }
             // 22. WATER DROP: NewBlue Caustic Water Droplet refraction lens with concentric ripple waves
             else if (mode === 'newblue_water_drop') {
@@ -2995,7 +3070,7 @@
                         gctx.scale(zoom, zoom);
                         gctx.drawImage(this.workCanvas, -cx, -cy);
                         gctx.restore();
-                    } catch(e) {}
+                    } catch(e) { throw e; }
                 }
             }
             // 23. RGB FAST SHIFT: NewBlue 3-Axis Directional RGB Prism Dispersion
@@ -3012,7 +3087,7 @@
                     gctx.drawImage(this.workCanvas, rx, ry);
                     gctx.drawImage(this.workCanvas, bx, by);
                     gctx.restore();
-                } catch(e) {}
+                } catch(e) { throw e; }
             }
             // 24. QUAD MIRROR: NewBlue 4-Quadrant Bilateral Mirror reflection
             else if (mode === 'newblue_quad_mirror') {
@@ -3038,7 +3113,7 @@
                     gctx.scale(-1, -1);
                     gctx.drawImage(this.workCanvas, 0, 0, halfW, halfH, 0, 0, halfW, halfH);
                     gctx.restore();
-                } catch(e) {}
+                } catch(e) { throw e; }
             }
             // 25. FISH EYE: NewBlue Fisheye Lens ultra-wide spherical convex barrel distortion
             else if (mode === 'newblue_fish_eye') {
@@ -3060,7 +3135,7 @@
                         gctx.scale(bulge, bulge);
                         gctx.drawImage(this.workCanvas, -cx, -cy);
                         gctx.restore();
-                    } catch(e) {}
+                    } catch(e) { throw e; }
                 }
             }
             // 26. PINCH: NewBlue Pincushion optical vacuum contraction singularity
@@ -3083,7 +3158,7 @@
                         gctx.scale(pinch, pinch);
                         gctx.drawImage(this.workCanvas, -cx, -cy);
                         gctx.restore();
-                    } catch(e) {}
+                    } catch(e) { throw e; }
                 }
             }
             // 27. SOLARIZE: NewBlue Luma Solarization & Sabattier inversion wash
@@ -3103,7 +3178,7 @@
                     gctx.fillStyle = `hsl(${solHue}, 90%, 50%)`;
                     gctx.fillRect(0, 0, w, h);
                     gctx.restore();
-                } catch(e) {}
+                } catch(e) { throw e; }
             }
             // 28. CATHODE BEAM: NewBlue Cathode Ray Tube electron beam raster deflection
             else if (mode === 'newblue_cathode_beam') {
@@ -3119,7 +3194,7 @@
                     const beamJitter = distToFly < 45 ? (Math.random() - 0.5) * (18 + s * 45) : Math.sin(t * 12.0 + l * 0.3) * (4 + s * 12);
                     try {
                         gctx.drawImage(this.workCanvas, 0, sy, w, sh, beamJitter, sy, w, sh);
-                    } catch(e) {}
+                    } catch(e) { throw e; }
                 }
                 gctx.fillStyle = `rgba(0, 255, 230, ${0.45 * s})`;
                 gctx.fillRect(0, Math.max(0, flyY - 2), w, 4);
@@ -3140,8 +3215,13 @@
                     gctx.fillStyle = `hsl(${(t * 60) % 360}, 100%, 60%)`;
                     gctx.fillRect(0, 0, w, h);
                     gctx.restore();
-                } catch(e) {}
+                } catch(e) { throw e; }
             }
+
+            // Fill slice/rotation gaps before the color passes, never exposing the untreated lens.
+            gctx.globalCompositeOperation = 'destination-over';
+            gctx.globalAlpha = 1;
+            gctx.drawImage(this.workCanvas, 0, 0);
 
             // Universal High-impact Chromatic Separation Passes
             const chroma = (6 + s * 22 + treble * 16);
@@ -3150,7 +3230,7 @@
             try {
                 gctx.drawImage(this.workCanvas, -chroma, 0);
                 gctx.drawImage(this.workCanvas, chroma, 0);
-            } catch(e) {}
+            } catch(e) { throw e; }
 
             // Mode Shimmer & Tint Wash
             gctx.globalCompositeOperation = 'soft-light';
@@ -3185,7 +3265,7 @@
             }
 
             const s = (this.aiWarpActive && this.aiWarpMode !== 'ai_zero' && this.aiWarpStrength > 0.005) ? (this.aiWarpStrength * this.masterOpacity) : 0;
-            const t = now * 0.001 * this.glitchSpeed;
+            const t = this.getWarpTime(now);
             const audio = this.audioDrive;
             const bass = audio.bass || 0;
             const mid = audio.mid || 0;
@@ -3499,7 +3579,7 @@
             }
 
             // ── 3. Damping (exponential smoothing, frame-rate independent) ───────
-            const damping = Math.min(1.0, Math.max(0.04, dt * 5.0));
+            const damping = 1 - Math.exp(-Math.max(0, dt) * 5.0);
             const sm = this.smoothedTransform;
             sm.skewX = lerp(sm.skewX, targetSkewX, damping);
             sm.skewY = lerp(sm.skewY, targetSkewY, damping);
@@ -3654,6 +3734,24 @@
             this.animFrameId = requestAnimationFrame((n) => this.mainRenderLoop(n));
             const dt = Math.min(0.1, Math.max(0, (now - this.lastFrameTime) * 0.001));
             this.lastFrameTime = now;
+            this.gctx.save();
+            try {
+                this.renderFrame(now, dt);
+                this.completedFrameCtx.globalCompositeOperation = 'copy';
+                this.completedFrameCtx.drawImage(this.canvas, 0, 0);
+                this.hasCompletedFrame = true;
+                this.renderErrors.delete('frame');
+            } catch (error) {
+                // A failed source/system pass must not publish a naked or half-rendered lens.
+                this.canvas.width = this.canvas.width;
+                if (this.hasCompletedFrame) this.gctx.drawImage(this.completedFrameCanvas, 0, 0);
+                this.reportRenderError('frame', error);
+            } finally {
+                this.gctx.restore();
+            }
+        }
+
+        renderFrame(now, dt) {
             const cw = this.canvas.width;
             const ch = this.canvas.height;
 
@@ -3662,9 +3760,19 @@
                 this.renderGenerativeSource(now);
                 this.gctx.clearRect(0, 0, cw, ch);
                 this.gctx.drawImage(this.genCanvas, 0, 0);
-            } else if (this.sourceMode === 'video' && this.activeVideoElement && this.activeVideoElement.readyState >= 2) {
+            } else if (this.sourceMode === 'video') {
+                // Keep animating FX over a clean cached source while the decoder buffers.
+                if (this.activeVideoElement && this.activeVideoElement.readyState >= 2) {
+                    this.genCtx.save();
+                    try {
+                        this.genCtx.globalCompositeOperation = 'copy';
+                        drawCover(this.genCtx, this.activeVideoElement, cw, ch);
+                    } finally {
+                        this.genCtx.restore();
+                    }
+                }
                 this.gctx.clearRect(0, 0, cw, ch);
-                drawCover(this.gctx, this.activeVideoElement, cw, ch);
+                this.gctx.drawImage(this.genCanvas, 0, 0);
             } else if (this.sourceMode === 'image' && this.activeImageElement) {
                 this.gctx.clearRect(0, 0, cw, ch);
                 drawCover(this.gctx, this.activeImageElement, cw, ch);
@@ -3678,7 +3786,6 @@
                 // a synthetic/test bed). The CSS Warp Bus continues to affect the
                 // iframe shell; capture the separate YouTube tab to process its pixels.
                 this.gctx.clearRect(0, 0, cw, ch);
-                this.updateYouTubeTransformsAndFilters(now, dt);
             }
 
             // 2. Automations: Continual Random, Auto Glitch, Timed Cadence, Automated Masters, Soft-Eye, Preset Slew Transition
@@ -3701,6 +3808,8 @@
                 this.r3GhostVsync.step(now, dt);
             }
             this.enforceLocks();
+            this.getWarpTime(now);
+            if (this.sourceMode === 'youtube') this.updateYouTubeTransformsAndFilters(now, dt);
 
             // 3. Render Active Glitch Voices (Persistent closures executed once per frame)
             for (let i = 0; i < this.activeEffects.length; i++) {

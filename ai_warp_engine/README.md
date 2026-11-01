@@ -1,4 +1,4 @@
-# ⚡ AI WARP ENGINE — R3 Canvas Edition (v6.4.36 · Init + FX restored · Cursor guard)
+# ⚡ AI WARP ENGINE — R3 Canvas Edition (v6.4.37 · Glitch Hardened & FX Fixed)
 
 > **Public-domain visual synthesizer, audio-reactive media playground, and live Canvas glitch suite.**  
 > Created through collaborative work between [imortalimp.nl](https://imortalimp.nl) (River Lyle Reuveni), [Arena.ai](https://arena.ai), and artificial intelligence.
@@ -44,11 +44,51 @@ Open any of these identical application aliases in a modern browser:
 
 The application loads local scripts in this dependency order:
 
-1. `glitch_engine.js`
-2. `r3_gc3_factories.js`
-3. `r3_ghost_vsync.js`
-4. `ai_warp_engine.js`
-5. `media_page.js`
+1. `three.min.js` (bundled Three.js; keep `THREE-LICENSE.txt`)
+2. `glitch_engine.js`
+3. `r3_gc3_factories.js`
+4. `r3_ghost_vsync.js`
+5. `ai_warp_engine.js`
+6. `local_media.js`
+7. `media_page.js`
+
+### Upload to imortalimp.nl
+
+Upload the complete `ai_warp_engine` folder beside the website's updated
+`home.html` and `index.html`; keep all ten files under `audio`. Open
+`https://imortalimp.nl/ai_warp_engine/index.html` over HTTPS. The folder contains
+all runtime scripts, configuration, CSS, bundled media, and the Three.js license.
+No Node.js, FFmpeg or Windows executable is needed on the web server.
+
+The release asset `AI-WARP-ENGINE-6.4.37-browser.zip` contains only
+`ai_warp_engine/`, including its app `index.html`. It excludes the website-root
+`home.html` and `index.html`, the old ZIP, legacy `web` bundle and native shell.
+Extract it into the website root alongside your existing website pages.
+
+The separate local `AI-WARP-ENGINE-6.4.37-web-upload.zip` is a website **update** bundle:
+its top level contains `home.html`, `index.html` and `ai_warp_engine/`.
+Extract these into the existing website root, replacing matching files and
+preserving the site's other assets. It excludes the obsolete 6.4 ZIP, the legacy
+`web` bundle and native shell files. It is not a backup of the entire website.
+
+The three app aliases show `v6.4.37 · Glitch Hardened & FX Fixed`.
+Local video and audio use the same continuous FX path as captured frames.
+Browser codec limitations still apply: unsupported AVI must be converted locally
+to H.264/AAC MP4 (or AAC M4A for audio); automatic conversion is Windows-only.
+Browser YouTube is an isolated iframe; use tab/screen capture for readable pixels.
+HTTPS and browser permission approval are required for capture/microphone.
+
+Main-app scripts load only from this folder, with a local-only script CSP.
+External-browser and new-window links are disabled inside the app; website
+launch links stay in the current tab. Keep any hosting CSP compatible with
+same-origin scripts, media/blob URLs and the YouTube embed. Native Windows
+navigation/debugging protections do not apply to a normal browser.
+
+Upload runtime assets before the three entry HTML files so their cache-revision
+URLs never point to missing scripts. The old `ai_warp_engine_r3_canvas_v6.4.zip`
+is a historical archive, not the current upload bundle. The v6.4.37 browser ZIP
+is published separately from the Windows installer; website download links
+identify the previous published Windows installer (v6.4.36).
 
 A local HTTP server is recommended instead of `file://` when using YouTube, media loading, or browser APIs. For example:
 
@@ -74,7 +114,7 @@ startup. Render errors are visible, voice passes restore their canvas state, and
 transient failures cannot stop the animation loop. The Windows system-cursor and
 theme/pointer download guards remain enabled for both views.
 The title-adjacent HUD change notice and installer/app version now agree on
-`v6.4.36 · INIT + FX RESTORED · CURSOR GUARD`.
+`v6.4.37 · Glitch Hardened & FX Fixed`.
 
 Run the dependency-free regression checks from the repository root:
 

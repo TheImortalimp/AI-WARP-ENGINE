@@ -8,7 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>AI-Warp-Engine</AssemblyName>
     <RootNamespace>AiWarpEngine</RootNamespace>
-    <Version>6.4.36</Version>
+    <Version>6.4.37</Version>
     <Authors>River Lyle Reuveni</Authors>
     <Company>River Lyle Reuveni (Imortalimp)</Company>
     <Product>AI WARP ENGINE</Product>
@@ -38,6 +38,20 @@
 
   <ItemGroup>
     <Content Include="app.ico" Link="app\favicon.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\ai_warp_engine\THREE-LICENSE.txt" Link="app\THREE-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <FFmpegRoot Condition="'$(FFmpegRoot)' == ''">$(AIWARP_FFMPEG_ROOT)</FFmpegRoot>
+  </PropertyGroup>
+  <Target Name="RequireBundledFFmpeg" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(FFmpegRoot)\bin\ffmpeg.exe') Or !Exists('$(FFmpegRoot)\LICENSE') Or !Exists('$(FFmpegRoot)\README.txt')"
+           Text="FFmpeg and its license/build notices are required. Run shell\build.ps1 or set FFmpegRoot to an extracted FFmpeg distribution." />
+  </Target>
+  <ItemGroup>
+    <Content Include="$(FFmpegRoot)\bin\ffmpeg.exe" Link="tools\ffmpeg.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(FFmpegRoot)\LICENSE" Link="tools\FFMPEG-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(FFmpegRoot)\README.txt" Link="tools\FFMPEG-README.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

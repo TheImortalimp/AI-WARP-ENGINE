@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const initialization = (async () => {
-    for (const name of ['GlitchEngine', 'GC3FactoryBank', 'R3GhostVsync', 'AiWarpEngine']) {
+    for (const name of ['GlitchEngine', 'GC3FactoryBank', 'R3GhostVsync', 'AiWarpEngine', 'LocalMediaPlayback']) {
         if (!window[name]) throw new Error(`Required engine script did not load: ${name}`);
     }
     for (const id of ['glitchCanvas', 'localVideo', 'localAudio', 'localArtworkImg']) {
@@ -295,16 +295,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
     /* ── HUD NOTIFICATION BANNER ────────────────────────────────────────── */
-    function showHudNotification(text) {
+    function showHudNotification(text, durationMs = 2200) {
         const banner = document.getElementById('hudNotificationBanner');
         if (!banner) return;
         banner.textContent = text;
         banner.classList.add('show');
         clearTimeout(banner.__timer);
-        banner.__timer = setTimeout(() => {
-            banner.classList.remove('show');
-        }, 2200);
+        if (durationMs > 0) {
+            banner.__timer = setTimeout(() => {
+                banner.classList.remove('show');
+            }, durationMs);
+        }
     }
+
+    window.open = () => {
+        showHudNotification('EXTERNAL BROWSERS / NEW WINDOWS ARE DISABLED');
+        return null;
+    };
+    const blockExternalLink = event => {
+        const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
+        if (!link) return;
+        const url = new URL(link.href, location.href);
+        if (link.hasAttribute('download') && (url.origin === location.origin || url.protocol === 'blob:' || url.protocol === 'data:')) return;
+        if ((link.target && link.target !== '_self') || url.origin !== location.origin || event.type === 'auxclick') {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            showHudNotification('EXTERNAL BROWSERS / NEW WINDOWS ARE DISABLED');
+        }
+    };
+    document.addEventListener('click', blockExternalLink, true);
+    document.addEventListener('auxclick', blockExternalLink, true);
 
 /* ── 2. WEB AUDIO API & LIVE MICROPHONE AUDIO MONITOR ────────────────── */
     let isMicActive = false;
@@ -317,6 +337,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let captureGainNode = null;
     let captureReturnToYouTube = false;
     const lensBridge = window.chrome && window.chrome.webview ? window.chrome.webview : null;
+    const localPlayback = new window.LocalMediaPlayback(lensBridge,
+        (text, persistent) => showHudNotification(text, persistent ? 0 : 2200), reportError);
+    let localPlaybackGeneration = 0;
     let lensActive = false;
     let lensOpenPending = false;
     let lensRequestGeneration = 0;
@@ -331,6 +354,10 @@ document.addEventListener('DOMContentLoaded', () => {
         lensBridge.addEventListener('message', (ev) => {
             const d = ev.data;
             if (typeof d !== 'string') return;
+            if (d.startsWith('control:blocked|')) {
+                reportError('APP CONTROL: ' + d.substring(16), new Error(d.substring(16)));
+                return;
+            }
             if (d === 'lens:closed' && lensActive) { lensActive = false; window.stopTabCapture(true); }
             else if (d.startsWith('lens:audiomode|')) { lensAudioMode = d.substring(15); }
             else if (d.startsWith('lens:audio|') && lensActive) {
@@ -1785,6 +1812,8 @@ const BUILT_IN_YOUTUBE_PLAYLISTS = Object.freeze([
     window.stopTabCapture = stopTabCapture;
 
     function pauseAllOtherMedia() {
+        localPlaybackGeneration++;
+        localPlayback.cancel();
         lensRequestGeneration++;
         const closeUncapturedLens = lensOpenPending || (lensActive && !captureStream);
         lensOpenPending = false;
@@ -2326,6 +2355,18 @@ const BUILT_IN_YOUTUBE_PLAYLISTS = Object.freeze([
     let currentVideoIndex = 0;
 
     // Trigger buttons
+    function resumeMediaPlayback(mediaEl) {
+        const generation = localPlaybackGeneration;
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume().catch(error => reportError('AUDIO RESUME FAILED: ' + error.message, error));
+        }
+        mediaEl.play().catch(error => {
+            if (error.name !== 'AbortError' && generation === localPlaybackGeneration) {
+                reportError('MEDIA RESUME FAILED: ' + error.message, error);
+            }
+        });
+    }
+
     if (openLocalMediaBtn && localFileInput) {
         openLocalMediaBtn.addEventListener('click', () => localFileInput.click());
     }
@@ -2334,22 +2375,19 @@ const BUILT_IN_YOUTUBE_PLAYLISTS = Object.freeze([
         mediaPlayPauseBtn.addEventListener('click', () => {
             if (currentMediaKind === 'audio' && localAudio && localAudio.src) {
                 if (localAudio.paused) {
-                    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-                    localAudio.play();
+                    resumeMediaPlayback(localAudio);
                 } else {
                     localAudio.pause();
                 }
             } else if (currentMediaKind === 'video' && localVideo && localVideo.src) {
                 if (localVideo.paused) {
-                    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-                    localVideo.play();
+                    resumeMediaPlayback(localVideo);
                 } else {
                     localVideo.pause();
                 }
             } else if (activeAudioElement) {
                 if (activeAudioElement.paused) {
-                    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-                    activeAudioElement.play();
+                    resumeMediaPlayback(activeAudioElement);
                 } else {
                     activeAudioElement.pause();
                 }
@@ -2580,7 +2618,7 @@ const BUILT_IN_YOUTUBE_PLAYLISTS = Object.freeze([
     }
 
     // Play Local Video (.mp4, .avi, .mkv, .mov)
-    function playLocalVideo(file, customTitle = null, onFail = null) {
+    async function playLocalVideo(file, customTitle = null, onFail = null) {
         pauseAllOtherMedia();
         if (ytWarpShell) ytWarpShell.style.display = 'none';
         currentMediaKind = 'video';
@@ -2594,19 +2632,17 @@ const BUILT_IN_YOUTUBE_PLAYLISTS = Object.freeze([
         }
         routeElementToAudioContext(localVideo);
 
-        const isUrl = typeof file === 'string';
-        const url = isUrl ? file : URL.createObjectURL(file);
-        localVideo.onerror = null;
-        if (onFail) localVideo.onerror = () => { localVideo.onerror = null; onFail(); };
-        localVideo.src = url;
+        localVideo.srcObject = null;
         localVideo.volume = 1.0;
-        localVideo.play().then(() => {
+        try {
+            await localPlayback.play(localVideo, file, 'video');
             if (aiWarp) aiWarp.setSourceMode('video', localVideo);
-            bindMediaTransportEvents(localVideo, customTitle || (isUrl ? url : file.name));
-        }).catch(err => {
-            console.warn('Video playback notice (may require a supported codec/container):', err);
-            if (onFail && !localVideo.error) onFail();
-        });
+            bindMediaTransportEvents(localVideo, customTitle || (typeof file === 'string' ? file : file.name));
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            if (onFail) onFail();
+            else reportError('LOCAL VIDEO FAILED: ' + error.message, error);
+        }
     }
 
     function playEasterEgg() {
@@ -2637,6 +2673,7 @@ const BUILT_IN_YOUTUBE_PLAYLISTS = Object.freeze([
     // Play Local Audio (.mp3, .m4a) & Hook Folder Artwork Accompaniment
     async function playLocalAudio(file, customTitle = null) {
         pauseAllOtherMedia();
+        const generation = localPlaybackGeneration;
         if (ytWarpShell) ytWarpShell.style.display = 'none';
         currentMediaKind = 'audio';
         syncPlaybackClasses('audio');
@@ -2644,6 +2681,10 @@ const BUILT_IN_YOUTUBE_PLAYLISTS = Object.freeze([
 
         // 1. Try extracting embedded ID3 cover art
         const id3CoverUrl = await extractId3Artwork(file);
+        if (generation !== localPlaybackGeneration) {
+            if (id3CoverUrl) URL.revokeObjectURL(id3CoverUrl);
+            return;
+        }
         if (id3CoverUrl) {
             localImagesPool.unshift({ name: `${file.name} (Embedded Cover)`, url: id3CoverUrl });
             setArtworkIndex(0);
@@ -2661,16 +2702,16 @@ const BUILT_IN_YOUTUBE_PLAYLISTS = Object.freeze([
         if (audioCtx && audioCtx.state === 'suspended') {
             await audioCtx.resume().catch(() => {});
         }
+        if (generation !== localPlaybackGeneration) return;
         routeElementToAudioContext(localAudio);
 
-        const url = URL.createObjectURL(file);
-        localAudio.src = url;
         localAudio.volume = 1.0;
-        localAudio.play().then(() => {
+        try {
+            await localPlayback.play(localAudio, file, 'audio');
             bindMediaTransportEvents(localAudio, customTitle || file.name);
-        }).catch(err => {
-            console.warn('Audio playback error:', err);
-        });
+        } catch (error) {
+            if (error.name !== 'AbortError') reportError('LOCAL AUDIO FAILED: ' + error.message, error);
+        }
     }
 
     // Process a collection of files (from file input, folder picker, or drag-and-drop)
@@ -2678,8 +2719,8 @@ const BUILT_IN_YOUTUBE_PLAYLISTS = Object.freeze([
         const files = Array.from(fileList);
         if (files.length === 0) return;
 
-        const isVideo = f => /\.(mp4|m4v|mov|avi|mkv|webm|ogv|ogm|3gp|av1|ivf)$/i.test(f.name) || f.type.startsWith('video/');
-        const isAudio = f => /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac|weba|mka|spx|aif|aiff)$/i.test(f.name) || f.type.startsWith('audio/');
+        const isVideo = f => /\.(mp4|m4v|mov|avi|mkv|webm|ogv|ogm|3gp|av1|ivf|wmv|asf|mpg|mpeg|ts|mts|m2ts|flv|vob)$/i.test(f.name) || f.type.startsWith('video/');
+        const isAudio = f => /\.(mp3|m4a|aac|wav|ogg|oga|opus|flac|weba|mka|spx|aif|aiff|wma|ac3|dts|amr)$/i.test(f.name) || f.type.startsWith('audio/');
         const isImage = f => /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(f.name) || f.type.startsWith('image/');
 
         const images = files.filter(isImage);
@@ -4121,11 +4162,11 @@ const BUILT_IN_YOUTUBE_PLAYLISTS = Object.freeze([
         if (e.code === 'Space') {
             e.preventDefault();
             if (currentMediaKind === 'audio' && localAudio) {
-                if (localAudio.paused) localAudio.play(); else localAudio.pause();
+                if (localAudio.paused) resumeMediaPlayback(localAudio); else localAudio.pause();
             } else if ((currentMediaKind === 'video' || currentMediaKind === 'capture') && localVideo) {
-                if (localVideo.paused) localVideo.play().catch(() => {}); else localVideo.pause();
+                if (localVideo.paused) resumeMediaPlayback(localVideo); else localVideo.pause();
             } else if (activeAudioElement) {
-                if (activeAudioElement.paused) activeAudioElement.play(); else activeAudioElement.pause();
+                if (activeAudioElement.paused) resumeMediaPlayback(activeAudioElement); else activeAudioElement.pause();
             } else {
                 toggleSyntheticAudio();
             }
