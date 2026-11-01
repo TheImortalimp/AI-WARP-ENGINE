@@ -26,6 +26,9 @@ hardening; it is unsigned. Browser-only usage does not apply Windows policies
 and uses display sharing for readable YouTube pixels.
 
 - Current local installer: `shell\AI-WARP-ENGINE-6.4.37-x64-setup.exe` (not yet published).
+- [FINAL NOVEMBER 2026 RELEASE](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.37):
+  browser app and documentation published; Windows binaries await
+  [complete FFmpeg source/build materials](https://github.com/GyanD/codexffmpeg/issues/254).
 - [Previous v6.4.36 release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.36)
 - [README](README.md) - installation, features, controls and build commands.
 - [About](ABOUT.md) - project goals and protection boundaries.

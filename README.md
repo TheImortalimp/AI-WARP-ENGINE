@@ -9,7 +9,12 @@ audio-driven automation in one Canvas-based performance interface.
 ## Download and install
 
 **Current local build:** `shell\AI-WARP-ENGINE-6.4.37-x64-setup.exe`.
-Version 6.4.37 is not yet published to GitHub.
+**FINAL NOVEMBER 2026 RELEASE:** the [v6.4.37 release](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.37)
+publishes the browser app and documentation. The Windows installer and app bundle
+are **not yet published**: complete corresponding source/build materials for the
+bundled GPLv3 FFmpeg build are awaiting [upstream request #254](https://github.com/GyanD/codexffmpeg/issues/254).
+See [release notes](RELEASE_NOTES_6.4.37.md) and
+[third-party redistribution status](THIRD_PARTY_NOTICES.md).
 
 [Previous published v6.4.36 installer](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/download/v6.4.36/AI-WARP-ENGINE-6.4.36-x64-setup.exe)
 
@@ -24,9 +29,11 @@ Version 6.4.37 is not yet published to GitHub.
 - The installer is unsigned and may trigger SmartScreen.
 
 Verify downloads against **SHA256SUMS.txt** in the
-[release assets](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.36).
+[release assets](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/tag/v6.4.37).
 The release also includes a matching browser-app ZIP. Extract the entire folder,
 including its media, and serve it over localhost rather than opening `file://`.
+The browser ZIP omits website-root `home.html` and `index.html` but includes the
+app folder's own `index.html`. The documentation ZIP is separate.
 
 ## What's fixed in 6.4.37
 

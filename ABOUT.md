@@ -83,4 +83,5 @@ affiliation. [Support the original album](https://pole-stefanbetke.bandcamp.com/
 
 [Installation and build guide](README.md) |
 [User manual](MANUAL.md) |
-[Release notes](RELEASE_NOTES_6.4.36.md)
+[Release notes](RELEASE_NOTES_6.4.37.md) |
+[Third-party notices](THIRD_PARTY_NOTICES.md)

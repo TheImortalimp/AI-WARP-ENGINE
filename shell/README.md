@@ -2,7 +2,8 @@
 
 A standalone Windows shell (WinForms + Microsoft Edge WebView2) that runs `../ai_warp_engine` locally and ships as a per-user NSIS installer, the same approach as K-Meleon-R.
 
-- Camera, microphone and screen capture are auto-allowed for the app's own origin only; external links open in the default browser.
+- Camera and microphone are allowed for exact local app documents; other native
+  permission requests are denied. External-browser launches and new windows are blocked.
 - F11 toggles fullscreen, F5 reloads.
 - Settings and the web profile live in `%LOCALAPPDATA%\AI-Warp-Engine`.
 - The 6.4.36 build repairs duplicate app documents and restores the
@@ -24,6 +25,15 @@ Set-Location shell
 
 This produces `AI-WARP-ENGINE-6.4.37-x64-setup.exe` (gold "Я" icon, `app.ico`/`logo.png`). It installs to `Desktop\AI WARP ENGINE` with an elevated (UAC) installer that also runs `cursor_lockdown.ps1` to enforce system-only mouse pointers, and adds a launcher shortcut in that folder, a Start Menu entry and an uninstaller.
 
+The app executable is `publish\AI-Warp-Engine.exe`; distribute the complete
+publish directory, not the executable alone. .NET is self-contained, WebView2
+is a runtime prerequisite. The uninstaller does not revert Windows policies
+or remove the separately stored WebView2 user profile.
+
+The **FINAL NOVEMBER 2026 RELEASE** currently distributes only the browser app
+and documentation. Windows installer/app publication is pending verified FFmpeg
+corresponding source; see [release notes](../RELEASE_NOTES_6.4.37.md).
+
 The build script locates FFmpeg on PATH, or accepts `-FFmpegRoot` / the
 `AIWARP_FFMPEG_ROOT` environment variable pointing to the extracted distribution.
 Direct .NET builds require `-p:FFmpegRoot="C:\path\to\ffmpeg-distribution"`.
@@ -41,6 +51,14 @@ for the exact FFmpeg build and linked dependencies before distributing an
 installer. See the distribution's README, <https://www.gyan.dev/ffmpeg/builds/>
 and <https://ffmpeg.org/legal.html>. Installing a local test build is not a
 claim that public-release licensing has been completed.
+
+Exact local build: `8.1.2-full_build-www.gyan.dev`, FFmpeg revision
+`38b88335f99e76ed89ff3c93f877fdefce736c13`, GCC 16.1.0 Rev2 (MSYS2).
+The FFmpeg source commit is known, but complete linked dependency sources,
+patches and build materials have not been verified. They are requested in
+[GyanD/codexffmpeg #254](https://github.com/GyanD/codexffmpeg/issues/254).
+Do not publish this installer or a portable bundle containing its FFmpeg binary
+until the outstanding materials are obtained and reviewed.
 
 ## App control hardening
 
