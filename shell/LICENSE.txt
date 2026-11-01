@@ -10,6 +10,22 @@ glitch engine, retro games, AI experiments, audio visualizer, digital art
 Credits: Arena.ai Agent Mode; generative AI and the open-source community.
 
 ======================================================================
+TRIBUTE TO MICROSOFT .NET
+======================================================================
+
+With gratitude to the Microsoft .NET team and its open-source contributors.
+The .NET runtime and Windows Forms make this Windows desktop edition possible.
+This installer bundles .NET 8 for Windows x64; no separate .NET installation
+is required. Thank you for the framework, tools and community behind the app.
+
+This acknowledgment does not imply Microsoft sponsorship or endorsement.
+The app's CC0 / Unlicense terms do not replace third-party component licenses.
+The next license page presents the bundled .NET runtime's MIT license.
+The installed app also includes the exact .NET runtime licenses and
+THIRD-PARTY-NOTICES, WebView2 SDK notices, NAudio's MIT license and Windows SDK
+terms. Please preserve these files when redistributing the complete app.
+
+======================================================================
 LICENSE TERMS
 ======================================================================
 
@@ -44,3 +60,4 @@ material referenced on the site remains the property of its respective owners.
 
 This installer bundles the Microsoft .NET runtime (MIT License) and uses the
 Microsoft Edge WebView2 runtime, which is governed by Microsoft's own terms.
+WebView2 must already be installed; its runtime installer is not bundled.

@@ -1,5 +1,8 @@
+param(
+    [string]$OutputDirectory = (Join-Path $PSScriptRoot 'publish-native-6.4.38.1')
+)
 $ErrorActionPreference = 'Stop'
-$output = Join-Path $PSScriptRoot 'publish-native-6.4.38.1'
+$output = $OutputDirectory
 if (Test-Path $output) {
     throw "Build output already exists: $output. Use a new clean output directory or explicitly remove only this edition's generated output."
 }

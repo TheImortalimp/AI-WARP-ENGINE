@@ -16,6 +16,21 @@ const dependencies = [
     'ai_warp_engine.js', 'local_media.js', 'freeze_frame.js', 'media_page.js'
 ];
 
+test('native installer retains gold icon wiring and presents .NET licensing tribute', () => {
+    const shell = name => fs.readFileSync(path.join(root, 'shell', name), 'utf8');
+    const setup = shell('setup.nsi');
+    assert.match(shell('AiWarpEngine.csproj'), /<ApplicationIcon>app\.ico<\/ApplicationIcon>/);
+    for (const directive of ['Icon', 'UninstallIcon']) {
+        assert.ok(setup.includes(`${directive} "app.ico"`));
+    }
+    for (const define of ['MUI_ICON', 'MUI_UNICON']) {
+        assert.ok(setup.includes(`!define ${define} "app.ico"`));
+    }
+    assert.ok(setup.includes('!insertmacro MUI_PAGE_LICENSE "${SRC}\\Microsoft.NETCore.App.Runtime.win-x64-LICENSE.TXT.txt"'));
+    assert.match(shell('LICENSE.txt'), /TRIBUTE TO MICROSOFT \.NET/);
+    assert.match(shell('LICENSE.txt'), /does not imply Microsoft sponsorship or endorsement/);
+});
+
 test('application aliases contain one document, unique IDs and one ordered engine stack', () => {
     for (const name of aliases) {
         const html = read(name);

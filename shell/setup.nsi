@@ -26,6 +26,7 @@ UninstallIcon "app.ico"
 
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
+!insertmacro MUI_PAGE_LICENSE "${SRC}\Microsoft.NETCore.App.Runtime.win-x64-LICENSE.TXT.txt"
 !insertmacro MUI_PAGE_LICENSE "WINDOWS-SDK-LICENSE.rtf"
 !insertmacro MUI_PAGE_INSTFILES
 !define MUI_FINISHPAGE_RUN "$INSTDIR\AI-Warp-Engine.exe"

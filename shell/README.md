@@ -21,6 +21,14 @@ the target framework. The script publishes self-contained .NET x64 into a new
 `publish-native-6.4.38.1` directory, rejects an existing directory, and checks
 that no FFmpeg files exist. NSIS packages that directory, never the old `publish`.
 
+For a clean rebuild, pass `-OutputDirectory` to the build script and the same
+directory via NSIS `/DSRC=...`. Existing outputs are never overwritten by the
+publish script. The app, installer, uninstaller and shortcuts retain the
+existing gold reversed-R `app.ico`; no replacement artwork is generated.
+Installer licensing includes a .NET team/community tribute and a separate
+page showing the bundled .NET runtime's actual MIT license, followed by Windows
+SDK terms. Runtime notices remain in the installed app.
+
 Run `AI-Warp-Engine.exe` with all adjacent DLLs/runtime files and the `app` assets.
 WebView2 and Windows media components must already be installed. Windows N
 requires the Media Feature Pack; licensed codec extensions are separate.

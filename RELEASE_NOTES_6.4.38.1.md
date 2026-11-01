@@ -84,6 +84,17 @@ it must never copy this edition into that release without an intentional change.
 
 ## Validation
 
+### Installer branding and .NET tribute refresh
+
+The refreshed downloads retain the existing gold reversed-R app icon in the
+Windows app, installer and uninstaller, with shortcuts using the app's icon.
+The installer licensing screen thanks the Microsoft .NET team and open-source
+contributors without implying endorsement. A separate page presents the actual
+bundled .NET runtime MIT license; exact runtime licenses/notices remain packaged.
+This is a same-version branding/licensing refresh. The release tag identifies
+the original publication; refreshed source/app manifests identify the exact
+new build revision. Use the refreshed checksums with the refreshed downloads.
+
 11 native conversion checks passed for MP4, WAV, silent video, cache reuse,
 original preservation, cancellation, corrupt/unsupported inputs and AVI
 empty-video rejection. An MJPEG AVI on this machine could not produce a valid
