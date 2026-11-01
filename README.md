@@ -15,6 +15,8 @@ are **not yet published**: complete corresponding source/build materials for the
 bundled GPLv3 FFmpeg build are awaiting [upstream request #254](https://github.com/GyanD/codexffmpeg/issues/254).
 See [release notes](RELEASE_NOTES_6.4.37.md) and
 [third-party redistribution status](THIRD_PARTY_NOTICES.md).
+Daily upstream checks and approval-gated installer publication are configured;
+see [Windows release workflow](WINDOWS_RELEASE_WORKFLOW.md).
 
 [Previous published v6.4.36 installer](https://github.com/TheImortalimp/AI-WARP-ENGINE/releases/download/v6.4.36/AI-WARP-ENGINE-6.4.36-x64-setup.exe)
 

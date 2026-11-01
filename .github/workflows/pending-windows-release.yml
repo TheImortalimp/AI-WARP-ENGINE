@@ -1,0 +1,168 @@
+name: Pending Windows release
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish only after verifying complete corresponding-source coverage
+        type: boolean
+        default: false
+      source_url:
+        description: Public HTTPS URL of the reviewed complete corresponding-source ZIP
+        type: string
+      source_sha256:
+        description: SHA256 of the reviewed source ZIP
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pending-windows-release
+  cancel-in-progress: false
+
+jobs:
+  check-source-response:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: upstream } = await github.rest.issues.get({
+              owner: 'GyanD', repo: 'codexffmpeg', issue_number: 254
+            });
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              ...context.repo, state: 'open', labels: 'windows-source-review', per_page: 100
+            });
+            const tracking = issues.find(issue => !issue.pull_request &&
+              issue.title === 'Windows 6.4.37 publication gate');
+            if (!tracking) throw new Error('Windows source-review tracking issue is missing');
+            const marker = `<!-- upstream-254:${upstream.updated_at} -->`;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo, issue_number: tracking.number, per_page: 100
+            });
+            if (comments.some(comment => comment.user.login === 'github-actions[bot]' &&
+                comment.body.includes(marker))) return;
+            await github.rest.issues.createComment({
+              ...context.repo, issue_number: tracking.number,
+              body: `${marker}\n@TheImortalimp Upstream source request updated: ${upstream.html_url}\n` +
+                `State: ${upstream.state}; comments: ${upstream.comments}.\n` +
+                'Review exact source/dependency/build coverage before queuing publication. ' +
+                'No binary is published by this scheduled check.'
+            });
+
+  publish-reviewed-installer:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    runs-on: ubuntu-latest
+    environment: windows-source-reviewed
+    permissions:
+      contents: write
+      issues: write
+      actions: read
+    steps:
+      - name: Validate approved inputs and environment protection
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_URL: ${{ inputs.source_url }}
+          SOURCE_SHA256: ${{ inputs.source_sha256 }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_URL" == https://* ]]
+          [[ "$SOURCE_SHA256" =~ ^[0-9a-fA-F]{64}$ ]]
+          gh api "repos/$REPO/environments/windows-source-reviewed" > environment.json
+          python3 - <<'PY'
+          import json
+          env = json.load(open('environment.json'))
+          rules = env['protection_rules']
+          assert any(rule['type'] == 'required_reviewers' and any(
+              reviewer['type'] == 'User' and reviewer['reviewer']['login'] == 'TheImortalimp'
+              for reviewer in rule['reviewers']) for rule in rules), 'Required reviewer missing'
+          assert env['can_admins_bypass'] is False, 'Admin bypass must be disabled'
+          PY
+          gh release view v6.4.37 --repo "$REPO" --json body --jq .body > release-body.md
+          python3 - <<'PY'
+          from pathlib import Path
+          body = Path('release-body.md').read_text()
+          assert '> **Windows publication pending:**' in body and '## Downloads' in body, \
+              'Expected release publication-hold section missing'
+          PY
+      - name: Fetch staged installer and reviewed complete source ZIP
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_URL: ${{ inputs.source_url }}
+          SOURCE_SHA256: ${{ inputs.source_sha256 }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh release view windows-6.4.37-staging --repo "$REPO" --json isDraft --jq .isDraft | grep -qx true
+          gh release download windows-6.4.37-staging --repo "$REPO" \
+            --pattern 'AI-WARP-ENGINE-6.4.37-x64-setup.exe'
+          echo '1ae628213305aabc3c0c348dc0ae19fd3f46de877474441233f47ed006a1dae3  AI-WARP-ENGINE-6.4.37-x64-setup.exe' | sha256sum --check
+          curl --fail --show-error --location --proto '=https' --proto-redir '=https' \
+            --output FFmpeg-8.1.2-corresponding-source.zip "$SOURCE_URL"
+          printf '%s  FFmpeg-8.1.2-corresponding-source.zip\n' "$SOURCE_SHA256" | sha256sum --check
+          python3 - <<'PY'
+          import zipfile
+          with zipfile.ZipFile('FFmpeg-8.1.2-corresponding-source.zip') as archive:
+              assert archive.namelist(), 'Empty source archive'
+              assert archive.testzip() is None, 'Corrupt source archive'
+          PY
+      - name: Publish source first, then installer and approval record
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SOURCE_URL: ${{ inputs.source_url }}
+          SOURCE_SHA256: ${{ inputs.source_sha256 }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          gh release upload v6.4.37 FFmpeg-8.1.2-corresponding-source.zip --repo "$REPO" --clobber
+          gh release upload v6.4.37 AI-WARP-ENGINE-6.4.37-x64-setup.exe --repo "$REPO" --clobber
+          gh release download v6.4.37 --repo "$REPO" --pattern SHA256SUMS.txt
+          python3 - <<'PY'
+          import hashlib, os
+          from pathlib import Path
+          names = ['AI-WARP-ENGINE-6.4.37-x64-setup.exe', 'FFmpeg-8.1.2-corresponding-source.zip']
+          sums = Path('SHA256SUMS.txt')
+          retained = [line for line in sums.read_text().splitlines() if line.split()[-1] not in names]
+          for name in names:
+              with open(name, 'rb') as file:
+                  digest = hashlib.file_digest(file, 'sha256').hexdigest()
+              retained.append(f'{digest}  {name}')
+          sums.write_text('\n'.join(retained) + '\n')
+          Path('WINDOWS_RELEASE_APPROVAL.md').write_text(
+              '# Windows 6.4.37 publication approval\n\n'
+              'Exact FFmpeg corresponding-source coverage was reviewed through the '
+              'TheImortalimp-required release environment before publication.\n\n'
+              f"Workflow: {os.environ['RUN_URL']}\n\n"
+              f"Queued by: {os.environ['ACTOR']}\n\n"
+              f"Reviewed source URL: {os.environ['SOURCE_URL']}\n\n"
+              f"Reviewed source SHA256: {os.environ['SOURCE_SHA256']}\n\n"
+              'This record supersedes the historical Windows-publication hold in the '
+              'earlier documentation bundle. The installer remains unsigned and '
+              'requires UAC; Windows policy/uninstall limits still apply.\n')
+          PY
+          gh release upload v6.4.37 SHA256SUMS.txt WINDOWS_RELEASE_APPROVAL.md --repo "$REPO" --clobber
+          python3 - <<'PY'
+          from pathlib import Path
+          body = Path('release-body.md').read_text()
+          start = body.find('> **Windows publication pending:**')
+          end = body.find('## Downloads', start)
+          if start < 0 or end < 0:
+              raise RuntimeError('Expected publication-hold section missing; update release manually')
+          body = body[:start] + (
+              '**Windows installer published after source-coverage approval.** '
+              'Download the installer, complete FFmpeg source ZIP and '
+              'WINDOWS_RELEASE_APPROVAL.md from the assets below. '
+              'The earlier documentation records the historical hold.\n\n'
+          ) + body[end:]
+          Path('release-body.md').write_text(body)
+          PY
+          gh release edit v6.4.37 --repo "$REPO" --notes-file release-body.md
