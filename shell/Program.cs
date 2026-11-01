@@ -38,6 +38,11 @@ internal sealed class MainForm : Form
         Controls.Add(view);
         Load += async (_, _) =>
         {
+            var workArea = Screen.FromControl(this).WorkingArea;
+            var width = Math.Min(Width, workArea.Width);
+            var height = Math.Min(Height, workArea.Height);
+            Bounds = new Rectangle(workArea.Left + (workArea.Width - width) / 2,
+                workArea.Top + (workArea.Height - height) / 2, width, height);
             try { await InitAsync(); }
             catch (Exception error) when (error is InvalidOperationException or ArgumentException or System.Runtime.InteropServices.COMException)
             {

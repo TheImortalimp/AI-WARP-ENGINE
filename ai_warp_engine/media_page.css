@@ -219,6 +219,9 @@ body {
 
 .hud-title-cluster {
     display: flex;
+    flex-wrap: wrap;
+    min-width: 0;
+    max-width: 100%;
     align-items: center;
     gap: 10px;
 }
@@ -232,6 +235,8 @@ body {
 }
 
 .hud-version-badge {
+    max-width: 100%;
+    overflow-wrap: anywhere;
     font-size: 9px;
     background: rgba(0, 255, 170, 0.15);
     border: 1px solid var(--theme-accent);

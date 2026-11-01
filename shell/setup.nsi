@@ -24,12 +24,16 @@ UninstallIcon "app.ico"
 !define MUI_ICON "app.ico"
 !define MUI_UNICON "app.ico"
 
+!define MUI_WELCOMEPAGE_TITLE "AI WARP ENGINE ${VERSION} Setup"
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "LICENSE.txt"
 !insertmacro MUI_PAGE_LICENSE "${SRC}\Microsoft.NETCore.App.Runtime.win-x64-LICENSE.TXT.txt"
 !insertmacro MUI_PAGE_LICENSE "WINDOWS-SDK-LICENSE.rtf"
 !insertmacro MUI_PAGE_INSTFILES
 !define MUI_FINISHPAGE_RUN "$INSTDIR\AI-Warp-Engine.exe"
+!define MUI_FINISHPAGE_TITLE "AI WARP ENGINE ${VERSION} Installed"
+!define MUI_FINISHPAGE_TEXT "Setup is complete.$\r$\n$\r$\nClick Finish to close Setup."
+!define MUI_FINISHPAGE_RUN_TEXT "Launch AI WARP ENGINE"
 !insertmacro MUI_PAGE_FINISH
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES

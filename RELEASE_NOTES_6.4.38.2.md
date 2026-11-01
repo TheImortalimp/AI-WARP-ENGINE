@@ -45,6 +45,17 @@ The native media-cache identity and conversion profile are unchanged.
 
 ## Installer licensing
 
+### Launch-flow clipping fix
+
+The refreshed 6.4.38.2 installer uses short explicit welcome/finish headings,
+completion text and "Launch AI WARP ENGINE" checkbox text instead of inserting
+the long edition name into fixed-size wizard controls. The app's startup window
+is centered and constrained to its monitor's working area after DPI scaling,
+so its borders do not extend below the taskbar on smaller/high-DPI displays.
+The HUD title/version group wraps within the viewport instead of overflowing.
+The refreshed app/source manifests identify the new build revision; the original
+release tag is retained. Use the refreshed checksum file for these downloads.
+
 The installer retains the .NET team/open-source community tribute, the actual
 .NET runtime MIT-license page, and separate Windows SDK terms.
 Exact runtime notices, WebView2 SDK notices and NAudio/Three.js licenses remain

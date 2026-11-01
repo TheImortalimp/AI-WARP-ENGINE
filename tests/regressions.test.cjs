@@ -60,6 +60,16 @@ test('crisp icon supplies ten valid PNG sizes and a high-resolution logo', () =>
     assert.ok(fs.existsSync(path.join(root, 'shell', 'app-icon.svg')));
 });
 
+test('installer launch copy is bounded and startup window fits the monitor work area', () => {
+    const setup = fs.readFileSync(path.join(root, 'shell', 'setup.nsi'), 'utf8');
+    assert.ok(setup.includes('!define MUI_FINISHPAGE_TITLE "AI WARP ENGINE ${VERSION} Installed"'));
+    assert.ok(setup.includes('!define MUI_FINISHPAGE_RUN_TEXT "Launch AI WARP ENGINE"'));
+    const host = fs.readFileSync(path.join(root, 'shell', 'Program.cs'), 'utf8');
+    assert.ok(host.includes('Screen.FromControl(this).WorkingArea'));
+    assert.ok(host.includes('Math.Min(Width, workArea.Width)'));
+    assert.ok(host.includes('Math.Min(Height, workArea.Height)'));
+});
+
 test('application aliases contain one document, unique IDs and one ordered engine stack', () => {
     for (const name of aliases) {
         const html = read(name);
